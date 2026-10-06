@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Pimen Leads: contactos de clientes que quieren reformar su baño en Barcelona, para empresas de reformas.">
+<title>Pimen Leads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;color-scheme:light dark}
+
+/* Layout: sticky nav, split hero (pitch + live lead card on a tile grid), trust strip,
+   problem, steps, ROI calculator, comparison, FAQ, contact band.
+   Motif: bathroom tile grid with grout lines. */
+:root{
+  --bg:#f4f6f9;
+  --surface:#ffffff;
+  --ink:#10182b;
+  --muted:#52607a;
+  --line:#d9dfe9;
+  --accent:#2457d6;
+  --accent-ink:#ffffff;
+  --accent-soft:#e3ebfc;
+  --tile:#e6ebf4;
+  --good:#12805c;
+  --good-soft:#dcf3ea;
+  --font-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --font-body:"Public Sans","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1220;--surface:#141c30;--ink:#eef2fa;--muted:#9aa8c4;--line:#27324c;
+    --accent:#6c93ff;--accent-ink:#0c1220;--accent-soft:#1b2a52;--tile:#18223a;
+    --good:#47d1a0;--good-soft:#123b30;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1220;--surface:#141c30;--ink:#eef2fa;--muted:#9aa8c4;--line:#27324c;
+  --accent:#6c93ff;--accent-ink:#0c1220;--accent-soft:#1b2a52;--tile:#18223a;
+  --good:#47d1a0;--good-soft:#123b30;color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;padding-inline:20px}
+.wrap{max-width:1080px;margin-inline:auto}
+h1,h2,h3{font-family:var(--font-display);line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-0.015em}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+/* nav */
+.navbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:-20px;padding-inline:20px}
+nav{max-width:1080px;margin-inline:auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:20px}
+.mark{width:34px;height:34px;border-radius:9px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:20px}
+.links{display:flex;align-items:center;gap:22px}
+.links a.t{color:var(--muted);text-decoration:none;font-size:15px;font-weight:500}
+.links a.t:hover{color:var(--ink)}
+.btn{display:inline-block;background:var(--accent);color:var(--accent-ink);text-decoration:none;font:inherit;font-weight:600;padding:12px 20px;border-radius:10px;border:0;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:hover{filter:brightness(1.08)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;padding-block:64px 56px}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+h1{font-size:clamp(38px,6.2vw,66px);font-weight:700}
+.lead{font-size:19px;color:var(--muted);max-width:50ch;margin-top:22px}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.stage{position:relative;border-radius:18px;padding:34px 22px;min-width:0;overflow:hidden;
+  background:
+    linear-gradient(var(--line) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/48px 48px,
+    var(--tile)}
+.lead-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(16,24,43,.14);overflow:hidden}
+.lead-card .top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.pill{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;background:var(--good-soft);color:var(--good);padding:4px 10px;border-radius:999px}
+.ej{font-size:12px;color:var(--muted)}
+.lead-card dl{margin:0;padding:6px 18px 4px}
+.lead-card dl div{display:grid;grid-template-columns:84px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.lead-card dl div:last-child{border:0}
+dt{color:var(--muted);font-size:14px}
+dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere;font-size:16px}
+.lead-card .foot{padding:14px 18px;background:var(--accent-soft);font-size:14px;color:var(--ink)}
+.lead-card.back{position:absolute;inset:auto 22px 14px 22px;height:60px;opacity:.7;z-index:0}
+.lead-card.front{position:relative;z-index:1;margin-bottom:26px}
+
+/* trust strip */
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.strip div{padding:18px 20px;border-right:1px solid var(--line);font-weight:600;font-size:15px;display:flex;gap:10px;align-items:center;min-width:0}
+.strip div:last-child{border:0}
+.strip svg{flex:none;color:var(--accent)}
+
+section{padding-block:72px 8px}
+h2{font-size:clamp(28px,4vw,42px);font-weight:700;margin-bottom:14px}
+.sub{color:var(--muted);max-width:60ch;margin-bottom:36px}
+
+/* problem */
+.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px;min-width:0}
+.box h3{font-size:20px;margin-bottom:8px}
+.box p{color:var(--muted);font-size:16px}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;counter-reset:s}
+.step{border-top:3px solid var(--accent);padding-top:16px;min-width:0}
+.step::before{counter-increment:s;content:"Paso " counter(s);font-size:13px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+.step h3{font-size:21px;margin:8px 0}
+.step p{color:var(--muted);font-size:16px}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.calc .in{padding:30px;display:grid;gap:22px;align-content:start;min-width:0}
+.calc .out{padding:30px;background:var(--accent);color:var(--accent-ink);display:grid;gap:18px;align-content:center;min-width:0}
+label{display:block;font-weight:600;font-size:15px;margin-bottom:8px}
+.field{display:flex;align-items:center;gap:10px}
+input[type=number]{width:100%;font:inherit;font-weight:600;font-size:18px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.unit{color:var(--muted);font-weight:500;white-space:nowrap}
+.rng{display:flex;align-items:center;gap:14px}
+.rng output{font:700 22px var(--font-display);min-width:3.2ch;text-align:right;font-variant-numeric:tabular-nums}
+.big{font:700 clamp(34px,5vw,50px)/1 var(--font-display);font-variant-numeric:tabular-nums}
+.out small{display:block;font-size:14px;opacity:.85;margin-top:6px}
+.out .item+.item{border-top:1px solid rgba(255,255,255,.28);padding-top:18px}
+.disc{font-size:14px;color:var(--muted);margin-top:14px}
+.part{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;padding:28px}
+.part>div{flex:1 1 320px;min-width:0}
+.part p{max-width:60ch}
+
+/* comparison */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:16px}
+th,td{text-align:left;padding:16px 20px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+thead th{font-family:var(--font-display);font-size:17px;background:var(--bg)}
+thead th.us{background:var(--accent);color:var(--accent-ink)}
+td.us{background:var(--accent-soft);font-weight:600}
+td:first-child{color:var(--muted);font-weight:500;width:24%}
+
+/* faq */
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 22px}
+details+details{margin-top:10px}
+summary{cursor:pointer;font-weight:600;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";float:right;color:var(--accent);font-size:22px;line-height:1}
+details[open] summary::after{content:"−"}
+details p{color:var(--muted);margin-top:10px;max-width:70ch}
+
+/* contact */
+.contact{background:var(--accent);color:var(--accent-ink);border-radius:22px;padding:52px 36px;margin-block:80px 40px;display:grid;gap:18px}
+.contact h2{margin:0;font-size:clamp(30px,4.5vw,46px)}
+.contact p{max-width:56ch;opacity:.93}
+.mail{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mail code{font:600 19px/1 var(--font-body);background:rgba(255,255,255,.16);padding:14px 18px;border-radius:10px;user-select:all;overflow-wrap:anywhere}
+.contact .btn{background:var(--accent-ink);color:var(--accent)}
+.note{font-size:14px;opacity:.9;min-height:1.4em}
+footer{padding-block:8px 40px;color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:36px;padding-block:36px 40px}
+  .cols3{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr 1fr}
+  .calc{grid-template-columns:1fr}
+  .strip{grid-template-columns:1fr 1fr}
+  .strip div:nth-child(2){border-right:0}
+  .strip div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .links a.t{display:none}
+  section{padding-block:52px 4px}
+}
+@media (max-width:520px){
+  .steps{grid-template-columns:1fr}
+  .contact{padding:34px 22px}
+  .calc .in,.calc .out{padding:24px 20px}
+  .strip{grid-template-columns:1fr}
+  .strip div{border-right:0!important;border-bottom:1px solid var(--line)}
+  .strip div:last-child{border-bottom:0}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="navbar">
+    <nav>
+      <div class="brand"><span class="mark">P</span>Pimen Leads</div>
+      <div class="links">
+        <a class="t" href="#como">Cómo funciona</a>
+        <a class="t" href="#calculadora">Calculadora</a>
+        <a class="t" href="#faq">Preguntas</a>
+        <a class="btn" href="#contacto">Prueba sin coste</a>
+      </div>
+    </nav>
+  </div>
+
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Para empresas de reformas · Barcelona</p>
+      <h1>Clientes de reformas de baño, sin pagar por promesas.</h1>
+      <p class="lead">Encontramos a personas de Barcelona que quieren reformar su baño y te pasamos su contacto. Tú haces el presupuesto. Solo pagas por cada contacto que recibes.</p>
+      <div class="cta-row">
+        <a class="btn" href="#contacto">Pedir la prueba sin coste</a>
+        <a class="btn ghost" href="#calculadora">Calcula lo que te cuesta cada cliente</a>
+      </div>
+    </div>
+    <div class="stage" aria-label="Ejemplo de contacto que recibirías">
+      <div class="lead-card front">
+        <div class="top"><span class="pill">Nuevo contacto</span><span class="ej">Ejemplo ficticio</span></div>
+        <dl>
+          <div><dt>Zona</dt><dd>Eixample, Barcelona</dd></div>
+          <div><dt>Reforma</dt><dd>Cambiar bañera por plato de ducha</dd></div>
+          <div><dt>Plazo</dt><dd>Empezar en 1 o 2 meses</dd></div>
+          <div><dt>Teléfono</dt><dd>6XX XX XX XX</dd></div>
+        </dl>
+        <div class="foot">Llámale y haz tu presupuesto.</div>
+      </div>
+      <div class="lead-card back" aria-hidden="true"></div>
+    </div>
+  </header>
+
+  <div class="strip" role="list">
+    <div role="listitem"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>Sin cuota mensual</div>
+    <div role="listitem"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>Sin permanencia</div>
+    <div role="listitem"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>Primeros contactos sin coste</div>
+    <div role="listitem"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>Cada contacto, a una sola empresa</div>
+  </div>
+
+  <section id="problema">
+    <h2>Conseguir obras de baño cuesta más de lo que debería</h2>
+    <p class="sub">Tres problemas que se repiten en casi cualquier empresa de reformas.</p>
+    <div class="cols3">
+      <div class="box"><h3>Contactos compartidos</h3><p>En muchos portales el mismo cliente recibe llamadas de varias empresas a la vez. Compites por precio antes de empezar.</p></div>
+      <div class="box"><h3>Publicidad que no controlas</h3><p>Pagar anuncios exige tiempo, conocimiento y presupuesto, y no siempre trae a quien quiere reformar ya.</p></div>
+      <div class="box"><h3>Boca a boca irregular</h3><p>Funciona, pero no puedes planificar cuántas obras entran el mes que viene.</p></div>
+    </div>
+  </section>
+
+  <section id="como">
+    <h2>Cómo funciona</h2>
+    <p class="sub">Empezamos con pocas empresas y pocos contactos, para comprobar que te encajan antes de crecer.</p>
+    <div class="steps">
+      <div class="step"><h3>Nos cuentas qué haces</h3><p>Tipo de baños, zonas de Barcelona y cuántas obras nuevas puedes asumir al mes.</p></div>
+      <div class="step"><h3>Buscamos a la persona</h3><p>Captamos a quien quiere reformar su baño en tu zona y confirmamos qué necesita.</p></div>
+      <div class="step"><h3>Recibes el contacto</h3><p>Nombre, teléfono, barrio, qué quiere hacer y cuándo. Tú decides si lo quieres.</p></div>
+      <div class="step"><h3>Pagas por contacto</h3><p>Los primeros son una prueba sin coste. Después, pagas solo por cada contacto recibido.</p></div>
+    </div>
+  </section>
+
+  <section id="compromiso">
+    <h2>Lo que te prometemos</h2>
+    <p class="sub">Estamos abriendo las primeras plazas para empresas de reformas de Barcelona. Empezamos con pocas, para cuidar cada una.</p>
+    <div class="cols3">
+      <div class="box"><h3>Especialistas en baños</h3><p>Empezamos por las reformas de baño, así que sabemos qué pide cada cliente y qué le preocupa antes de llamarte.</p></div>
+      <div class="box"><h3>Contactos que se pueden llamar</h3><p>Si el teléfono no existe o la persona no quería reformar, lo cambiamos por otro. No pagas por contactos falsos.</p></div>
+      <div class="box"><h3>Cuentas claras</h3><p>Sabes cuántos contactos recibes y cuánto pagas. Sin letra pequeña ni cargos que no esperabas.</p></div>
+    </div>
+  </section>
+
+  <section id="calculadora">
+    <h2>Calcula lo que te sale cada cliente</h2>
+    <p class="sub">Pon tus cifras. Los valores de partida son un ejemplo para que veas cómo funciona.</p>
+    <div class="calc">
+      <div class="in">
+        <div>
+          <label for="precio">Precio medio de una reforma de baño</label>
+          <div class="field"><input id="precio" type="number" min="0" step="100" value="5000" inputmode="numeric"><span class="unit">€</span></div>
+        </div>
+        <div>
+          <label for="cierre">De cada 10 contactos, ¿cuántos acaban en obra?</label>
+          <div class="rng"><input id="cierre" type="range" min="1" max="10" step="1" value="2"><output id="cierreOut" for="cierre">2</output></div>
+        </div>
+        <div>
+          <label for="coste">Precio por contacto</label>
+          <div class="field"><input id="coste" type="number" min="0" step="5" value="40" inputmode="numeric"><span class="unit">€</span></div>
+        </div>
+      </div>
+      <div class="out" aria-live="polite">
+        <div class="item"><div class="big" id="rObra">200 €</div><small>Lo que te cuesta conseguir cada obra</small></div>
+        <div class="item"><div class="big" id="rFact">1.000 €</div><small>Facturación media que genera cada contacto</small></div>
+        <div class="item"><div class="big" id="rVeces">25×</div><small>Facturas 25 € por cada 1 € que pagas en contactos</small></div>
+      </div>
+    </div>
+    <p class="disc">Es facturación, no beneficio: al resultado hay que restarle tus costes de obra.</p>
+  </section>
+
+  <section id="comparativa">
+    <h2>Pimen Leads frente a otras formas de captar clientes</h2>
+    <p class="sub">Así se compara de forma general. Las condiciones de cada portal pueden variar.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th></th><th class="us">Pimen Leads</th><th>Portales generalistas</th><th>Publicidad propia</th></tr></thead>
+        <tbody>
+          <tr><td>Quién recibe el contacto</td><td class="us">Una sola empresa</td><td>Varias empresas a la vez</td><td>Tú, mezclado con curiosos</td></tr>
+          <tr><td>Cuota fija</td><td class="us">No</td><td>Depende del portal</td><td>Presupuesto de anuncios</td></tr>
+          <tr><td>Pagas por</td><td class="us">Contacto recibido</td><td>Contacto o suscripción</td><td>Clics, no clientes</td></tr>
+          <tr><td>Tiempo para empezar</td><td class="us">Días</td><td>Días</td><td>Semanas de prueba y ajuste</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2>Preguntas frecuentes</h2>
+    <p class="sub">Lo que suelen preguntar las empresas antes de empezar.</p>
+    <details><summary>¿Cuánto cuesta?</summary><p>Pagas solo por cada contacto que recibes. Hablamos del precio antes de empezar y los primeros contactos son una prueba sin coste.</p></details>
+    <details><summary>¿Hay que firmar algo o pagar una cuota?</summary><p>No hay cuota mensual ni permanencia. Si los contactos no te encajan, lo dejas.</p></details>
+    <details><summary>¿Qué incluye cada contacto?</summary><p>Barrio, qué reforma quiere, cuándo quiere empezar y un teléfono para llamar.</p></details>
+    <details><summary>¿En qué zonas trabajáis?</summary><p>Nos centramos en Barcelona ciudad: Eixample, Gràcia, Sants, Les Corts, Sarrià, Horta y Sant Martí, entre otras. Si la obra queda fuera de Barcelona, también te la pasamos y tú decides si la quieres.</p></details>
+    <details><summary>¿Qué pasa si el contacto no sirve?</summary><p>Si el teléfono no existe o la persona no estaba pensando en reformar, nos lo dices y lo cambiamos por otro. No pagas por contactos que no son reales.</p></details>
+    <details><summary>¿Y si ya trabajo con otros portales?</summary><p>Puedes probar con nosotros y comparar cuánto te cuesta cada cliente en cada sitio.</p></details>
+  </section>
+
+  <section id="particulares">
+    <div class="box part">
+      <div>
+        <h3>¿Quieres reformar tu baño?</h3>
+        <p>Cuéntanos qué quieres hacer, en qué zona de Barcelona estás y cuándo quieres empezar. Una empresa de reformas te llamará para darte un presupuesto.</p>
+      </div>
+      <a class="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSdL54pMajYeYjSRqTSD8zLJRubesZ93qmueZhFW5NzN9R2WRQ/viewform" target="_blank" rel="noopener">Pedir presupuesto</a>
+    </div>
+  </section>
+
+  <div class="contact" id="contacto">
+    <h2>Prueba sin coste</h2>
+    <p>Escríbenos con el nombre de tu empresa y las zonas donde trabajas. Te respondemos por correo.</p>
+    <div class="mail">
+      <code id="addr">comercial@pimenleads.com</code>
+      <button class="btn" id="copy" type="button">Copiar correo</button>
+    </div>
+    <p class="note" id="msg" role="status" aria-live="polite"></p>
+  </div>
+
+  <footer>
+    <span>Pimen Leads · Barcelona</span>
+    <span>comercial@pimenleads.com</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var fmt=new Intl.NumberFormat('es-ES',{maximumFractionDigits:0});
+  function calc(){
+    var p=Math.max(0,parseFloat($('precio').value)||0);
+    var c=Math.max(0,parseFloat($('coste').value)||0);
+    var k=parseInt($('cierre').value,10)/10;
+    $('cierreOut').textContent=$('cierre').value;
+    var obra=c/k, fact=p*k, veces=c>0?fact/c:0;
+    $('rObra').textContent=fmt.format(obra)+' €';
+    $('rFact').textContent=fmt.format(fact)+' €';
+    $('rVeces').textContent=c>0?fmt.format(veces)+'×':'–';
+    $('rVeces').nextElementSibling.textContent=c>0?'Facturas '+fmt.format(veces)+' € por cada 1 € que pagas en contactos':'Pon un precio por contacto para verlo';
+  }
+  ['precio','cierre','coste'].forEach(function(i){$(i).addEventListener('input',calc)});
+  calc();
+
+  var btn=$('copy'),msg=$('msg'),addr=$('addr');
+  function selectText(){var r=document.createRange();r.selectNodeContents(addr);var s=window.getSelection();s.removeAllRanges();s.addRange(r)}
+  btn.addEventListener('click',function(){
+    var t=addr.textContent;
+    try{
+      navigator.clipboard.writeText(t).then(function(){msg.textContent='Correo copiado.'},function(){selectText();msg.textContent='Selecciona el correo y cópialo.'});
+    }catch(e){selectText();msg.textContent='Selecciona el correo y cópialo.'}
+  });
+})();
+</script>
+
+</body>
+</html>
