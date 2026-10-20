@@ -347,20 +347,33 @@ footer a { text-underline-offset: 4px; }
       form.querySelectorAll('input[name="tipo"]:checked'),
       function (c) { return c.value; }
     );
-    var cuerpo = [
-      "Empresa: " + empresa,
-      "Persona de contacto: " + nombre,
-      "Correo: " + email,
-      "Teléfono: " + (form.tel.value.trim() || "—"),
-      "Reformas que hacen: " + (tipos.length ? tipos.join(", ") : "—"),
-      "",
-      form.mensaje.value.trim()
-    ].join("\n");
-    var url = "mailto:comercial@pimenleads.com" +
-      "?subject=" + encodeURIComponent("Solicitud de primer lead gratis · " + empresa) +
-      "&body=" + encodeURIComponent(cuerpo);
-    msg.textContent = "Se abrirá tu aplicación de correo con el mensaje listo. Pulsa enviar para terminar.";
-    window.location.href = url;
+    var btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    msg.textContent = "Enviando…";
+    var data = new FormData();
+    data.append("_subject", "Solicitud de primer lead gratis · " + empresa);
+    data.append("origen", "Web para empresas");
+    data.append("empresa", empresa);
+    data.append("nombre", nombre);
+    data.append("email", email);
+    data.append("telefono", form.tel.value.trim() || "—");
+    data.append("reformas", tipos.length ? tipos.join(", ") : "—");
+    data.append("mensaje", form.mensaje.value.trim());
+    fetch("https://formspree.io/f/myekaoar", {
+      method: "POST",
+      body: data,
+      headers: { "Accept": "application/json" }
+    }).then(function (r) {
+      if (!r.ok) { throw new Error("fallo"); }
+      form.reset();
+      msg.className = "msg";
+      msg.textContent = "Recibido. Te respondemos por correo.";
+    }).catch(function () {
+      msg.className = "msg err";
+      msg.textContent = "No se ha podido enviar. Inténtalo de nuevo o escríbenos a comercial@pimenleads.com.";
+    }).then(function () {
+      btn.disabled = false;
+    });
   });
 })();
 </script>
