@@ -90,6 +90,7 @@ fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: .6rem; }
 .checks input { accent-color: var(--teal); width: 1.1rem; height: 1.1rem; }
 .consent { display: flex; gap: .7rem; align-items: flex-start; font-weight: 400; font-size: .9rem; color: var(--muted); line-height: 1.45; }
 .consent input { flex: none; width: 1.2rem; height: 1.2rem; margin-top: .15rem; accent-color: var(--teal); }
+.consent.bad { outline: 2px solid #c0392b; outline-offset: 6px; border-radius: 6px; }
 .consent a { color: var(--ink); text-underline-offset: 3px; }
 .msg { font-size: .95rem; color: var(--muted); min-height: 1.4em; }
 .msg.err { color: var(--err); }
@@ -338,11 +339,16 @@ footer a { text-underline-offset: 4px; }
       msg.textContent = "Rellena el nombre de la empresa, la persona de contacto y un correo válido.";
       return;
     }
+    var consentLabel = form.consent.closest("label");
     if (!form.consent.checked) {
       msg.className = "msg err";
-      msg.textContent = "Para continuar, marca la casilla de consentimiento.";
+      msg.textContent = "No se ha enviado: marca la casilla de consentimiento para continuar.";
+      consentLabel.classList.add("bad");
+      consentLabel.scrollIntoView({ behavior: "smooth", block: "center" });
+      form.consent.focus();
       return;
     }
+    consentLabel.classList.remove("bad");
     var tipos = Array.prototype.map.call(
       form.querySelectorAll('input[name="tipo"]:checked'),
       function (c) { return c.value; }

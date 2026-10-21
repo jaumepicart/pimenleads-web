@@ -87,6 +87,7 @@ input[type="text"], input[type="email"], input[type="tel"], select, textarea {
 textarea { min-height: 5.5rem; resize: vertical; }
 .consent { display: flex; gap: .7rem; align-items: flex-start; font-weight: 400; font-size: .9rem; color: var(--muted); line-height: 1.45; }
 .consent input { flex: none; width: 1.2rem; height: 1.2rem; margin-top: .15rem; accent-color: var(--teal); }
+.consent.bad { outline: 2px solid #c0392b; outline-offset: 6px; border-radius: 6px; }
 .consent a { color: var(--ink); text-underline-offset: 3px; }
 .msg { font-size: .95rem; color: var(--muted); min-height: 1.4em; }
 .msg.err { color: var(--err); }
@@ -313,11 +314,16 @@ footer a { text-underline-offset: 4px; }
       msg.textContent = "Rellena nombre, teléfono, un correo válido, tu barrio o código postal y qué quieres hacer.";
       return;
     }
+    var consentLabel = form.consent.closest("label");
     if (!form.consent.checked) {
       msg.className = "msg err";
-      msg.textContent = "Para continuar, marca la casilla de consentimiento.";
+      msg.textContent = "No se ha enviado: marca la casilla de consentimiento para continuar.";
+      consentLabel.classList.add("bad");
+      consentLabel.scrollIntoView({ behavior: "smooth", block: "center" });
+      form.consent.focus();
       return;
     }
+    consentLabel.classList.remove("bad");
     var btn = form.querySelector('button[type="submit"]');
     btn.disabled = true;
     msg.textContent = "Enviando…";
