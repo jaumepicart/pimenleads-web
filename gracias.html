@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<title>Solicitud recibida · Pimen Leads</title>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="Pimen Leads, inicio">
+      <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      Pimen Leads
+    </a>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="wrap">
+      <h1 id="titulo" style="font-size: clamp(2.1rem, 7vw, 3.6rem); max-width: 16ch;">Hemos recibido tu solicitud.</h1>
+      <p class="sub" id="texto">En breve te llamaremos para confirmar los detalles de tu reforma. Después, hasta tres empresas de reformas se pondrán en contacto contigo para prepararte el presupuesto.</p>
+      <p class="sub">Si tienes cualquier duda, escríbenos a <a href="mailto:comercial@pimenleads.com">comercial@pimenleads.com</a>.</p>
+    </div>
+  </section>
+</main>
+
+<script>
+// Las empresas llegan con ?de=empresa y ven su propio texto.
+if (new URLSearchParams(location.search).get("de") === "empresa") {
+  document.getElementById("texto").textContent = "Te escribimos por correo para explicarte las condiciones y enviarte tu primer lead gratis.";
+}
+</script>
+</body>
+</html>
