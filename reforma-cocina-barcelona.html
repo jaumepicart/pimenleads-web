@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Reforma de cocina en Barcelona · Presupuesto gratis · Pimen Leads</title>
-<meta name="description" content="Cuéntanos tu reforma de cocina en Barcelona y hasta tres empresas de confianza te preparan un presupuesto sin compromiso. Gratis para ti.">
+<title>Reforma de cocina en Barcelona · 3 presupuestos gratis · Pimen Reformas</title>
+<meta name="description" content="Cuéntanos tu reforma de cocina en Barcelona y hasta tres empresas revisadas te preparan un presupuesto sin compromiso. Gratis para ti.">
 <link rel="canonical" href="https://www.pimenleads.com/reforma-cocina-barcelona.html">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_ES">
-<meta property="og:site_name" content="Pimen Leads">
+<meta property="og:site_name" content="Pimen Reformas">
 <meta property="og:url" content="https://www.pimenleads.com/reforma-cocina-barcelona.html">
 <meta property="og:title" content="Reforma tu cocina en Barcelona con empresas de confianza">
-<meta property="og:description" content="Cuéntanos tu reforma de cocina en Barcelona y hasta tres empresas de confianza te preparan un presupuesto sin compromiso. Gratis para ti.">
+<meta property="og:description" content="Cuéntanos tu reforma de cocina en Barcelona y hasta tres empresas revisadas te preparan un presupuesto sin compromiso. Gratis para ti.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -31,8 +31,8 @@
       },
       "provider": {
         "@type": "Organization",
-        "name": "Pimen Leads",
-        "url": "https://www.pimenleads.com/"
+        "name": "Pimen Reformas",
+        "url": "https://www.pimenleads.com/reforma-cocina-barcelona.html"
       },
       "offers": {
         "@type": "Offer",
@@ -46,7 +46,15 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "¿Tengo que pagar algo a Pimen Leads?",
+          "name": "¿Cuánto cuesta reformar una cocina en Barcelona?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Como orientación, en Barcelona: cambiar muebles y encimera, 4.000 – 9.000 €; reforma completa (8–10 m²), 9.000 – 20.000 €; con cambio de distribución, 14.000 – 28.000 €. El precio final lo da cada empresa después de ver tu vivienda."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Tengo que pagar algo por pedir presupuesto?",
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "No. El servicio es gratis para ti. Los presupuestos los preparan las empresas de reformas y no tienes obligación de aceptar ninguno."
@@ -90,63 +98,70 @@
 }
 </script>
 </head>
-<body>
+<body class="b2c">
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#inicio" aria-label="Pimen Leads, inicio">
+    <a class="brand" href="#inicio" aria-label="Pimen Reformas, inicio">
       <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      Pimen Leads
+      Pimen Reformas
     </a>
-    <a class="link" href="#presupuesto">Pedir presupuesto</a>
+    <a class="link" href="#precios">Ver precios</a>
   </div>
 </header>
 
 <main id="inicio">
 
-  <div class="hero">
+  <div class="hero hero-b2c">
     <div class="wrap">
-      <div>
+      <div class="intro">
         <h1>Reforma tu cocina en Barcelona con empresas de confianza.</h1>
-        <p class="lead">Cuéntanos qué necesitas y hasta tres empresas seleccionadas por nosotros te preparan un presupuesto sin compromiso.</p>
-        <ul class="ticks">
-          <li>Gratis para ti</li>
-          <li>Recibes hasta 3 presupuestos para comparar</li>
-          <li>Sin obligación de contratar</li>
-        </ul>
-        <p class="cta"><a class="btn" href="#presupuesto">Pedir presupuesto gratis</a></p>
+        <p class="lead">Responde 4 preguntas y hasta tres empresas revisadas te preparan un presupuesto sin compromiso.</p>
       </div>
 
       <div class="formcard" id="presupuesto">
-        <h2>Cuéntanos tu reforma</h2>
-        <p class="hint">Tarda un par de minutos. Solo pedimos lo necesario para que las empresas puedan prepararte el presupuesto.</p>
         <form id="form" novalidate data-lead-form
               data-subject="Presupuesto reforma de cocina" data-subject-field="nombre"
               data-origen="Página de cocinas (particulares)" data-next="gracias.html"
-              data-error="Rellena los campos marcados: nombre, teléfono, un correo válido, tu barrio o código postal, qué quieres hacer y cuándo.">
-          <div class="field">
-            <label for="tipo">¿Qué quieres hacer?</label>
-            <select id="tipo" name="reforma" required>
-              <option value="">Elige una opción</option>
-                <option>Reforma completa de la cocina</option>
-                <option>Cambiar muebles y encimera</option>
-                <option>Cambiar la distribución o abrir la cocina</option>
-                <option>Todavía no lo sé</option>
-            </select>
+              data-error="Rellena los campos marcados para poder enviarte los presupuestos.">
+          <div class="stepper-ui" aria-hidden="true">
+            <div class="progress"><span></span></div>
+            <p class="stepcount">Paso 1 de 4</p>
           </div>
-          <div class="row">
+
+          <fieldset class="step" data-auto data-required data-error="Elige una opción para continuar.">
+            <legend class="step-title" tabindex="-1">¿Qué quieres hacer?</legend>
+            <div class="tiles">
+              <label class="tile"><input type="radio" name="reforma" value="Reforma completa de la cocina"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 10h16"/><circle cx="9" cy="6.5" r="1"/><circle cx="15" cy="6.5" r="1"/><path d="M8 14h8"/></svg>Reforma completa de la cocina</span></label>
+              <label class="tile"><input type="radio" name="reforma" value="Cambiar muebles y encimera"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v3H6z"/><path d="M3 10h18"/><rect x="4" y="10" width="16" height="10" rx="1"/><path d="M12 10v10M9 14v2M15 14v2"/></svg>Cambiar muebles y encimera</span></label>
+              <label class="tile"><input type="radio" name="reforma" value="Cambiar la distribución o abrir la cocina"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M12 4v7M12 15v5M3 12h5"/></svg>Cambiar la distribución o abrir la cocina</span></label>
+              <label class="tile"><input type="radio" name="reforma" value="Todavía no lo sé"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17h.01"/></svg>Todavía no lo sé</span></label>
+            </div>
+            <div class="step-nav"><button type="button" class="btn step-next">Siguiente</button></div>
+          </fieldset>
+
+          <fieldset class="step" data-auto data-required data-error="Elige una opción para continuar.">
+            <legend class="step-title" tabindex="-1">¿Cuándo quieres empezar?</legend>
+            <div class="tiles list">
+              <label class="tile"><input type="radio" name="plazo" value="Lo antes posible"><span>Lo antes posible</span></label>
+              <label class="tile"><input type="radio" name="plazo" value="En 1 a 3 meses"><span>En 1 a 3 meses</span></label>
+              <label class="tile"><input type="radio" name="plazo" value="En más de 3 meses"><span>En más de 3 meses</span></label>
+              <label class="tile"><input type="radio" name="plazo" value="Solo quiero saber el precio"><span>Solo quiero saber el precio</span></label>
+            </div>
+            <div class="step-nav">
+              <button type="button" class="step-back">Atrás</button>
+              <button type="button" class="btn step-next">Siguiente</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="step" data-error="Escribe tu barrio o código postal para continuar.">
+            <legend class="step-title" tabindex="-1">¿Dónde está la vivienda?</legend>
             <div class="field">
-              <label for="plazo">¿Cuándo quieres empezar?</label>
-              <select id="plazo" name="plazo" required>
-                <option value="">Elige una opción</option>
-                <option>Lo antes posible</option>
-                <option>En 1 a 3 meses</option>
-                <option>En más de 3 meses</option>
-                <option>Solo quiero saber el precio</option>
-              </select>
+              <label for="zona">Barrio o código postal</label>
+              <input type="text" id="zona" name="zona" autocomplete="postal-code" placeholder="Ej.: Gràcia o 08012" required>
             </div>
             <div class="field">
-              <label for="vivienda">La vivienda es…</label>
+              <label for="vivienda">La vivienda es… (opcional)</label>
               <select id="vivienda" name="vivienda">
                 <option value="">Elige una opción</option>
                 <option>Mía (soy propietario)</option>
@@ -154,42 +169,54 @@
                 <option>Para un local o negocio</option>
               </select>
             </div>
-          </div>
-          <div class="field">
-            <label for="zona">Barrio o código postal</label>
-            <input type="text" id="zona" name="zona" autocomplete="postal-code" required>
-          </div>
-          <div class="field">
-            <label for="nombre">Nombre</label>
-            <input type="text" id="nombre" name="nombre" autocomplete="name" required>
-          </div>
-          <div class="row">
+            <div class="step-nav">
+              <button type="button" class="step-back">Atrás</button>
+              <button type="button" class="btn step-next">Siguiente</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="step" data-error="Rellena tu nombre, un teléfono y un correo válidos.">
+            <legend class="step-title" tabindex="-1">¿A quién enviamos los presupuestos?</legend>
             <div class="field">
-              <label for="tel">Teléfono</label>
-              <input type="tel" id="tel" name="telefono" autocomplete="tel" inputmode="tel" required>
+              <label for="nombre">Nombre</label>
+              <input type="text" id="nombre" name="nombre" autocomplete="name" required>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="tel">Teléfono</label>
+                <input type="tel" id="tel" name="telefono" autocomplete="tel" inputmode="tel" required>
+              </div>
+              <div class="field">
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" name="email" autocomplete="email" required>
+              </div>
             </div>
             <div class="field">
-              <label for="email">Correo electrónico</label>
-              <input type="email" id="email" name="email" autocomplete="email" required>
+              <label for="mensaje">Cuéntanos más (opcional)</label>
+              <textarea id="mensaje" name="mensaje" placeholder="Ej.: cocina de 8 m², quiero abrirla al salón"></textarea>
             </div>
-          </div>
-          <div class="field">
-            <label for="mensaje">Cuéntanos más (opcional)</label>
-            <textarea id="mensaje" name="mensaje" placeholder="Ej.: cocina de 8 m², quiero abrirla al salón"></textarea>
-          </div>
-          <div class="hp" aria-hidden="true">
-            <label for="gotcha">No rellenes este campo</label>
-            <input type="text" id="gotcha" name="_gotcha" tabindex="-1" autocomplete="off">
-          </div>
-          <label class="consent">
-            <input type="checkbox" id="consent" name="consent" value="Sí: compartir datos con un máximo de 3 empresas de reformas" required>
-            <span>Acepto que Pimen Leads comparta mis datos con un máximo de tres empresas de reformas para que me contacten y me preparen un presupuesto. He leído la <a href="legal.html#particulares">información sobre protección de datos</a>.</span>
-          </label>
-          <button class="btn" type="submit">Pedir presupuesto gratis</button>
+            <div class="hp" aria-hidden="true">
+              <label for="gotcha">No rellenes este campo</label>
+              <input type="text" id="gotcha" name="_gotcha" tabindex="-1" autocomplete="off">
+            </div>
+            <label class="consent">
+              <input type="checkbox" id="consent" name="consent" value="Sí: compartir datos con un máximo de 3 empresas de reformas" required>
+              <span>Acepto que Pimen Reformas (Pimen Leads) comparta mis datos con un máximo de tres empresas de reformas para que me contacten y me preparen un presupuesto. He leído la <a href="legal.html#particulares">información sobre protección de datos</a>.</span>
+            </label>
+            <button class="btn" type="submit">Recibir mis presupuestos gratis</button>
+            <div class="step-nav"><button type="button" class="step-back">Atrás</button></div>
+          </fieldset>
+
           <p class="msg" id="msg" role="status" aria-live="polite"></p>
-          <p class="free">Es gratis y no te compromete a nada.</p>
+          <p class="free">Gratis y sin compromiso. Solo te llaman 3 empresas como máximo.</p>
         </form>
       </div>
+
+      <ul class="ticks">
+        <li>Gratis para ti</li>
+        <li>Hasta 3 presupuestos para comparar, nunca más llamadas</li>
+        <li>Sin obligación de contratar</li>
+      </ul>
     </div>
   </div>
 
@@ -200,26 +227,58 @@
       <ol class="steps">
         <li>
           <h3>Cuéntanos tu reforma</h3>
-          <p>Rellenas el formulario con lo que necesitas y dónde está tu vivienda.</p>
+          <p>Respondes cuatro preguntas sobre lo que necesitas y dónde está tu vivienda.</p>
         </li>
         <li>
           <h3>Te contactan hasta tres empresas</h3>
           <p>Empresas de confianza, seleccionadas por nosotros, se ponen en contacto contigo. Como máximo tres.</p>
         </li>
         <li>
-          <h3>Recibes hasta tres presupuestos</h3>
+          <h3>Comparas y decides</h3>
           <p>Cada una te prepara un presupuesto sin compromiso. Los comparas y decides tú si seguir adelante.</p>
         </li>
       </ol>
     </div>
   </section>
 
-  <section id="preguntas">
+  <section id="precios">
+    <div class="wrap">
+      <h2>¿Cuánto cuesta reformar una cocina en Barcelona?</h2>
+      <p class="sub">Rangos orientativos para que sepas de qué hablamos antes de recibir los presupuestos.</p>
+      <div class="pricegrid">
+        <article>
+          <h3>Cambiar muebles y encimera</h3>
+          <p class="price">4.000 – 9.000 €</p>
+          <p>Muebles nuevos, encimera y montaje, manteniendo instalaciones.</p>
+        </article>
+        <article>
+          <h3>Reforma completa (8–10 m²)</h3>
+          <p class="price">9.000 – 20.000 €</p>
+          <p>Muebles, electrodomésticos, revestimientos e instalaciones nuevas.</p>
+        </article>
+        <article>
+          <h3>Con cambio de distribución</h3>
+          <p class="price">14.000 – 28.000 €</p>
+          <p>Abrir la cocina al salón o moverla, con obra de tabiques.</p>
+        </article>
+      </div>
+      <p class="note">Lo que más cambia el precio:</p>
+      <ul class="factors">
+        <li>Los metros y la forma de la cocina</li>
+        <li>La gama de muebles, encimera y electrodomésticos</li>
+        <li>Si se tiran tabiques o se mueven tomas de agua y gas</li>
+      </ul>
+      <p class="note">Son precios orientativos. El precio real lo da cada empresa después de ver tu vivienda; por eso conviene comparar varios presupuestos.</p>
+      <p class="cta" style="margin-top: 1.75rem;"><a class="btn" href="#presupuesto">Pedir mis 3 presupuestos</a></p>
+    </div>
+  </section>
+
+  <section class="alt" id="preguntas">
     <div class="wrap">
       <h2>Preguntas frecuentes</h2>
       <div class="faq">
         <details>
-          <summary>¿Tengo que pagar algo a Pimen Leads?</summary>
+          <summary>¿Tengo que pagar algo por pedir presupuesto?</summary>
           <p>No. El servicio es gratis para ti. Los presupuestos los preparan las empresas de reformas y no tienes obligación de aceptar ninguno.</p>
         </details>
         <details>
@@ -242,9 +301,9 @@
     </div>
   </section>
 
-  <section class="alt crosslink">
+  <section class="crosslink">
     <div class="wrap">
-      <p>¿Otra reforma? También te buscamos presupuesto para tu <a href="reforma-bano-barcelona.html">baño</a> o <a href="reforma-integral-barcelona.html">reforma integral de tu piso</a>.</p>
+      <p>¿Otra reforma? También te buscamos presupuesto para tu <a href="reforma-bano-barcelona.html">baño</a> o tu <a href="reforma-integral-barcelona.html">reforma integral de tu piso</a>.</p>
       <p>¿Tienes una empresa de reformas? <a href="./">Recibe clientes de tu zona</a>.</p>
     </div>
   </section>
@@ -253,10 +312,9 @@
 
 <footer>
   <div class="wrap">
-    <p>Pimen Leads · Reformas en Barcelona</p>
+    <p>Pimen Reformas · Presupuestos de reformas en Barcelona</p>
     <p>
-      <a href="mailto:comercial@pimenleads.com">comercial@pimenleads.com</a> ·
-      <a href="https://www.instagram.com/pimenleads" rel="noopener">Instagram @pimenleads</a>
+      <a href="mailto:comercial@pimenleads.com">comercial@pimenleads.com</a>
     </p>
     <p>
       <a href="legal.html#aviso-legal">Aviso legal</a> ·
@@ -264,6 +322,8 @@
     </p>
   </div>
 </footer>
+
+<div class="sticky"><a class="btn" href="#presupuesto">Pedir presupuesto gratis</a></div>
 
 <script src="assets/form.js" defer></script>
 </body>

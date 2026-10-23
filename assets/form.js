@@ -5,9 +5,11 @@
 //   data-origen         de qué página viene la solicitud
 //   data-next           página a la que se redirige al enviar
 //   data-error          mensaje si faltan campos obligatorios
+// Si el formulario tiene bloques .step, se muestra por pasos (sin JS se ven todos).
 (function () {
   var ENDPOINT = "https://formspree.io/f/myekaoar";
   var UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "fbclid"];
+  var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
 
   // De dónde llega la visita (anuncio, Instagram…), para saber qué canal trae cada solicitud.
   // Se lee de la URL de la propia página; no se guarda nada en el navegador.
@@ -26,11 +28,79 @@
     return true;
   }
 
-  Array.prototype.forEach.call(document.querySelectorAll("form[data-lead-form]"), function (form) {
+  function mark(el, ok) {
+    if (ok) { el.removeAttribute("aria-invalid"); } else { el.setAttribute("aria-invalid", "true"); }
+    return ok;
+  }
+
+  // Campos obligatorios sin rellenar dentro de `scope`, en orden de aparición.
+  // Los grupos de opciones (radio) se marcan con <fieldset data-required>.
+  function invalidFields(scope) {
+    var bad = [];
+    each(scope.querySelectorAll("input[required]:not([type=checkbox]):not([type=radio]), select[required], textarea[required], fieldset[data-required]"), function (el) {
+      var ok = el.tagName === "FIELDSET" ? !!el.querySelector("input:checked") : isValid(el);
+      if (!mark(el, ok)) { bad.push(el); }
+    });
+    return bad;
+  }
+
+  function focusField(el) {
+    (el.tagName === "FIELDSET" ? el.querySelector("input") : el).focus();
+  }
+
+  each(document.querySelectorAll("form[data-lead-form]"), function (form) {
     var msg = form.querySelector(".msg");
     var btn = form.querySelector('button[type="submit"]');
     var consent = form.querySelector('input[name="consent"]');
     var consentLabel = consent.closest("label");
+    var steps = form.querySelectorAll(".step");
+    var current = 0;
+    var lastPointer = 0;
+
+    function showError(text, field) {
+      msg.className = "msg err";
+      msg.textContent = text;
+      if (field) { focusField(field); }
+    }
+
+    function showStep(i, moveFocus) {
+      current = i;
+      each(steps, function (s, k) { s.hidden = k !== i; });
+      form.querySelector(".progress span").style.width = ((i + 1) / steps.length * 100) + "%";
+      form.querySelector(".stepcount").textContent = "Paso " + (i + 1) + " de " + steps.length;
+      msg.className = "msg";
+      msg.textContent = "";
+      if (moveFocus) {
+        var card = form.closest(".formcard");
+        if (card.getBoundingClientRect().top < 0) { card.scrollIntoView({ block: "start" }); }
+        steps[i].querySelector(".step-title").focus({ preventScroll: true });
+      }
+    }
+
+    function nextStep() {
+      var bad = invalidFields(steps[current]);
+      if (bad.length) { showError(steps[current].dataset.error || form.dataset.error, bad[0]); return; }
+      showStep(current + 1, true);
+    }
+
+    if (steps.length) {
+      form.classList.add("js-steps");
+      showStep(0, false);
+      form.addEventListener("click", function (e) {
+        if (e.target.closest(".step-next")) { nextStep(); }
+        if (e.target.closest(".step-back")) { showStep(current - 1, true); }
+      });
+      // Al tocar una opción se pasa solo al paso siguiente; con teclado (flechas) no,
+      // para que se pueda recorrer las opciones sin saltar de paso.
+      form.addEventListener("pointerdown", function () { lastPointer = Date.now(); });
+      form.addEventListener("change", function (e) {
+        var step = e.target.closest(".step");
+        if (e.target.type === "radio" && step && step.hasAttribute("data-auto") && Date.now() - lastPointer < 1500) {
+          mark(e.target.closest("fieldset"), true);
+          setTimeout(nextStep, 180);
+        }
+      });
+    }
 
     form.addEventListener("input", function (e) {
       if (e.target.getAttribute("aria-invalid") === "true" && isValid(e.target)) {
@@ -40,25 +110,19 @@
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
+      // Intro en un paso intermedio = pasar al siguiente.
+      if (steps.length && current < steps.length - 1) { nextStep(); return; }
       msg.className = "msg";
 
-      var invalid = Array.prototype.filter.call(
-        form.querySelectorAll("input[required]:not([type=checkbox]), select[required], textarea[required]"),
-        function (el) {
-          var ok = isValid(el);
-          if (ok) { el.removeAttribute("aria-invalid"); } else { el.setAttribute("aria-invalid", "true"); }
-          return !ok;
-        }
-      );
-      if (invalid.length) {
-        msg.className = "msg err";
-        msg.textContent = form.dataset.error;
-        invalid[0].focus();
+      var bad = invalidFields(form);
+      if (bad.length) {
+        var step = bad[0].closest(".step");
+        if (step) { showStep(Array.prototype.indexOf.call(steps, step), false); invalidFields(step); }
+        showError((step && step.dataset.error) || form.dataset.error, bad[0]);
         return;
       }
       if (!consent.checked) {
-        msg.className = "msg err";
-        msg.textContent = "No se ha enviado: marca la casilla de consentimiento para continuar.";
+        showError("No se ha enviado: marca la casilla de consentimiento para continuar.");
         consentLabel.classList.add("bad");
         consentLabel.scrollIntoView({ behavior: "smooth", block: "center" });
         consent.focus();
@@ -70,14 +134,15 @@
       var subjectValue = form.elements[form.dataset.subjectField].value.trim();
       data.append("_subject", form.dataset.subject + " · " + subjectValue);
       data.append("origen", form.dataset.origen);
-      Array.prototype.forEach.call(form.elements, function (el) {
-        if (!el.name || el.name === "consent" || el.type === "checkbox" || el.tagName === "BUTTON") { return; }
-        data.append(el.name, el.value.trim() || (el.name === "_gotcha" ? "" : "—"));
-      });
       var groups = {};
-      Array.prototype.forEach.call(form.querySelectorAll('input[type=checkbox]:not([name="consent"])'), function (c) {
-        groups[c.name] = groups[c.name] || [];
-        if (c.checked) { groups[c.name].push(c.value); }
+      each(form.elements, function (el) {
+        if (!el.name || el.name === "consent" || el.tagName === "BUTTON" || el.tagName === "FIELDSET") { return; }
+        if (el.type === "checkbox" || el.type === "radio") {
+          groups[el.name] = groups[el.name] || [];
+          if (el.checked) { groups[el.name].push(el.value); }
+          return;
+        }
+        data.append(el.name, el.value.trim() || (el.name === "_gotcha" ? "" : "—"));
       });
       Object.keys(groups).forEach(function (k) { data.append(k, groups[k].join(", ") || "—"); });
       if (consent.value && consent.value !== "on") { data.append("consentimiento", consent.value); }
@@ -95,10 +160,19 @@
         form.reset();
         location.href = form.dataset.next;
       }).catch(function () {
-        msg.className = "msg err";
-        msg.textContent = "No se ha podido enviar. Inténtalo de nuevo o escríbenos a comercial@pimenleads.com.";
+        showError("No se ha podido enviar. Inténtalo de nuevo o escríbenos a comercial@pimenleads.com.");
         btn.disabled = false;
       });
     });
   });
+
+  // Botón fijo en móvil: aparece cuando el formulario ha quedado por encima de la pantalla.
+  var sticky = document.querySelector(".sticky");
+  var card = document.querySelector(".formcard");
+  if (sticky && card && "IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+      var e = entries[0];
+      sticky.classList.toggle("show", !e.isIntersecting && e.boundingClientRect.top < 0);
+    }).observe(card);
+  }
 })();

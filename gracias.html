@@ -17,7 +17,7 @@
   <div class="wrap">
     <a class="brand" href="./" aria-label="Pimen Leads, inicio">
       <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      Pimen Leads
+      <span id="marca">Pimen Reformas</span>
     </a>
   </div>
 </header>
@@ -35,6 +35,7 @@
 <script>
 // Las empresas llegan con ?de=empresa y ven su propio texto.
 if (new URLSearchParams(location.search).get("de") === "empresa") {
+  document.getElementById("marca").textContent = "Pimen Leads";
   document.getElementById("texto").textContent = "Te escribimos por correo para explicarte las condiciones y enviarte tu primer lead gratis.";
 }
 </script>
