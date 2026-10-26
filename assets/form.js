@@ -131,6 +131,7 @@
       consentLabel.classList.remove("bad");
 
       var data = new FormData();
+      var datos = { tipo_solicitud: form.dataset.tipo === "empresa" ? "empresa" : "particular", tipo: form.dataset.tipo, origen: {} };
       var subjectValue = form.elements[form.dataset.subjectField].value.trim();
       data.append("_subject", form.dataset.subject + " · " + subjectValue);
       data.append("origen", form.dataset.origen);
@@ -142,21 +143,45 @@
           if (el.checked) { groups[el.name].push(el.value); }
           return;
         }
+        datos[el.name] = el.value.trim();
         data.append(el.name, el.value.trim() || (el.name === "_gotcha" ? "" : "—"));
       });
-      Object.keys(groups).forEach(function (k) { data.append(k, groups[k].join(", ") || "—"); });
-      if (consent.value && consent.value !== "on") { data.append("consentimiento", consent.value); }
+      Object.keys(groups).forEach(function (k) {
+        // En la base de datos, las casillas múltiples van como lista y las de una opción como texto.
+        datos[k] = form.querySelector('input[type=radio][name="' + k + '"]') ? (groups[k][0] || "") : groups[k];
+        data.append(k, groups[k].join(", ") || "—");
+      });
+      if (consent.value && consent.value !== "on") {
+        data.append("consentimiento", consent.value);
+        datos.consentimiento = consent.value;
+      }
       data.append("pagina", location.pathname);
-      Object.keys(campaign).forEach(function (k) { data.append(k, campaign[k]); });
+      datos.origen.pagina = location.pathname;
+      Object.keys(campaign).forEach(function (k) {
+        data.append(k, campaign[k]);
+        datos.origen[k] = campaign[k];
+      });
 
       btn.disabled = true;
       msg.textContent = "Enviando…";
-      fetch(ENDPOINT, {
+      var sends = [fetch(ENDPOINT, {
         method: "POST",
         body: data,
         headers: { "Accept": "application/json" }
-      }).then(function (r) {
-        if (!r.ok) { throw new Error("fallo"); }
+      })];
+      var cfg = window.PIMEN_CONFIG || {};
+      if (cfg.supabaseUrl && cfg.supabaseKey) {
+        sends.push(fetch(cfg.supabaseUrl + "/rest/v1/rpc/recibir_solicitud", {
+          method: "POST",
+          body: JSON.stringify({ datos: datos }),
+          headers: { "Content-Type": "application/json", "apikey": cfg.supabaseKey, "Authorization": "Bearer " + cfg.supabaseKey }
+        }));
+      }
+      // Basta con que llegue a uno de los dos sitios (correo o base de datos).
+      Promise.all(sends.map(function (p) {
+        return p.then(function (r) { return r.ok; }, function () { return false; });
+      })).then(function (oks) {
+        if (oks.indexOf(true) === -1) { throw new Error("fallo"); }
         form.reset();
         location.href = form.dataset.next;
       }).catch(function () {
