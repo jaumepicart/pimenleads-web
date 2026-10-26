@@ -127,6 +127,10 @@ details p { color: var(--muted); padding-bottom: 1.1rem; }
 .privacy dd { margin: .1rem 0 0; color: var(--muted); }
 .privacy a { text-underline-offset: 3px; }
 
+.zonalist { list-style: none; margin: 1.25rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .6rem; }
+.zonalist a { display: inline-block; font-weight: 600; color: var(--ink); text-decoration: none; border: 1.5px solid var(--line); border-radius: 999px; padding: .5rem .95rem; background: var(--surface); }
+.zonalist a:hover { border-color: var(--teal); }
+
 .crosslink { padding-block: 2.5rem; }
 .crosslink .wrap { display: grid; gap: .5rem; }
 .crosslink p { color: var(--muted); }
