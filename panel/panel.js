@@ -88,6 +88,29 @@
     });
   }
 
+  // Descarga un CSV que Excel abre bien en español (separador ";", coma decimal y BOM UTF-8).
+  function descargarCSV(nombre, cabecera, filas) {
+    function celda(v) {
+      if (typeof v === "number") { return String(v).replace(".", ","); }
+      v = v == null ? "" : String(v);
+      return /[";\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+    }
+    var texto = [cabecera].concat(filas).map(function (f) { return f.map(celda).join(";"); }).join("\r\n");
+    var url = URL.createObjectURL(new Blob(["\ufeff" + texto], { type: "text/csv;charset=utf-8" }));
+    var a = h("a", { href: url, download: nombre });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  var CABECERA_ENVIOS = ["Fecha envío", "Empresa", "Lead", "Tipo", "Reforma", "Zona", "Cliente", "Precio (€, sin IVA)", "Resultado", "Devolución", "Cobrado"];
+  function filaEnvio(x) {
+    var emp = empresaPorId(x.empresa_id);
+    return [x.created_at.slice(0, 10), emp ? emp.nombre : "#" + x.empresa_id, "#" + x.lead.id, TIPOS[x.lead.tipo], x.lead.reforma, x.lead.zona, x.lead.nombre,
+      Number(x.precio), RESULTADOS[x.resultado], DEVOLUCIONES[x.devolucion], x.cobrado ? "Sí" : "No"];
+  }
+  function slug(t) { return norm(t).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+
   function empresaPorId(id) {
     return state.empresas.filter(function (e) { return e.id === id; })[0];
   }
@@ -610,6 +633,12 @@
         h("span", { class: "meta", text: st.ganados + " ganados · " + euros(st.pendiente) + " por cobrar" })));
     if (st.pendiente) {
       lista.appendChild(h("div", { class: "actions" }, h("button", {
+        class: "btn btn-sm", type: "button", text: "Descargar lo pendiente de cobro (CSV)",
+        onclick: function () {
+          var pendientes = st.envios.filter(function (x) { return !x.cobrado && cuenta(x) && Number(x.precio) > 0; });
+          descargarCSV("pendiente-" + slug(e.nombre) + "-" + new Date().toISOString().slice(0, 10) + ".csv", CABECERA_ENVIOS, pendientes.map(filaEnvio));
+        }
+      }), h("button", {
         class: "btn btn-sm btn-ghost", type: "button", text: "Marcar todo como cobrado (" + euros(st.pendiente) + ")",
         onclick: function () {
           var ids = st.envios.filter(function (x) { return !x.cobrado && cuenta(x) && Number(x.precio) > 0; }).map(function (x) { return x.id; });
@@ -690,7 +719,17 @@
       [["mes", "Este mes"], ["mes-pasado", "Mes pasado"], ["30", "Últimos 30 días"], ["90", "Últimos 90 días"], ["todo", "Todo"]].map(function (o) {
         return h("option", { value: o[0], text: o[1], selected: state.periodo === o[0] });
       }));
-    main.appendChild(h("div", { class: "pn-toolbar" }, h("h2", { text: "Resumen" }), h("span", { class: "spacer" }), periodo));
+    main.appendChild(h("div", { class: "pn-toolbar" }, h("h2", { text: "Resumen" }), h("span", { class: "spacer" }), periodo,
+      h("button", {
+        class: "btn btn-sm btn-ghost", type: "button", text: "Exportar envíos del periodo (CSV)", disabled: !envios.length,
+        onclick: function () {
+          var orden = envios.slice().sort(function (a, b) {
+            var ea = (empresaPorId(a.empresa_id) || {}).nombre || "", eb = (empresaPorId(b.empresa_id) || {}).nombre || "";
+            return ea.localeCompare(eb) || (a.created_at < b.created_at ? -1 : 1);
+          });
+          descargarCSV("envios-" + state.periodo + "-" + new Date().toISOString().slice(0, 10) + ".csv", CABECERA_ENVIOS, orden.map(filaEnvio));
+        }
+      })));
 
     function kpi(titulo, valor, nota) { return h("div", { class: "kpi" }, h("span", { text: titulo }), h("strong", { text: valor }), nota ? h("small", { text: nota }) : null); }
     main.appendChild(h("div", { class: "kpis" },
