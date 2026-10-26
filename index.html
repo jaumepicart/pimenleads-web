@@ -45,12 +45,21 @@
 </head>
 <body>
 
-<header class="top">
+<header class="top top-nav">
   <div class="wrap">
     <a class="brand" href="./" aria-label="Pimen Leads, inicio">
       <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       Pimen Leads
     </a>
+    <nav class="mainnav" aria-label="Secciones">
+      <ul>
+        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a href="#diferencia">Por qué nosotros</a></li>
+        <li><a href="#precios">Precios</a></li>
+        <li><a href="#que-recibes">Qué recibes</a></li>
+        <li><a href="#preguntas">Preguntas</a></li>
+      </ul>
+    </nav>
     <a class="link link-wa" href="https://wa.me/34644489180?text=Hola%2C%20tengo%20una%20empresa%20de%20reformas%20y%20quiero%20recibir%20leads" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5l1.3-3.9A8 8 0 1 1 8.4 18.7z"/></svg><span>644 48 91 80</span></a>
   </div>
 </header>
@@ -309,6 +318,25 @@
 </footer>
 
 <script src="assets/form.js" defer></script>
+<script>
+// Marca en el menú la sección que se está viendo.
+(function () {
+  var links = document.querySelectorAll(".mainnav a");
+  if (!("IntersectionObserver" in window)) { return; }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) { return; }
+      Array.prototype.forEach.call(links, function (a) {
+        if (a.getAttribute("href") === "#" + e.target.id) { a.setAttribute("aria-current", "true"); } else { a.removeAttribute("aria-current"); }
+      });
+    });
+  }, { rootMargin: "-40% 0px -55% 0px" });
+  Array.prototype.forEach.call(links, function (a) {
+    var target = document.querySelector(a.getAttribute("href"));
+    if (target) { io.observe(target); }
+  });
+})();
+</script>
 <script>
 (function () {
   var calc = document.getElementById("calc");
