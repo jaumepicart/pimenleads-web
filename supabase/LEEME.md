@@ -45,6 +45,46 @@ y pégalas en [`assets/config.js`](../assets/config.js). Esta clave es pública 
 enviar solicitudes; leer los leads exige entrar en el panel con un correo autorizado.
 **Nunca** pongas ahí la clave `service_role` ni la `secret`.
 
+## 6. Avisos por Telegram (opcional, recomendado)
+
+Cada lead nuevo, y cada empresa que pide su primer lead desde el formulario, manda al momento un mensaje
+a Telegram con el tipo de reforma, zona, plazo, nombre y el enlace al panel. Las empresas que dais de alta
+vosotros desde el panel no avisan.
+
+1. En Telegram, habla con **@BotFather**, escribe `/newbot` y sigue los pasos. Te dará un **token** (`123456789:AA…`).
+2. Escribe cualquier cosa al bot (o crea un grupo con los socios, añade el bot y escribe en el grupo).
+3. En **SQL Editor**, guarda el token en Vault. **Nunca** lo pongas en este repositorio: es público.
+
+   ```sql
+   select vault.create_secret('TOKEN_DEL_BOT', 'telegram_bot_token');
+   ```
+
+4. Averigua el `chat_id`: ejecuta la primera consulta, espera un par de segundos y ejecuta la segunda.
+
+   ```sql
+   select net.http_get('https://api.telegram.org/bot' || (select decrypted_secret from vault.decrypted_secrets
+     where name = 'telegram_bot_token') || '/getUpdates');
+   ```
+
+   ```sql
+   select distinct u -> 'message' -> 'chat' ->> 'id' as chat_id, u -> 'message' -> 'chat' ->> 'title' as grupo
+   from net._http_response r, jsonb_array_elements(r.content::jsonb -> 'result') u
+   where r.id = (select max(id) from net._http_response);
+   ```
+
+   Si sale vacío, escribe otra vez al bot y repite. En un grupo el `chat_id` empieza por `-`.
+
+5. Guarda el `chat_id` y ejecuta todo el contenido de [`avisos.sql`](avisos.sql):
+
+   ```sql
+   select vault.create_secret('CHAT_ID', 'telegram_chat_id');
+   ```
+
+Para cambiar de chat más adelante: `select vault.update_secret((select id from vault.secrets where name = 'telegram_chat_id'), 'NUEVO_CHAT_ID');`
+
+Si el aviso falla (Telegram caído, token mal puesto…), el lead se guarda igual. Las respuestas de Telegram
+quedan unas horas en `net._http_response` por si hay que revisar qué ha pasado.
+
 ## Cómo funciona
 
 - Los formularios de la web envían cada solicitud a la base de datos **y** a Formspree (correo). Basta con que llegue a uno de los dos.
