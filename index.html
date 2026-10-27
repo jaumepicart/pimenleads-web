@@ -221,33 +221,6 @@
     </div>
   </section>
 
-  <section id="calculadora">
-    <div class="wrap">
-      <h2>¿Te sale a cuenta?</h2>
-      <p class="sub">Pon tus números y mira cuánto trabajo puede traerte.</p>
-      <form class="calc" id="calc" onsubmit="return false">
-        <div class="fields">
-          <div class="field">
-            <label for="c-leads">Leads al mes</label>
-            <input type="number" id="c-leads" min="1" max="200" value="10" inputmode="numeric">
-          </div>
-          <div class="field">
-            <label for="c-cierre">De cada 10, ¿cuántos cierras?</label>
-            <input type="number" id="c-cierre" min="0" max="10" value="2" inputmode="numeric">
-          </div>
-          <div class="field">
-            <label for="c-ticket">Importe medio de obra (€)</label>
-            <input type="number" id="c-ticket" min="0" step="500" value="8000" inputmode="numeric">
-          </div>
-        </div>
-        <output for="c-leads c-cierre c-ticket" aria-live="polite">
-          <strong id="c-total">16.000 € al mes</strong>
-          <span id="c-obras">en obra nueva: 2 obras al mes</span>
-        </output>
-      </form>
-    </div>
-  </section>
-
   <section class="alt" id="que-recibes">
     <div class="wrap">
       <h2>Qué recibes en cada lead</h2>
@@ -323,8 +296,9 @@
   </div>
 </footer>
 
-<script src="assets/config.js?v=2" defer></script>
-<script src="assets/form.js?v=2" defer></script>
+<script src="assets/config.js?v=4" defer></script>
+<script src="assets/medicion.js?v=1" defer></script>
+<script src="assets/form.js?v=3" defer></script>
 <script>
 // Marca en el menú la sección que se está viendo.
 (function () {
@@ -342,23 +316,6 @@
     var target = document.querySelector(a.getAttribute("href"));
     if (target) { io.observe(target); }
   });
-})();
-</script>
-<script>
-(function () {
-  var calc = document.getElementById("calc");
-  var fmt = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0 });
-  var fmt1 = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
-  function update() {
-    var leads = Math.max(0, +calc.querySelector("#c-leads").value || 0);
-    var cierre = Math.min(10, Math.max(0, +calc.querySelector("#c-cierre").value || 0));
-    var ticket = Math.max(0, +calc.querySelector("#c-ticket").value || 0);
-    var obras = leads * cierre / 10;
-    document.getElementById("c-total").textContent = fmt.format(obras * ticket) + " € al mes";
-    document.getElementById("c-obras").textContent = "en obra nueva: " + fmt1.format(obras) + (obras === 1 ? " obra" : " obras") + " al mes";
-  }
-  calc.addEventListener("input", update);
-  update();
 })();
 </script>
 </body>
