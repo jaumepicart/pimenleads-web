@@ -16,23 +16,23 @@ En **SQL Editor**, pega y ejecuta todo el contenido de [`schema.sql`](schema.sql
 
 ## 3. Dar acceso a los socios
 
-En **SQL Editor**, ejecuta lo mismo que hay en [`admins.example.sql`](admins.example.sql), pero con vuestros correos reales.
-No guardéis los correos en este repositorio: es público.
+Se entra con **correo y contraseña** (no hay enlaces por correo). Para cada persona, en dos pasos:
+
+1. En Supabase, **Authentication → Users → Add user → Create new user**: pon su correo y una contraseña, y marca
+   **Auto Confirm User**. La contraseña se la dais en persona o por un canal privado; no la pongáis en este repositorio.
+2. En **SQL Editor**, autorízala como administradora (con su correo en minúsculas). No guardéis los correos en este
+   repositorio: es público.
 
 ```sql
-insert into public.admins (email) values ('tu-correo@ejemplo.com'), ('correo-del-socio@ejemplo.com');
+insert into public.admins (email) values ('tu-correo@ejemplo.com'), ('correo-del-socio@ejemplo.com') on conflict do nothing;
 ```
 
-Los correos van en minúsculas.
+Para cambiar una contraseña, en **Authentication → Users** abre el menú de la persona y elige la opción de
+actualizar el usuario para escribir la nueva.
 
-## 4. Configurar el enlace de acceso
+## 4. (Ya no hace falta)
 
-En **Authentication → URL Configuration**:
-
-- **Site URL**: `https://www.pimenleads.com/panel/`
-- **Redirect URLs**: añade `https://www.pimenleads.com/panel/` y, para probar en local, `http://localhost:8765/panel/`
-
-Si no se configura, el enlace del correo os llevará a una dirección que no existe.
+Antes se configuraba aquí el enlace de acceso por correo. Con contraseña no se usa, ni hay límite de envíos.
 
 ## 5. Conectar la web
 
