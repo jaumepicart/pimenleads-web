@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="assets/styles.css">
 <title>Solicitud recibida · Pimen Leads</title>
 </head>
-<body>
+<body data-conversion="lead">
 
 <header class="top">
   <div class="wrap">
@@ -39,5 +39,7 @@ if (new URLSearchParams(location.search).get("de") === "empresa") {
   document.getElementById("texto").textContent = "Te escribimos por correo para explicarte las condiciones y enviarte tu primer lead gratis.";
 }
 </script>
+<script src="assets/config.js?v=4" defer></script>
+<script src="assets/medicion.js?v=1" defer></script>
 </body>
 </html>

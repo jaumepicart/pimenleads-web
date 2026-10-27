@@ -287,3 +287,16 @@ html:has(.top-nav) { scroll-padding-top: 7rem; }
   .btn, .progress span, .tile span, .sticky { transition: none; }
 }
 .step > legend.step-title { padding: 0; margin-bottom: 1rem; }
+
+/* Visitas desde anuncios: sin enlaces que saquen de la landing */
+.desde-anuncio .zonas, .desde-anuncio .crosslink { display: none; }
+
+/* Aviso de cookies (solo aparece si Google Ads está configurado) */
+.cookies { position: fixed; left: 1rem; right: 1rem; bottom: 1rem; z-index: 40; max-width: 560px; margin-inline: auto; background: var(--surface); color: var(--ink); border: 1.5px solid var(--ink); border-radius: 14px; padding: 1rem 1.1rem; box-shadow: 0 12px 32px rgba(0, 0, 0, .18); display: grid; gap: .8rem; font-size: .95rem; }
+.cookies a { color: var(--ink); text-underline-offset: 3px; }
+.cookies-botones { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.cookies-btn { font: inherit; font-weight: 600; padding: .7rem 1rem; border-radius: 10px; border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); cursor: pointer; }
+.cookies-btn:hover { background: var(--tile-2); }
+[data-cookies] { display: none; }
+.cookies-activas [data-cookies] { display: inline; }
+.linkbtn-plain { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
