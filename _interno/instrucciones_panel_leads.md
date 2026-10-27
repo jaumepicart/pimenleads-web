@@ -7,9 +7,9 @@
 ## Dónde está el panel
 
 - Dirección: https://www.pimenleads.com/panel/
-- Se entra con el correo de la persona: el panel le envía un enlace de acceso y lo abre en **este mismo navegador**. Solo entran los correos autorizados.
-- **Nunca introduzcas contraseñas ni abras enlaces de acceso por la persona.** Si no está dentro, pídele que entre ella y sigue después.
-- Si sale «Este correo no tiene acceso», dile que se lo pida a Alex (hay que autorizar su correo). No hay nada más que hacer.
+- Se entra con el **correo y la contraseña** de la persona. No hay enlaces por correo.
+- **Nunca escribas ni guardes la contraseña por la persona.** Si no está dentro, pídele que entre ella y sigue después.
+- Si sale «Correo o contraseña incorrectos» o «Este correo no tiene acceso», dile que se lo pida a Alex (hay que crearle el usuario o autorizar su correo). No hay nada más que hacer.
 
 Si tienes un navegador (Claude in Chrome o el navegador integrado), úsalo y haz los pasos de abajo. Si no lo tienes, prepara el texto listo para pegar en **Directorio → Importar lista** y explícale a la persona dónde pegarlo.
 

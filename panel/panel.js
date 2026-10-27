@@ -216,33 +216,41 @@
     });
   }
 
-  function pintarLogin(enviadoA) {
-    var email = h("input", { type: "email", id: "login-email", autocomplete: "email", required: true });
+  function pintarLogin() {
+    var email = h("input", { type: "email", id: "login-email", autocomplete: "username", required: true });
+    var clave = h("input", { type: "password", id: "login-clave", autocomplete: "current-password", required: true });
     var msg = h("p", { class: "msg" });
+    var boton = h("button", { class: "btn", type: "submit", text: "Entrar" });
     var form = h("form", {
       onsubmit: function (e) {
         e.preventDefault();
         var correo = email.value.trim();
         if (!/^\S+@\S+\.\S+$/.test(correo)) { msg.className = "msg err"; msg.textContent = "Escribe un correo válido."; return; }
-        msg.className = "msg"; msg.textContent = "Enviando…";
-        sb.auth.signInWithOtp({ email: correo, options: { emailRedirectTo: location.origin + location.pathname } }).then(function (res) {
-          if (res.error) { msg.className = "msg err"; msg.textContent = res.error.message; return; }
-          pintarLogin(correo);
+        msg.className = "msg"; msg.textContent = "Entrando…"; boton.disabled = true;
+        sb.auth.signInWithPassword({ email: correo, password: clave.value }).then(function (res) {
+          boton.disabled = false;
+          if (res.error) {
+            msg.className = "msg err";
+            msg.textContent = /invalid login/i.test(res.error.message) ? "Correo o contraseña incorrectos." : res.error.message;
+            clave.value = "";
+            clave.focus();
+          }
+          // Si entra bien, onAuthStateChange pinta el panel.
         });
       }
     },
       h("div", { class: "field" }, h("label", { for: "login-email", text: "Tu correo" }), email),
-      h("button", { class: "btn", type: "submit", text: "Enviarme el enlace de acceso" }),
+      h("div", { class: "field" }, h("label", { for: "login-clave", text: "Contraseña" }), clave),
+      boton,
       msg
     );
     app.replaceChildren(h("div", { class: "pn-login" }, h("div", { class: "card" },
       h("a", { class: "brand", href: "../" }, h("span", { class: "mark", "aria-hidden": "true" }, h("i"), h("i"), h("i"), h("i")), "Pimen Leads"),
       h("h2", { text: "Panel interno" }),
-      enviadoA
-        ? h("p", { text: "Te hemos enviado un enlace a " + enviadoA + ". Ábrelo en este mismo navegador para entrar." })
-        : [h("p", { class: "meta", text: "Te enviamos un enlace a tu correo. Solo pueden entrar los correos autorizados." }), form]
+      h("p", { class: "meta", text: "Solo pueden entrar los correos autorizados. Si no tienes contraseña, pídesela a Alex." }),
+      form
     )));
-    if (!enviadoA) { email.focus(); }
+    email.focus();
   }
 
   function pintarSinAcceso() {
