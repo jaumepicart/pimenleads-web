@@ -86,6 +86,14 @@
     if (steps.length) {
       form.classList.add("js-steps");
       showStep(0, false);
+      // Un enlace (por ejemplo, de un anuncio) puede llegar con la reforma ya elegida:
+      // ?opcion=2 marca la segunda tarjeta del primer paso y pasa directamente al segundo.
+      var opcion = parseInt(params.get("opcion"), 10);
+      var tarjetas = steps[0].querySelectorAll("input[type=radio]");
+      if (opcion > 0 && tarjetas[opcion - 1]) {
+        tarjetas[opcion - 1].checked = true;
+        showStep(1, false);
+      }
       form.addEventListener("click", function (e) {
         if (e.target.closest(".step-next")) { nextStep(); }
         if (e.target.closest(".step-back")) { showStep(current - 1, true); }
