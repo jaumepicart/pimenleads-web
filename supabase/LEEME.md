@@ -85,6 +85,30 @@ Para cambiar de chat más adelante: `select vault.update_secret((select id from 
 Si el aviso falla (Telegram caído, token mal puesto…), el lead se guarda igual. Las respuestas de Telegram
 quedan unas horas en `net._http_response` por si hay que revisar qué ha pasado.
 
+## 7. Seguimiento de prospección (llamadas, correos, reformistas y canal)
+
+Las pestañas **Pendientes** y **Directorio** necesitan tablas nuevas. Se instalan de una vez con un único script,
+`privado/crm-completo.sql` (no está en git: lleva los 112 correos de «Contactos ya escritos» y el repositorio es
+público; pasároslo por otro medio). Pégalo entero en el **SQL Editor** y ejecútalo. Se puede repetir sin problema
+(no duplica fichas ni historial) y, si algo falla, no se aplica nada.
+
+El script junta, en este orden: [`prospeccion.sql`](prospeccion.sql), [`crm-ampliacion.sql`](crm-ampliacion.sql),
+la carga de contactos, [`avisos.sql`](avisos.sql) y [`recordatorios.sql`](recordatorios.sql). Sin contactos, los
+mismos archivos de esta carpeta sirven por separado. Qué añade:
+asignación estricta (solo empresas activas o en prueba que hagan ese tipo de reforma, máximo 3), sincronía de estado
+y tipos entre el reformista y su ficha en Empresas, estado «por verificar», historial también en los clientes, quién
+registró cada llamada y el resumen diario de pendientes por Telegram (necesita los avisos del apartado 6).
+
+Para añadir teléfonos, tandas de correo que falten o marcar quién ha respondido sin ir ficha a ficha, usa
+**Directorio → Importar lista** (pegas columnas de Excel o los correos de las respuestas de Gmail).
+
+Hasta que no ejecutes el paso 1, el resto del panel funciona igual y esas pestañas avisan de que faltan las tablas.
+
+Reglas del modelo: las fichas son de **dos tipos** (reformista y canal; el canal exige tipo: administración,
+inmobiliaria, gestora u otro) y los **clientes finales** son los leads de siempre. Cada correo, llamada o WhatsApp
+queda en el historial de la ficha. En los datos importados la fecha de envío no estaba en el documento, así que
+aparece «sin fecha anotada».
+
 ## Cómo funciona
 
 - Los formularios de la web envían cada solicitud a la base de datos **y** a Formspree (correo). Basta con que llegue a uno de los dos.

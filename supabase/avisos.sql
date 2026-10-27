@@ -40,6 +40,10 @@ language plpgsql security definer set search_path = ''
 as $$
 begin
   begin
+    -- Los clientes que da de alta un socio desde el panel no avisan; solo los del formulario.
+    if public.es_admin() then
+      return null;
+    end if;
     perform public.avisar_telegram(concat_ws(e'\n',
       '🔔 Lead nuevo #' || new.id || ': ' || case new.tipo
         when 'bano' then 'Baño' when 'cocina' then 'Cocina' when 'integral' then 'Integral' else 'Otro' end,
