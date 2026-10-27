@@ -11,6 +11,7 @@ language plpgsql security definer set search_path = ''
 as $$
 declare
   v_leads int;
+  v_invalidos int;
   v_texto text := '';
   r record;
   v_lineas text;
@@ -18,6 +19,12 @@ begin
   select count(*) into v_leads from public.leads where estado in ('nuevo', 'por_verificar');
   if v_leads > 0 then
     v_texto := v_texto || e'\n• Clientes por verificar: ' || v_leads;
+  end if;
+
+  select count(*) into v_invalidos from public.leads l
+  where l.estado = 'descartado' and exists (select 1 from public.envios e where e.lead_id = l.id and not e.avisada);
+  if v_invalidos > 0 then
+    v_texto := v_texto || e'\n• Leads inválidos: avisar a las empresas (7 días): ' || v_invalidos;
   end if;
 
   for r in

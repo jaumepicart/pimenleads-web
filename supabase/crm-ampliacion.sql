@@ -41,7 +41,7 @@ end $$;
 -- ── 2. Sincronía reformista ↔ empresa ──────────────────────────────────
 -- Cada cambio solo se propaga si deja un valor distinto, para no entrar en bucle.
 
-create function public.sync_contacto_a_empresa() returns trigger
+create or replace function public.sync_contacto_a_empresa() returns trigger
 language plpgsql security definer set search_path = ''
 as $$
 declare
@@ -61,7 +61,7 @@ begin
   return null;
 end $$;
 
-create function public.sync_empresa_a_contacto() returns trigger
+create or replace function public.sync_empresa_a_contacto() returns trigger
 language plpgsql security definer set search_path = ''
 as $$
 declare
@@ -81,8 +81,10 @@ end $$;
 
 revoke all on function public.sync_contacto_a_empresa(), public.sync_empresa_a_contacto() from public, anon, authenticated;
 
+drop trigger if exists contactos_sync_empresa on public.contactos;
 create trigger contactos_sync_empresa after update of estado, reformas, empresa_id on public.contactos
 for each row execute function public.sync_contacto_a_empresa();
+drop trigger if exists empresas_sync_contacto on public.empresas;
 create trigger empresas_sync_contacto after update of estado, tipos on public.empresas
 for each row execute function public.sync_empresa_a_contacto();
 
@@ -109,6 +111,13 @@ end $$;
 
 -- Una interacción pertenece a una ficha de contacto o a un cliente, nunca a las dos.
 alter table public.interacciones alter column contacto_id drop not null;
-alter table public.interacciones add column lead_id bigint references public.leads (id) on delete cascade;
+alter table public.interacciones add column if not exists lead_id bigint references public.leads (id) on delete cascade;
+alter table public.interacciones drop constraint if exists interacciones_un_dueno;
 alter table public.interacciones add constraint interacciones_un_dueno check ((contacto_id is null) <> (lead_id is null));
-create index interacciones_lead on public.interacciones (lead_id, ocurrio_at desc);
+create index if not exists interacciones_lead on public.interacciones (lead_id, ocurrio_at desc);
+
+-- Quién registró cada llamada o correo (el correo con el que ha entrado al panel).
+alter table public.interacciones add column if not exists autor text;
+
+-- Aviso a las empresas de un lead inválido (hay 7 días desde el envío).
+alter table public.envios add column if not exists avisada boolean not null default false;

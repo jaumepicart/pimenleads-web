@@ -317,6 +317,7 @@
     return r.length > 1 ? "mixto (" + nombres + ")" : nombres;
   }
   function tipoTexto(c) { return c.tipo === "canal" ? SUBTIPOS[c.subtipo] : "Reformista · " + reformasTexto(c); }
+  function autorActual() { return state.session && state.session.user.email ? state.session.user.email.toLowerCase() : null; }
   function ahoraLocal() {
     var d = new Date();
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -386,8 +387,14 @@
       grupo("Seguimiento con fecha de hoy o vencida", null, function (c) { return c.proxima_fecha && c.proxima_fecha <= hoy && cerrados.indexOf(c.estado) === -1; })
     ];
   }
+  // Leads inválidos ya enviados: las empresas deben saberlo en los 7 días siguientes al envío.
+  function invalidosPorAvisar() {
+    return state.leads.filter(function (l) {
+      return l.estado === "descartado" && (l.envios || []).some(function (e) { return !e.avisada; });
+    });
+  }
   function totalPendientes() {
-    var n = state.leads.filter(function (l) { return l.estado === "nuevo" || l.estado === "por_verificar"; }).length;
+    var n = invalidosPorAvisar().length; state.leads.filter(function (l) { return l.estado === "nuevo" || l.estado === "por_verificar"; }).length;
     gruposPendientes().forEach(function (g) { n += g.items.length; });
     return n;
   }
@@ -407,6 +414,18 @@
           return h("button", { class: "row", type: "button", onclick: function () { location.hash = "leads/" + l.id; } },
             h("span", { class: "l1" }, h("span", { class: "name", text: l.nombre }), badge(l.estado, ESTADOS_LEAD), h("span", { class: "when", text: fecha(l.created_at) })),
             h("span", { class: "l2", text: [TIPOS[l.tipo], l.zona, l.plazo].filter(Boolean).join(" · ") }));
+        }))));
+    }
+    var invalidos = invalidosPorAvisar();
+    if (invalidos.length) {
+      hay = true;
+      cont.appendChild(h("section", {}, h("h3", { text: "Leads inválidos: avisar a las empresas (" + invalidos.length + ")" }),
+        h("p", { class: "meta", text: "No se cobran, pero hay que avisar en los 7 días siguientes al envío." }),
+        h("div", { class: "pn-list" }, invalidos.map(function (l) {
+          var primero = l.envios.reduce(function (m, e) { return e.created_at < m ? e.created_at : m; }, l.envios[0].created_at);
+          return h("button", { class: "row", type: "button", onclick: function () { location.hash = "leads/" + l.id; } },
+            h("span", { class: "l1" }, h("span", { class: "name", text: l.nombre }), badge(l.estado, ESTADOS_LEAD)),
+            h("span", { class: "l2 toca", text: "Avisar antes del " + dia(new Date(new Date(primero).getTime() + 7 * 864e5)) }));
         }))));
     }
     if (state.sinProspeccion) {
@@ -532,7 +551,7 @@
             run: function () {
               var q = salientes.length
                 ? sb.from("interacciones").update({ estado: "respondido" }).eq("id", salientes[0].id)
-                : sb.from("interacciones").insert({ contacto_id: c.id, canal: "email", direccion: "entrante", estado: "respondido", resumen: "Respuesta anotada desde Importar" });
+                : sb.from("interacciones").insert({ contacto_id: c.id, canal: "email", direccion: "entrante", estado: "respondido", resumen: "Respuesta anotada desde Importar", autor: autorActual() });
               return q.then(function (res) {
                 if (res.error || c.tipo !== "proveedor" || ["nuevo", "email_enviado"].indexOf(c.estado) === -1) { return res; }
                 return sb.from("contactos").update({ estado: "respondio", proxima_accion: c.proxima_accion || ACCION_POR_ESTADO.respondio }).eq("id", c.id);
@@ -574,7 +593,7 @@
           if (res.error || !registrar.checked) { return res; }
           var cuando = fechaEnvio.value ? new Date(fechaEnvio.value + "T12:00:00").toISOString() : null;
           return sb.from("interacciones").insert(res.data.map(function (c) {
-            return { contacto_id: c.id, canal: "email", direccion: "saliente", ocurrio_at: cuando, desde: CUENTA_COMERCIAL, campana: campana.value.trim() || null, estado: "enviado", resumen: "Añadido con Importar" };
+            return { contacto_id: c.id, canal: "email", direccion: "saliente", ocurrio_at: cuando, desde: CUENTA_COMERCIAL, campana: campana.value.trim() || null, estado: "enviado", resumen: "Añadido con Importar", autor: autorActual() };
           }));
         });
       } else {
@@ -604,6 +623,30 @@
     main.appendChild(h("div", { class: "card", style: "max-width:760px" }, h("h2", { text: "Importar lista" }),
       h("div", { class: "field" }, h("label", { for: "imp-modo", text: "Qué quieres hacer" }), modo), ayuda, texto, opciones,
       h("div", { class: "actions" }, revisar), salida));
+  }
+
+  // Copia de seguridad en CSV (abre bien en Excel): fichas filtradas y su historial.
+  function exportarContactos() {
+    var fichas = contactosFiltrados(), dia0 = new Date().toISOString().slice(0, 10);
+    function ultimo(its, canal) { var i = its.filter(function (x) { return x.canal === canal; })[0]; return i ? (ESTADOS_INTER_TODOS[i.estado] + " · " + fechaInter(i)) : ""; }
+    descargarCSV("directorio-" + dia0 + ".csv",
+      ["Tipo", "Subtipo / reformas", "Nombre", "Correo", "Teléfono", "Estado", "Próxima acción", "Fecha próxima acción", "Correos enviados", "Último correo", "Última llamada", "Notas"],
+      fichas.map(function (c) {
+        var its = internasDe(c.id);
+        return [CONTACTO_TIPOS[c.tipo], c.tipo === "canal" ? SUBTIPOS[c.subtipo] : reformasTexto(c), c.nombre, c.email, c.telefono, ESTADOS_CONTACTO[c.estado],
+          c.proxima_accion, c.proxima_fecha, its.filter(function (i) { return i.canal === "email" && i.direccion === "saliente"; }).length, ultimo(its, "email"), ultimo(its, "llamada"), c.notas];
+      }));
+    var filas = [];
+    fichas.forEach(function (c) {
+      internasDe(c.id).forEach(function (i) {
+        filas.push([c.nombre, CONTACTO_TIPOS[c.tipo], CANALES[i.canal], i.direccion, i.ocurrio_at ? i.ocurrio_at.slice(0, 16).replace("T", " ") : "sin fecha anotada",
+          i.desde, i.campana, ESTADOS_INTER_TODOS[i.estado], i.resumen, i.autor]);
+      });
+    });
+    setTimeout(function () {
+      descargarCSV("historial-" + dia0 + ".csv", ["Ficha", "Tipo", "Canal", "Dirección", "Fecha", "Desde", "Campaña", "Estado", "Resumen", "Registrado por"], filas);
+    }, 400);
+    toast("Descargando directorio e historial (" + fichas.length + " fichas)");
   }
 
   function vistaContactos(main, id) {
@@ -639,6 +682,7 @@
     var tb1 = h("div", { class: "pn-toolbar" },
       chipTipo("", "Todos", state.contactos.length), chipTipo("proveedor", "Reformistas", porTipo.proveedor), chipTipo("canal", "Canal", porTipo.canal),
       buscar, h("a", { class: "btn btn-sm btn-ghost", href: "#contactos/importar", text: "Importar lista" }),
+      h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Exportar CSV", onclick: exportarContactos }),
       h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" }));
 
     var tb2 = h("div", { class: "pn-toolbar" });
@@ -769,7 +813,7 @@
             ocurrio_at: cuando.value ? new Date(cuando.value).toISOString() : new Date().toISOString(),
             desde: esCorreoSaliente() ? (desde.value.trim() || null) : null,
             campana: canal === "email" ? (campana.value.trim() || null) : null,
-            estado: est.value, resumen: resumen.value.trim() || null
+            estado: est.value, resumen: resumen.value.trim() || null, autor: autorActual()
           };
           if (esLead) { fila.lead_id = dueno.l.id; } else { fila.contacto_id = c.id; }
           state.registrando = null;
@@ -824,7 +868,8 @@
             h("span", { class: "meta", text: fechaInter(i) })),
           h("div", { class: "tags" }, sel,
             i.desde ? h("span", { class: "meta", text: "desde " + i.desde }) : null,
-            i.campana ? h("span", { class: "meta", text: "«" + i.campana + "»" }) : null),
+            i.campana ? h("span", { class: "meta", text: "«" + i.campana + "»" }) : null,
+            i.autor ? h("span", { class: "meta", text: "por " + i.autor.split("@")[0] }) : null),
           i.resumen ? h("p", { class: "meta", text: i.resumen }) : null,
           h("div", { class: "actions" },
             h("button", { class: "linkbtn", type: "button", text: "Corregir", onclick: editar }),
@@ -1261,8 +1306,14 @@
     var primero = envios.reduce(function (m, e) { return e.created_at < m ? e.created_at : m; }, envios[0].created_at);
     var limite = new Date(new Date(primero).getTime() + 7 * 864e5);
     var sinDevolver = envios.filter(function (e) { return e.devolucion !== "aceptada"; });
-    return h("p", { class: "alert" }, "Lead inválido ya enviado a " + envios.length + " empresa(s): no se cobra. Avisa a las empresas antes del " + dia(limite) + " (7 días desde el primer envío)." +
-      (sinDevolver.length ? " Quedan " + sinDevolver.length + " envío(s) sin marcar como devueltos." : " Devolución anotada en todos."));
+    var sinAvisar = envios.filter(function (e) { return !e.avisada; });
+    return h("div", { class: "alert" },
+      h("p", { text: "Lead inválido ya enviado a " + envios.length + " empresa(s): no se cobra. Avisa a las empresas antes del " + dia(limite) + " (7 días desde el primer envío)." +
+        (sinDevolver.length ? " Quedan " + sinDevolver.length + " envío(s) sin marcar como devueltos." : " Devolución anotada en todos.") }),
+      sinAvisar.length ? h("div", { class: "actions" }, h("button", {
+        class: "btn btn-sm", type: "button", text: "Ya he avisado a las empresas",
+        onclick: function () { guardar(sb.from("envios").update({ avisada: true }).eq("lead_id", l.id), "Anotado: empresas avisadas"); }
+      })) : h("p", { class: "meta", text: "Empresas avisadas." }));
   }
 
   function kv(k, v) {

@@ -87,21 +87,17 @@ quedan unas horas en `net._http_response` por si hay que revisar qué ha pasado.
 
 ## 7. Seguimiento de prospección (llamadas, correos, reformistas y canal)
 
-Las pestañas **Pendientes** y **Directorio** del panel necesitan dos tablas más. En **SQL Editor**:
+Las pestañas **Pendientes** y **Directorio** necesitan tablas nuevas. Se instalan de una vez con un único script,
+`privado/crm-completo.sql` (no está en git: lleva los 112 correos de «Contactos ya escritos» y el repositorio es
+público; pasároslo por otro medio). Pégalo entero en el **SQL Editor** y ejecútalo. Se puede repetir sin problema
+(no duplica fichas ni historial) y, si algo falla, no se aplica nada.
 
-1. Ejecuta todo el contenido de [`prospeccion.sql`](prospeccion.sql).
-2. Carga los contactos ya escritos con `privado/prospeccion-datos.sql` (112 fichas: 22 administraciones de fincas,
-   9 inmobiliarias y 81 empresas de reformas). Ese archivo **no está en git** (lleva correos de terceros y el
-   repositorio es público): pásalo entre vosotros por otro medio. Si la tabla ya tiene datos, se cancela sola.
-3. Si ya tenías los avisos de Telegram, vuelve a ejecutar [`avisos.sql`](avisos.sql): ahora los clientes que
-   dais de alta vosotros desde el panel tampoco avisan.
-
-4. Ejecuta [`crm-ampliacion.sql`](crm-ampliacion.sql) (después del 1). Añade: asignación estricta (solo empresas
-   activas o en prueba que hagan ese tipo de reforma, máximo 3), sincronía de estado y tipos entre la ficha del
-   reformista y su ficha en Empresas, el estado «por verificar» y el historial de llamadas también en los clientes.
-   El panel nuevo lo necesita para esas funciones.
-5. Opcional: [`recordatorios.sql`](recordatorios.sql) manda cada día laborable un resumen de pendientes por Telegram
-   (necesita los avisos del apartado 6 ya configurados).
+El script junta, en este orden: [`prospeccion.sql`](prospeccion.sql), [`crm-ampliacion.sql`](crm-ampliacion.sql),
+la carga de contactos, [`avisos.sql`](avisos.sql) y [`recordatorios.sql`](recordatorios.sql). Sin contactos, los
+mismos archivos de esta carpeta sirven por separado. Qué añade:
+asignación estricta (solo empresas activas o en prueba que hagan ese tipo de reforma, máximo 3), sincronía de estado
+y tipos entre el reformista y su ficha en Empresas, estado «por verificar», historial también en los clientes, quién
+registró cada llamada y el resumen diario de pendientes por Telegram (necesita los avisos del apartado 6).
 
 Para añadir teléfonos, tandas de correo que falten o marcar quién ha respondido sin ir ficha a ficha, usa
 **Directorio → Importar lista** (pegas columnas de Excel o los correos de las respuestas de Gmail).
