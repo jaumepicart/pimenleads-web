@@ -85,6 +85,24 @@ Para cambiar de chat más adelante: `select vault.update_secret((select id from 
 Si el aviso falla (Telegram caído, token mal puesto…), el lead se guarda igual. Las respuestas de Telegram
 quedan unas horas en `net._http_response` por si hay que revisar qué ha pasado.
 
+## 7. Seguimiento de prospección (llamadas, correos, reformistas y canal)
+
+Las pestañas **Pendientes** y **Directorio** del panel necesitan dos tablas más. En **SQL Editor**:
+
+1. Ejecuta todo el contenido de [`prospeccion.sql`](prospeccion.sql).
+2. Carga los contactos ya escritos con `privado/prospeccion-datos.sql` (112 fichas: 22 administraciones de fincas,
+   9 inmobiliarias y 81 empresas de reformas). Ese archivo **no está en git** (lleva correos de terceros y el
+   repositorio es público): pásalo entre vosotros por otro medio. Si la tabla ya tiene datos, se cancela sola.
+3. Si ya tenías los avisos de Telegram, vuelve a ejecutar [`avisos.sql`](avisos.sql): ahora los clientes que
+   dais de alta vosotros desde el panel tampoco avisan.
+
+Hasta que no ejecutes el paso 1, el resto del panel funciona igual y esas pestañas avisan de que faltan las tablas.
+
+Reglas del modelo: las fichas son de **dos tipos** (reformista y canal; el canal exige tipo: administración,
+inmobiliaria, gestora u otro) y los **clientes finales** son los leads de siempre. Cada correo, llamada o WhatsApp
+queda en el historial de la ficha. En los datos importados la fecha de envío no estaba en el documento, así que
+aparece «sin fecha anotada».
+
 ## Cómo funciona
 
 - Los formularios de la web envían cada solicitud a la base de datos **y** a Formspree (correo). Basta con que llegue a uno de los dos.

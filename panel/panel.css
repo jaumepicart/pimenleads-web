@@ -119,3 +119,27 @@ body.panel { font-size: .97rem; }
   .pn-split:not(.has-detail) .pn-detail { display: none; }
 }
 .actions select { width: auto; }
+
+/* Prospección */
+.badge[data-v="email_enviado"], .badge[data-v="contactado"], .badge[data-v="hecha"] { background: #d7e8ff; color: #0b3a75; }
+.badge[data-v="respondio"], .badge[data-v="llamada_pendiente"], .badge[data-v="llamada_hecha"], .badge[data-v="pendiente"], .badge[data-v="devolver_llamada"] { background: var(--accent); color: var(--accent-ink); }
+.badge[data-v="acuerdo_cerrado"], .badge[data-v="activo"], .badge[data-v="colabora"], .badge[data-v="respondido"] { background: var(--teal); color: var(--on-teal); }
+.badge[data-v="no_interesa"], .badge[data-v="pausado"], .badge[data-v="inactivo"], .badge[data-v="sin_respuesta"], .badge[data-v="no_contesta"] { background: var(--line); color: var(--muted); }
+.badge[data-v="rebotado"] { background: #fde2df; color: #8a1c14; }
+.row .l2.toca { color: var(--ink); font-weight: 600; }
+.pn-pend { display: grid; gap: 1.5rem; max-width: 760px; }
+.pn-pend section { display: grid; gap: .5rem; }
+.ya { font-weight: 600; }
+.toca-grande { background: var(--tile-2); border-radius: 8px; padding: .55rem .8rem; }
+.reg-form { display: grid; gap: .75rem; }
+.reg-form .fields { display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: end; }
+.reg-form .fields label, .reg-form .grid2 label { display: grid; gap: .2rem; font-size: .8rem; color: var(--muted); }
+.reg-form input[type="text"], .reg-form input[type="date"], .reg-form input[type="datetime-local"] { font: inherit; color: var(--ink); background: var(--paper); border: 1.5px solid var(--line); border-radius: 8px; padding: .5rem .6rem; width: 100%; }
+.tl { border-top: 1px solid var(--line); padding-top: .65rem; display: grid; gap: .35rem; }
+.tl .tags { align-items: center; gap: .6rem; }
+.tl select { width: auto; padding: .25rem .5rem; font-size: .85rem; }
+details.card > summary { cursor: pointer; font-weight: 700; font-family: "Bricolage Grotesque", system-ui, sans-serif; }
+@media (max-width: 759px) {
+  .reg-form .fields label { flex: 1 1 100%; }
+  .reg-form .actions .btn, .actions .btn-sm { padding-block: .7rem; }
+}

@@ -1,4 +1,4 @@
-// Panel interno de Pimen Leads: leads, empresas, envíos y resumen.
+// Panel interno de Pimen Leads: pendientes, directorio de prospección (reformistas y canal), clientes (leads), empresas, envíos y resumen.
 // Los datos vienen de Supabase; el acceso lo controla la tabla admins (ver supabase/schema.sql).
 // Todo el texto que viene de formularios se pinta con textContent: nunca como HTML.
 (function () {
@@ -15,10 +15,49 @@
   var DEVOLUCIONES = { no: "Sin devolución", solicitada: "Devolución pedida", aceptada: "Devuelto", rechazada: "Devolución rechazada" };
   var MOTIVOS = ["No contesta", "Datos falsos", "Solo quiere saber el precio", "Fuera de zona", "Duplicado", "Ya tiene empresa", "Otro"];
 
+  // Prospección: dos tipos de ficha de contacto (reformista y canal) con su propio embudo; los clientes finales son los leads.
+  var CONTACTO_TIPOS = { proveedor: "Reformista", canal: "Canal" };
+  var SUBTIPOS = { administracion: "Administración de fincas", inmobiliaria: "Inmobiliaria", gestora: "Gestora", otro: "Otro canal" };
+  var SUBTIPOS_PLURAL = { administracion: "Administraciones", inmobiliaria: "Inmobiliarias", gestora: "Gestoras", otro: "Otros canales" };
+  var ESTADOS_PROV = {
+    nuevo: "Nuevo", email_enviado: "Email enviado", respondio: "Respondió", llamada_pendiente: "Llamada pendiente", contactado: "Contactado",
+    no_interesa: "No interesa ahora", acuerdo_cerrado: "Acuerdo cerrado", activo: "Activo", pausado: "Pausado / descartado"
+  };
+  var ESTADOS_CANAL = {
+    nuevo: "Nuevo", email_enviado: "Email enviado", llamada_hecha: "Llamada hecha", no_interesa: "No interesa ahora", colabora: "Colabora", inactivo: "Inactivo"
+  };
+  var ESTADOS_CONTACTO = Object.assign({}, ESTADOS_PROV, ESTADOS_CANAL);
+  var REFORMAS = { bano: "Baños", cocina: "Cocinas", integral: "Integrales" };
+  var CANALES = { email: "Email", llamada: "Llamada", whatsapp: "WhatsApp" };
+  var ESTADOS_INTER = {
+    email: { enviado: "Enviado", respondido: "Respondido", sin_respuesta: "Sin respuesta", rebotado: "Rebotado" },
+    llamada: { pendiente: "Pendiente", hecha: "Hecha", no_contesta: "No contesta", no_interesa: "No interesa", devolver_llamada: "Devolver llamada" },
+    whatsapp: { enviado: "Enviado", respondido: "Respondido", pendiente: "Pendiente" }
+  };
+  var ESTADOS_INTER_TODOS = Object.assign({}, ESTADOS_INTER.email, ESTADOS_INTER.llamada, ESTADOS_INTER.whatsapp);
+  var CUENTA_COMERCIAL = "comercial@pimenleads.com";
+  var DOMINIOS_GENERICOS = ["gmail.com", "hotmail.com", "hotmail.es", "yahoo.es", "yahoo.com", "outlook.com", "outlook.es", "icloud.com", "telefonica.net"];
+  var ACCION_POR_ESTADO = {
+    respondio: "Llamar (respondió al correo)", llamada_pendiente: "Llamar", acuerdo_cerrado: "Enviar el primer lead gratis y pasar a activo",
+    contactado: "Seguimiento", llamada_hecha: "Esperar respuesta / seguimiento"
+  };
+  var VIAS = { telefono: "Teléfono", whatsapp: "WhatsApp", canal: "Canal (partner)", otro: "Otro" };
+
   var state = {
     session: null,
     leads: [],
     empresas: [],
+    contactos: [],
+    interacciones: [],
+    sinProspeccion: false,
+    dirTipo: "",
+    dirSub: "",
+    dirReforma: "",
+    dirEstado: "",
+    dirBusqueda: "",
+    altaTipo: "proveedor",
+    altaCanal: null,
+    registrando: null,
     filtroLead: "nuevo",
     filtroTipo: "",
     busqueda: "",
@@ -128,12 +167,18 @@
   function cargar() {
     return Promise.all([
       sb.from("leads").select("*, envios(*)").order("created_at", { ascending: false }).limit(2000),
-      sb.from("empresas").select("*").order("nombre")
+      sb.from("empresas").select("*").order("nombre"),
+      sb.from("contactos").select("*").order("nombre").limit(5000),
+      sb.from("interacciones").select("*").limit(20000)
     ]).then(function (r) {
       if (r[0].error) { throw r[0].error; }
       if (r[1].error) { throw r[1].error; }
       state.leads = r[0].data;
       state.empresas = r[1].data;
+      // Si todavía no se ha ejecutado supabase/prospeccion.sql, el resto del panel sigue funcionando.
+      state.sinProspeccion = !!(r[2].error || r[3].error);
+      state.contactos = state.sinProspeccion ? [] : r[2].data;
+      state.interacciones = state.sinProspeccion ? [] : r[3].data;
       render();
     }).catch(function (err) {
       toast("Error al cargar datos: " + (err.message || err), true);
@@ -203,11 +248,11 @@
     )));
   }
 
-  // ── Estructura y navegación (#leads, #leads/12, #empresas, #empresas/3, #empresas/nueva, #resumen) ──
+  // ── Estructura y navegación (#pendientes, #contactos, #contactos/7, #contactos/nuevo, #leads, #leads/12, #leads/nuevo, #empresas, #empresas/3, #empresas/nueva, #resumen) ──
 
   function ruta() {
     var partes = location.hash.replace(/^#/, "").split("/");
-    return { vista: partes[0] || "leads", id: partes[1] || null };
+    return { vista: partes[0] || "pendientes", id: partes[1] || null };
   }
 
   function render() {
@@ -215,25 +260,537 @@
     var r = ruta();
     var nuevos = state.leads.filter(function (l) { return l.estado === "nuevo"; }).length;
     var interesadas = state.empresas.filter(function (e) { return e.estado === "interesada"; }).length;
+    if (r.vista !== "contactos") { state.registrando = null; }
     function tab(vista, texto, n) {
       return h("a", { href: "#" + vista, "aria-current": r.vista === vista ? "page" : null }, texto, n ? h("span", { class: "count", text: n }) : null);
     }
     var top = h("header", { class: "pn-top" }, h("div", { class: "bar" },
-      h("a", { class: "brand", href: "#leads" }, h("span", { class: "mark", "aria-hidden": "true" }, h("i"), h("i"), h("i"), h("i")), "Pimen Leads ", h("small", { text: "panel" })),
+      h("a", { class: "brand", href: "#pendientes" }, h("span", { class: "mark", "aria-hidden": "true" }, h("i"), h("i"), h("i"), h("i")), "Pimen Leads ", h("small", { text: "panel" })),
       h("nav", { class: "pn-tabs", "aria-label": "Secciones del panel" },
-        tab("leads", "Leads", nuevos), tab("empresas", "Empresas", interesadas), tab("resumen", "Resumen")),
+        tab("pendientes", "Pendientes", totalPendientes()), tab("contactos", "Directorio"), tab("leads", "Clientes", nuevos),
+        tab("empresas", "Empresas", interesadas), tab("resumen", "Resumen")),
       h("div", { class: "pn-user" },
         h("button", { class: "linkbtn", type: "button", text: "Actualizar", onclick: function () { cargar().then(function () { toast("Datos actualizados"); }); } }),
         h("span", { text: state.session.user.email }),
         h("button", { class: "linkbtn", type: "button", text: "Salir", onclick: function () { sb.auth.signOut(); } }))
     ));
     var main = h("main", { class: "pn-main" });
-    if (r.vista === "empresas") { vistaEmpresas(main, r.id); }
+    if (r.vista === "contactos") { vistaContactos(main, r.id); }
+    else if (r.vista === "empresas") { vistaEmpresas(main, r.id); }
     else if (r.vista === "resumen") { vistaResumen(main); }
-    else { vistaLeads(main, r.id); }
+    else if (r.vista === "leads") { vistaLeads(main, r.id); }
+    else { vistaPendientes(main); }
     var scroll = window.scrollY;
     app.replaceChildren(top, main);
     window.scrollTo(0, scroll);
+  }
+
+  // ── Prospección: pendientes y directorio de reformistas y canal ───────
+
+  function ordenInter(a, b) {
+    var ta = a.ocurrio_at ? new Date(a.ocurrio_at).getTime() : null;
+    var tb = b.ocurrio_at ? new Date(b.ocurrio_at).getTime() : null;
+    if (ta === tb) { return b.id - a.id; }
+    if (ta === null) { return 1; }
+    if (tb === null) { return -1; }
+    return tb - ta;
+  }
+  var cacheInter = { src: null, map: {} };
+  // Interacciones de una ficha, la más reciente primero (las sin fecha, al final).
+  function internasDe(id) {
+    if (cacheInter.src !== state.interacciones) {
+      cacheInter = { src: state.interacciones, map: {} };
+      state.interacciones.forEach(function (i) { (cacheInter.map[i.contacto_id] = cacheInter.map[i.contacto_id] || []).push(i); });
+      Object.keys(cacheInter.map).forEach(function (k) { cacheInter.map[k].sort(ordenInter); });
+    }
+    return cacheInter.map[id] || [];
+  }
+  function estadosDe(c) { return c.tipo === "canal" ? ESTADOS_CANAL : ESTADOS_PROV; }
+  function fechaInter(i) { return i.ocurrio_at ? fecha(i.ocurrio_at) : "sin fecha anotada"; }
+  function reformasTexto(c) {
+    var r = c.reformas || [];
+    if (!r.length) { return "tipo por clasificar"; }
+    var nombres = r.map(function (t) { return REFORMAS[t].toLowerCase(); }).join(", ");
+    return r.length > 1 ? "mixto (" + nombres + ")" : nombres;
+  }
+  function tipoTexto(c) { return c.tipo === "canal" ? SUBTIPOS[c.subtipo] : "Reformista · " + reformasTexto(c); }
+  function ahoraLocal() {
+    var d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  }
+  function hoyISO() { return ahoraLocal().slice(0, 10); }
+  function contactoPorId(id) { return state.contactos.filter(function (c) { return c.id === id; })[0]; }
+
+  function lineaUltima(c) {
+    var its = internasDe(c.id);
+    if (!its.length) { return "Aún no le hemos escrito ni llamado"; }
+    var i = its[0];
+    return CANALES[i.canal] + ": " + (ESTADOS_INTER_TODOS[i.estado] || i.estado).toLowerCase() + " · " + fechaInter(i) +
+      (i.canal === "email" && i.direccion === "saliente" && i.desde ? " · desde " + i.desde : "");
+  }
+  // Resumen de una frase para saber si ya hemos escrito a esta empresa.
+  function yaEscritos(c) {
+    var its = internasDe(c.id);
+    var correos = its.filter(function (i) { return i.canal === "email" && i.direccion === "saliente"; });
+    var llamadas = its.filter(function (i) { return i.canal === "llamada"; });
+    if (!correos.length && !llamadas.length) { return "Todavía no le hemos escrito ni llamado."; }
+    var partes = [];
+    if (correos.length) {
+      var u = correos[0];
+      partes.push("Ya le escribimos" + (correos.length > 1 ? " (" + correos.length + " correos)" : "") + ": último correo " +
+        (u.ocurrio_at ? "el " + fecha(u.ocurrio_at) : "(fecha no anotada)") + " desde " + (u.desde || "una cuenta sin anotar") +
+        (u.campana ? ", «" + u.campana + "»" : "") + ".");
+      partes.push(its.some(function (i) { return i.canal === "email" && i.estado === "respondido"; }) ? "Respondió." : "Sin respuesta anotada.");
+    }
+    if (llamadas.length) {
+      partes.push("Llamada " + (ESTADOS_INTER.llamada[llamadas[0].estado] || llamadas[0].estado).toLowerCase() + " (" + fechaInter(llamadas[0]) + ").");
+    }
+    return partes.join(" ");
+  }
+
+  function filaContacto(c, selId) {
+    return h("button", {
+      class: "row", type: "button", "aria-current": selId === c.id ? "true" : null,
+      onclick: function () { location.hash = "contactos/" + c.id; }
+    },
+      h("span", { class: "l1" }, h("span", { class: "name", text: c.nombre }), badge(c.estado, ESTADOS_CONTACTO)),
+      h("span", { class: "l2", text: [tipoTexto(c), c.email].filter(Boolean).join(" · ") }),
+      h("span", { class: "l2", text: lineaUltima(c) }),
+      c.proxima_accion ? h("span", { class: "l2 toca", text: "Toca: " + c.proxima_accion + (c.proxima_fecha ? " · " + dia(c.proxima_fecha) : "") }) : null
+    );
+  }
+
+  function avisoProspeccion() {
+    return h("div", { class: "card" }, h("h2", { text: "Falta crear las tablas de prospección" }),
+      h("p", { text: "Ejecuta supabase/prospeccion.sql en el SQL Editor de Supabase y, después, la carga de contactos. Los pasos están en supabase/LEEME.md." }));
+  }
+
+  // Cuenta lo que hay que hacer hoy, en orden de prioridad.
+  function gruposPendientes() {
+    var cs = state.contactos, hoy = hoyISO(), usados = {};
+    function grupo(titulo, nota, filtro) {
+      var items = cs.filter(function (c) { return !usados[c.id] && filtro(c); });
+      items.forEach(function (c) { usados[c.id] = true; });
+      return { titulo: titulo, nota: nota, items: items };
+    }
+    var cerrados = ["no_interesa", "pausado", "inactivo"];
+    return [
+      grupo("Respondió y tiene llamada pendiente", null, function (c) { return c.tipo === "proveedor" && c.estado === "llamada_pendiente"; }),
+      grupo("Respondió: hay que llamar", null, function (c) { return c.tipo === "proveedor" && c.estado === "respondio"; }),
+      grupo("Acuerdo cerrado: activar y mandar el primer lead", "Un acuerdo no es el final: envíale el primer lead gratis y pásalo a activo.", function (c) { return c.tipo === "proveedor" && c.estado === "acuerdo_cerrado"; }),
+      grupo("Canal con llamada hecha, a la espera", null, function (c) { return c.tipo === "canal" && c.estado === "llamada_hecha"; }),
+      grupo("Seguimiento con fecha de hoy o vencida", null, function (c) { return c.proxima_fecha && c.proxima_fecha <= hoy && cerrados.indexOf(c.estado) === -1; })
+    ];
+  }
+  function totalPendientes() {
+    var n = state.leads.filter(function (l) { return l.estado === "nuevo"; }).length;
+    gruposPendientes().forEach(function (g) { n += g.items.length; });
+    return n;
+  }
+
+  function vistaPendientes(main) {
+    main.appendChild(h("div", { class: "pn-toolbar" }, h("h2", { text: "Pendientes" }), h("span", { class: "spacer" }),
+      h("a", { class: "btn btn-sm btn-ghost", href: "#contactos", text: "Buscar antes de llamar" }),
+      h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" })));
+    var cont = h("div", { class: "pn-pend" });
+    var nuevos = state.leads.filter(function (l) { return l.estado === "nuevo"; });
+    var hay = false;
+    if (nuevos.length) {
+      hay = true;
+      cont.appendChild(h("section", {}, h("h3", { text: "Clientes por verificar (" + nuevos.length + ")" }),
+        h("p", { class: "meta", text: "Solicitudes que han entrado y todavía no se han llamado." }),
+        h("div", { class: "pn-list" }, nuevos.map(function (l) {
+          return h("button", { class: "row", type: "button", onclick: function () { location.hash = "leads/" + l.id; } },
+            h("span", { class: "l1" }, h("span", { class: "name", text: l.nombre }), badge(l.estado, ESTADOS_LEAD), h("span", { class: "when", text: fecha(l.created_at) })),
+            h("span", { class: "l2", text: [TIPOS[l.tipo], l.zona, l.plazo].filter(Boolean).join(" · ") }));
+        }))));
+    }
+    if (state.sinProspeccion) {
+      cont.appendChild(avisoProspeccion());
+    } else {
+      gruposPendientes().forEach(function (g) {
+        if (!g.items.length) { return; }
+        hay = true;
+        cont.appendChild(h("section", {}, h("h3", { text: g.titulo + " (" + g.items.length + ")" }),
+          g.nota ? h("p", { class: "meta", text: g.nota }) : null,
+          h("div", { class: "pn-list" }, g.items.map(function (c) { return filaContacto(c, null); }))));
+      });
+      var sinRespuesta = state.contactos.filter(function (c) { return c.estado === "email_enviado"; }).length;
+      if (sinRespuesta) {
+        cont.appendChild(h("p", { class: "meta" }, sinRespuesta + " fichas con el correo enviado y sin respuesta anotada. Se siguen desde el ",
+          h("a", { href: "#contactos", text: "directorio" }), "; no ensucian los pendientes."));
+      }
+    }
+    if (!hay && !state.sinProspeccion) { cont.insertBefore(h("p", { class: "pn-empty", text: "Nada pendiente ahora mismo." }), cont.firstChild); }
+    main.appendChild(cont);
+  }
+
+  function contactosFiltrados() {
+    var q = norm(state.dirBusqueda);
+    return state.contactos.filter(function (c) {
+      if (state.dirTipo && c.tipo !== state.dirTipo) { return false; }
+      if (state.dirTipo === "canal" && state.dirSub && c.subtipo !== state.dirSub) { return false; }
+      if (state.dirTipo === "proveedor" && state.dirReforma) {
+        var r = c.reformas || [];
+        if (state.dirReforma === "sin" ? r.length : state.dirReforma === "mixto" ? r.length < 2 : r.indexOf(state.dirReforma) === -1) { return false; }
+      }
+      if (state.dirEstado && c.estado !== state.dirEstado) { return false; }
+      if (q) {
+        var texto = norm([c.nombre, c.email, c.dominio, c.contacto, c.telefono].join(" "));
+        if (texto.indexOf(q) === -1 && digitos(c.telefono).indexOf(digitos(q) || "@@") === -1) { return false; }
+      }
+      return true;
+    });
+  }
+
+  function vistaContactos(main, id) {
+    if (state.sinProspeccion) { main.appendChild(avisoProspeccion()); return; }
+    var nuevo = id === "nuevo";
+    var sel = nuevo ? {} : id ? contactoPorId(Number(id)) : null;
+    var split = h("div", { class: "pn-split" + (sel ? " has-detail" : "") });
+    if (sel) { main.classList.add("has-detail"); }
+    var lista = h("div", { class: "pn-list" });
+    var contador = h("p", { class: "meta" });
+
+    function pintarLista() {
+      var filas = contactosFiltrados();
+      lista.replaceChildren(contador);
+      contador.textContent = filas.length + (filas.length === 1 ? " ficha" : " fichas");
+      if (!filas.length) { lista.appendChild(h("p", { class: "pn-empty", text: "Ninguna ficha con este filtro. Si no aparece, es que aún no le hemos escrito." })); return; }
+      filas.forEach(function (c) { lista.appendChild(filaContacto(c, sel && sel.id)); });
+    }
+
+    var porTipo = { proveedor: 0, canal: 0 };
+    state.contactos.forEach(function (c) { porTipo[c.tipo]++; });
+    function chipTipo(valor, texto, n) {
+      return h("button", {
+        class: "chip", type: "button", "aria-pressed": state.dirTipo === valor ? "true" : "false",
+        onclick: function () { state.dirTipo = valor; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = ""; render(); }
+      }, texto, h("b", { text: n }));
+    }
+    var buscar = h("input", {
+      type: "search", placeholder: "Buscar por nombre, correo o dominio (ej. finquesfalcon.com)", value: state.dirBusqueda, "aria-label": "Buscar contactos",
+      oninput: function () { state.dirBusqueda = buscar.value; pintarLista(); }
+    });
+    var tb1 = h("div", { class: "pn-toolbar" },
+      chipTipo("", "Todos", state.contactos.length), chipTipo("proveedor", "Reformistas", porTipo.proveedor), chipTipo("canal", "Canal", porTipo.canal),
+      buscar, h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" }));
+
+    var tb2 = h("div", { class: "pn-toolbar" });
+    if (state.dirTipo === "canal") {
+      var cuenta = {};
+      state.contactos.forEach(function (c) { if (c.tipo === "canal") { cuenta[c.subtipo] = (cuenta[c.subtipo] || 0) + 1; } });
+      [["", "Todos los canales"]].concat(Object.keys(SUBTIPOS_PLURAL).map(function (k) { return [k, SUBTIPOS_PLURAL[k]]; })).forEach(function (o) {
+        tb2.appendChild(h("button", {
+          class: "chip", type: "button", "aria-pressed": state.dirSub === o[0] ? "true" : "false",
+          onclick: function () { state.dirSub = o[0]; render(); }
+        }, o[1], h("b", { text: o[0] ? (cuenta[o[0]] || 0) : porTipo.canal })));
+      });
+    }
+    if (state.dirTipo === "proveedor") {
+      var refSel = h("select", { "aria-label": "Tipo de reforma", onchange: function () { state.dirReforma = refSel.value; pintarLista(); } },
+        [["", "Todos los tipos de reforma"], ["bano", "Baños"], ["cocina", "Cocinas"], ["integral", "Integrales"], ["mixto", "Mixto"], ["sin", "Por clasificar"]].map(function (o) {
+          return h("option", { value: o[0], text: o[1], selected: state.dirReforma === o[0] });
+        }));
+      tb2.appendChild(refSel);
+    }
+    var etiquetas = state.dirTipo ? (state.dirTipo === "canal" ? ESTADOS_CANAL : ESTADOS_PROV) : ESTADOS_CONTACTO;
+    var estSel = h("select", { "aria-label": "Estado", onchange: function () { state.dirEstado = estSel.value; pintarLista(); } },
+      h("option", { value: "", text: "Todos los estados" }),
+      Object.keys(etiquetas).map(function (k) { return h("option", { value: k, text: etiquetas[k], selected: state.dirEstado === k }); }));
+    tb2.appendChild(estSel);
+
+    pintarLista();
+    var detalle = h("div", { class: "pn-detail" });
+    if (sel) { detalleContacto(detalle, sel, nuevo); }
+    else if (id) { detalle.appendChild(h("p", { class: "pn-empty", text: "Esa ficha no existe." })); }
+    else { detalle.appendChild(h("p", { class: "pn-empty", text: "Busca por nombre o dominio antes de llamar, o elige una ficha." })); }
+
+    main.appendChild(tb1);
+    if (!sel) { main.appendChild(tb2); }
+    split.appendChild(lista);
+    split.appendChild(detalle);
+    main.appendChild(split);
+  }
+
+  // Fichas que comparten correo o dominio (salvo gmail, etc.) con otra ficha o con una empresa.
+  function avisoDuplicados(email, excluirId) {
+    var e = String(email || "").trim().toLowerCase();
+    if (!e) { return null; }
+    var dom = e.split("@")[1] || "";
+    var propio = dom && DOMINIOS_GENERICOS.indexOf(dom) === -1;
+    var otros = state.contactos.filter(function (x) {
+      return x.id !== excluirId && x.email && (x.email.toLowerCase() === e || (propio && x.dominio === dom));
+    });
+    var empresas = state.empresas.filter(function (x) {
+      var m = String(x.email || "").toLowerCase();
+      return m && (m === e || (propio && m.split("@")[1] === dom));
+    });
+    if (!otros.length && !empresas.length) { return null; }
+    var enlaces = otros.map(function (x) { return h("a", { href: "#contactos/" + x.id, text: x.nombre + (x.email.toLowerCase() === e ? " (mismo correo)" : "") }); })
+      .concat(empresas.map(function (x) { return h("a", { href: "#empresas/" + x.id, text: x.nombre + " (empresa en Empresas)" }); }));
+    return h("p", { class: "alert" }, "Ya existe en el panel: ",
+      enlaces.map(function (a, i) { return [i ? ", " : "", a]; }), ".");
+  }
+
+  function sugerenciaEstado(c, canal, dir, estado) {
+    var prov = c.tipo === "proveedor";
+    if (estado === "no_interesa") { return "no_interesa"; }
+    if (["acuerdo_cerrado", "activo", "pausado", "colabora", "inactivo"].indexOf(c.estado) !== -1) { return c.estado; }
+    if (canal === "llamada") {
+      if (estado === "hecha") { return prov ? "contactado" : "llamada_hecha"; }
+      return prov ? "llamada_pendiente" : c.estado;
+    }
+    if (estado === "respondido") { return prov ? "respondio" : c.estado; }
+    if (canal === "email" && estado === "enviado" && dir === "saliente" && c.estado === "nuevo") { return "email_enviado"; }
+    return c.estado;
+  }
+
+  function detalleContacto(cont, c, nuevo) {
+    cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a la lista", onclick: function () { state.registrando = null; location.hash = "contactos"; } }));
+
+    // Formulario de alta / edición. El tipo no se cambia: cada ficha nace con su tipo y subtipo.
+    var tipo = nuevo ? state.altaTipo : c.tipo;
+    var datosForm = nuevo ? { tipo: tipo, estado: "nuevo", reformas: [] } : c;
+    var etiquetasEstado = tipo === "canal" ? ESTADOS_CANAL : ESTADOS_PROV;
+    function campo(nombre, etiqueta, tipoInput, extra) {
+      var input = h("input", Object.assign({ type: tipoInput || "text", id: "ct-" + nombre, name: nombre, value: datosForm[nombre] == null ? "" : datosForm[nombre] }, extra || {}));
+      return h("div", { class: "field" }, h("label", { for: "ct-" + nombre, text: etiqueta }), input);
+    }
+    var avisoEl = h("div", {});
+    function pintarAviso(valor) {
+      var a = avisoDuplicados(valor, nuevo ? null : c.id);
+      avisoEl.replaceChildren();
+      if (a) { avisoEl.appendChild(a); }
+    }
+    var emailCampo = campo("email", "Correo", "email", { onchange: function (ev) { pintarAviso(ev.target.value); } });
+    var estadoSel = h("select", { id: "ct-estado", name: "estado" },
+      Object.keys(etiquetasEstado).map(function (k) { return h("option", { value: k, text: etiquetasEstado[k], selected: datosForm.estado === k }); }));
+    var tipoCampo;
+    if (tipo === "canal") {
+      tipoCampo = h("div", { class: "field" }, h("label", { for: "ct-subtipo", text: "Tipo de canal (obligatorio)" }),
+        h("select", { id: "ct-subtipo", name: "subtipo", required: true },
+          h("option", { value: "", text: "Elige…" }),
+          Object.keys(SUBTIPOS).map(function (k) { return h("option", { value: k, text: SUBTIPOS[k], selected: datosForm.subtipo === k }); })));
+    } else {
+      tipoCampo = h("fieldset", {}, h("legend", { text: "Tipo de reforma que hace (sin marcar = por clasificar)" }),
+        h("div", { class: "checks-inline" }, Object.keys(REFORMAS).map(function (t) {
+          return h("label", {}, h("input", { type: "checkbox", name: "reformas", value: t, checked: (datosForm.reformas || []).indexOf(t) !== -1 }), REFORMAS[t]);
+        })));
+    }
+    var notas = h("textarea", { id: "ct-notas", name: "notas", value: datosForm.notas || "", placeholder: "Notas internas" });
+    var form = h("form", {
+      onsubmit: function (ev) {
+        ev.preventDefault();
+        var f = ev.target;
+        var datos = {
+          nombre: f.nombre.value.trim(),
+          contacto: f.contacto.value.trim() || null,
+          email: f.email.value.trim().toLowerCase() || null,
+          telefono: f.telefono.value.trim() || null,
+          estado: f.estado.value,
+          notas: f.notas.value.trim() || null
+        };
+        if (tipo === "canal") {
+          datos.subtipo = f.subtipo.value;
+          if (!datos.subtipo) { toast("Elige el tipo de canal: administración, inmobiliaria, gestora u otro", true); f.subtipo.focus(); return; }
+        } else {
+          datos.reformas = Array.prototype.filter.call(f.querySelectorAll("input[name=reformas]"), function (x) { return x.checked; }).map(function (x) { return x.value; });
+        }
+        if (!datos.nombre) { toast("Pon el nombre", true); f.nombre.focus(); return; }
+        if (nuevo) {
+          datos.tipo = tipo;
+          var repetido = datos.email && state.contactos.some(function (x) { return x.email && x.email.toLowerCase() === datos.email; });
+          if (repetido && !confirm("Ya hay una ficha con ese correo. ¿Crear otra igualmente?")) { return; }
+          sb.from("contactos").insert(datos).select("id").single().then(function (res) {
+            if (res.error) { toast("No se ha podido guardar: " + res.error.message, true); return; }
+            toast("Ficha creada");
+            location.hash = "contactos/" + res.data.id;
+            cargar();
+          });
+        } else {
+          datos.nombre_derivado = c.nombre_derivado && datos.nombre === c.nombre;
+          guardar(sb.from("contactos").update(datos).eq("id", c.id), "Ficha guardada");
+        }
+      }
+    },
+      h("div", { class: "grid2" },
+        campo("nombre", "Nombre", "text", { required: true }), campo("contacto", "Persona de contacto"),
+        emailCampo, campo("telefono", "Teléfono", "tel"),
+        h("div", { class: "field" }, h("label", { for: "ct-estado", text: "Estado" }), estadoSel),
+        tipoCampo),
+      avisoEl,
+      h("div", { class: "field" }, h("label", { for: "ct-notas", text: "Notas internas" }), notas),
+      h("div", { class: "actions" }, h("button", { class: "btn btn-sm", type: "submit", text: nuevo ? "Crear ficha" : "Guardar cambios" }))
+    );
+
+    if (nuevo) {
+      var elegir = h("div", { class: "pn-toolbar" }, ["proveedor", "canal"].map(function (t) {
+        return h("button", {
+          class: "chip", type: "button", "aria-pressed": state.altaTipo === t ? "true" : "false",
+          onclick: function () { state.altaTipo = t; render(); }
+        }, t === "proveedor" ? "Empresa de reformas" : "Canal (inmobiliaria, administración…)");
+      }));
+      cont.appendChild(h("div", { class: "card" }, h("h2", { text: "Nuevo contacto" }),
+        h("p", { class: "meta", text: "Los clientes finales no se dan de alta aquí: van en Clientes." }), elegir, form));
+      return;
+    }
+
+    // Cabecera: quién es y si ya le hemos escrito
+    var dup = avisoDuplicados(c.email, c.id);
+    cont.appendChild(h("div", { class: "card" },
+      h("div", { class: "card-head" },
+        h("h2", {}, c.nombre, " ", badge(c.estado, ESTADOS_CONTACTO)),
+        h("span", { class: "meta", text: tipoTexto(c) })),
+      c.tipo === "proveedor" && !(c.reformas || []).length ? h("p", { class: "alert", text: "Tipo de reforma por clasificar: pregúntaselo en la llamada y márcalo en «Editar ficha»." }) : null,
+      c.nombre_derivado ? h("p", { class: "meta", text: "Nombre sacado del dominio del correo: corrígelo en «Editar ficha» cuando lo sepas." }) : null,
+      h("p", { class: "ya" }, yaEscritos(c)),
+      c.proxima_accion ? h("p", { class: "toca-grande" }, h("strong", { text: "Toca: " }), c.proxima_accion + (c.proxima_fecha ? " · " + dia(c.proxima_fecha) : "")) : null,
+      h("div", { class: "actions" },
+        c.telefono ? h("a", { class: "btn btn-sm", href: "tel:" + digitos(c.telefono), text: "Llamar " + c.telefono }) : null,
+        c.telefono ? h("a", { class: "btn btn-sm btn-ghost", href: waUrl(c.telefono, "Hola, soy de Pimen Leads."), target: "_blank", rel: "noopener", text: "WhatsApp" }) : null,
+        c.email ? h("a", { class: "btn btn-sm btn-ghost", href: "mailto:" + c.email, text: c.email }) : null),
+      !c.telefono ? h("p", { class: "meta", text: "Sin teléfono anotado. Añádelo en «Editar ficha» cuando lo tengas." }) : null,
+      dup,
+      c.contacto || c.notas ? h("dl", { class: "kv" }, kv("Persona de contacto", c.contacto), kv("Notas", c.notas)) : null
+    ));
+
+    // Registrar correo, llamada o WhatsApp en pocos clics
+    var reg = h("div", {});
+    function cerrarRegistro() { state.registrando = null; reg.replaceChildren(botonesRegistro()); }
+    function botonesRegistro() {
+      return h("div", { class: "actions" }, Object.keys(CANALES).map(function (k) {
+        return h("button", { class: "btn btn-sm" + (k === "llamada" ? "" : " btn-ghost"), type: "button", text: "Registrar " + (k === "llamada" ? "llamada" : k === "email" ? "correo" : "WhatsApp"), onclick: function () { abrirRegistro(k); } });
+      }));
+    }
+    function abrirRegistro(canal) {
+      state.registrando = c.id;
+      var dir = h("select", { "aria-label": "Dirección" },
+        h("option", { value: "saliente", text: canal === "llamada" ? "Llamamos nosotros" : "Enviado por nosotros" }),
+        h("option", { value: "entrante", text: canal === "llamada" ? "Nos llaman" : "Recibido de ellos" }));
+      var est = h("select", { "aria-label": "Estado" }, Object.keys(ESTADOS_INTER[canal]).map(function (k) {
+        return h("option", { value: k, text: ESTADOS_INTER[canal][k], selected: k === (canal === "llamada" ? "hecha" : "enviado") });
+      }));
+      var cuando = h("input", { type: "datetime-local", value: ahoraLocal(), "aria-label": "Fecha y hora" });
+      var desde = h("input", { type: "text", value: CUENTA_COMERCIAL, "aria-label": "Enviado desde" });
+      var campana = h("input", { type: "text", value: c.tipo === "canal" ? "Primer contacto canal" : "Primer contacto sin coste", "aria-label": "Campaña o asunto" });
+      var resumen = h("textarea", { "aria-label": "Resumen o resultado", placeholder: canal === "llamada" ? "Qué dijo, qué hay que hacer…" : "Resumen" });
+      var nuevoEstado = h("select", { "aria-label": "Estado de la ficha" },
+        Object.keys(estadosDe(c)).map(function (k) { return h("option", { value: k, text: estadosDe(c)[k], selected: k === c.estado }); }));
+      var accion = h("input", { type: "text", value: c.proxima_accion || "", placeholder: "Próxima acción (ej. Llamar el jueves)", "aria-label": "Próxima acción" });
+      var fechaProx = h("input", { type: "date", value: c.proxima_fecha || "", "aria-label": "Fecha de la próxima acción" });
+      var accionTocada = false;
+      accion.addEventListener("input", function () { accionTocada = true; });
+      function recalcular() {
+        nuevoEstado.value = sugerenciaEstado(c, canal, dir.value, est.value);
+        if (!accionTocada) {
+          var igual = nuevoEstado.value === c.estado;
+          accion.value = igual ? (c.proxima_accion || "") : (ACCION_POR_ESTADO[nuevoEstado.value] || "");
+          fechaProx.value = igual ? (c.proxima_fecha || "") : "";
+        }
+      }
+      dir.addEventListener("change", function () {
+        if (canal !== "llamada") { est.value = dir.value === "entrante" ? "respondido" : "enviado"; }
+        recalcular();
+      });
+      est.addEventListener("change", recalcular);
+      var esCorreoSaliente = function () { return canal === "email" && dir.value === "saliente"; };
+      var extraCorreo = h("div", { class: "grid2" },
+        h("label", {}, "Enviado desde", desde), h("label", {}, "Campaña o asunto", campana));
+      if (canal !== "email") { extraCorreo.hidden = true; }
+      dir.addEventListener("change", function () { extraCorreo.hidden = !(canal === "email"); desde.disabled = !esCorreoSaliente(); });
+      var guardarBtn = h("button", {
+        class: "btn btn-sm", type: "button", text: "Guardar",
+        onclick: function () {
+          var fila = {
+            contacto_id: c.id, canal: canal, direccion: dir.value,
+            ocurrio_at: cuando.value ? new Date(cuando.value).toISOString() : new Date().toISOString(),
+            desde: esCorreoSaliente() ? (desde.value.trim() || null) : null,
+            campana: canal === "email" ? (campana.value.trim() || null) : null,
+            estado: est.value, resumen: resumen.value.trim() || null
+          };
+          var cambios = { estado: nuevoEstado.value, proxima_accion: accion.value.trim() || null, proxima_fecha: fechaProx.value || null };
+          state.registrando = null;
+          guardar(sb.from("interacciones").insert(fila).then(function (res) {
+            return res.error ? res : sb.from("contactos").update(cambios).eq("id", c.id);
+          }), (canal === "llamada" ? "Llamada" : canal === "email" ? "Correo" : "WhatsApp") + " registrado");
+        }
+      });
+      reg.replaceChildren(h("div", { class: "reg-form" },
+        h("h3", { text: canal === "llamada" ? "Registrar llamada" : canal === "email" ? "Registrar correo" : "Registrar WhatsApp" }),
+        h("div", { class: "fields" }, h("label", {}, "Quién", dir), h("label", {}, "Resultado", est), h("label", {}, "Cuándo", cuando)),
+        extraCorreo, resumen,
+        h("div", { class: "fields" }, h("label", {}, "La ficha pasa a", nuevoEstado), h("label", {}, "Próxima acción", accion), h("label", {}, "Para el día", fechaProx)),
+        h("div", { class: "actions" }, guardarBtn, h("button", { class: "linkbtn", type: "button", text: "Cancelar", onclick: cerrarRegistro }))));
+      recalcular();
+    }
+    reg.appendChild(botonesRegistro());
+    cont.appendChild(h("div", { class: "card" }, h("h3", { text: "Registrar" }), reg));
+
+    // Timeline
+    var its = internasDe(c.id);
+    var tl = h("div", { class: "card" }, h("h3", { text: "Historial (" + its.length + ")" }));
+    if (!its.length) { tl.appendChild(h("p", { class: "meta", text: "Sin correos ni llamadas registrados. Antes de escribirle, comprueba que no esté ya con otro nombre o dominio." })); }
+    its.forEach(function (i) {
+      var sel = h("select", {
+        "aria-label": "Estado de la interacción",
+        onchange: function () {
+          var q = sb.from("interacciones").update({ estado: sel.value }).eq("id", i.id);
+          var avanza = i.canal === "email" && sel.value === "respondido" && c.tipo === "proveedor" && ["nuevo", "email_enviado"].indexOf(c.estado) !== -1;
+          if (avanza) {
+            q = q.then(function (res) {
+              return res.error ? res : sb.from("contactos").update({ estado: "respondio", proxima_accion: c.proxima_accion || ACCION_POR_ESTADO.respondio }).eq("id", c.id);
+            });
+          }
+          guardar(q, avanza ? "Respondido: la ficha pasa a «Respondió» y a Pendientes" : "Estado guardado");
+        }
+      }, Object.keys(ESTADOS_INTER[i.canal]).map(function (k) { return h("option", { value: k, text: ESTADOS_INTER[i.canal][k], selected: i.estado === k }); }));
+      tl.appendChild(h("div", { class: "tl" },
+        h("div", { class: "card-head" },
+          h("strong", { text: CANALES[i.canal] + (i.direccion === "entrante" ? " recibido" : " enviado por nosotros") }),
+          h("span", { class: "meta", text: fechaInter(i) })),
+        h("div", { class: "tags" }, sel,
+          i.desde ? h("span", { class: "meta", text: "desde " + i.desde }) : null,
+          i.campana ? h("span", { class: "meta", text: "«" + i.campana + "»" }) : null),
+        i.resumen ? h("p", { class: "meta", text: i.resumen }) : null));
+    });
+    cont.appendChild(tl);
+
+    // Reformista: paso a empresa que recibe leads
+    if (c.tipo === "proveedor") {
+      var emp = c.empresa_id ? empresaPorId(c.empresa_id) : null;
+      var puedeCrear = !emp && ["acuerdo_cerrado", "activo"].indexOf(c.estado) !== -1;
+      if (emp || puedeCrear) {
+        cont.appendChild(h("div", { class: "card" }, h("h3", { text: "Recibir leads" }),
+          emp ? h("p", {}, "Ficha en Empresas: ", h("a", { href: "#empresas/" + emp.id, text: emp.nombre }), " (" + ESTADOS_EMPRESA[emp.estado] + "). Ahí se le asignan los leads: solo tipos y zonas que encajen, 3 empresas como máximo por solicitud.")
+            : [h("p", { class: "meta", text: "Para asignarle clientes finales hace falta su ficha en Empresas. Se crea «en prueba»: el primer lead que reciba es gratis." }),
+              h("div", { class: "actions" }, h("button", {
+                class: "btn btn-sm", type: "button", text: "Crear ficha en Empresas",
+                onclick: function () {
+                  sb.from("empresas").insert({ nombre: c.nombre, contacto: c.contacto, email: c.email, telefono: c.telefono, tipos: c.reformas || [], estado: "prueba" })
+                    .select("id").single().then(function (res) {
+                      if (res.error) { toast("No se ha podido crear: " + res.error.message, true); return; }
+                      guardar(sb.from("contactos").update({ empresa_id: res.data.id }).eq("id", c.id), "Creada en Empresas, en prueba");
+                    });
+                }
+              }))]));
+      }
+    }
+
+    // Canal: clientes que nos ha derivado
+    if (c.tipo === "canal") {
+      var derivados = state.leads.filter(function (l) { return l.canal_id === c.id; });
+      cont.appendChild(h("div", { class: "card" }, h("h3", { text: "Clientes derivados (" + derivados.length + ")" }),
+        derivados.length ? derivados.map(function (l) { return h("p", {}, h("a", { href: "#leads/" + l.id, text: "#" + l.id + " " + l.nombre }), " · " + [TIPOS[l.tipo], l.zona].filter(Boolean).join(" · ")); })
+          : h("p", { class: "meta", text: "Todavía no nos ha derivado a nadie. Cuando mande a alguien que quiera reformar, se da de alta como cliente con este canal de origen." }),
+        h("div", { class: "actions" }, h("button", {
+          class: "btn btn-sm btn-ghost", type: "button", text: "+ Cliente derivado por este canal",
+          onclick: function () { state.altaCanal = c.id; location.hash = "leads/nuevo"; }
+        }))));
+    }
+
+    cont.appendChild(h("details", { class: "card" }, h("summary", { text: "Editar ficha" }), form));
   }
 
   // ── Leads ─────────────────────────────────────────────────────────────
@@ -258,14 +815,16 @@
   }
 
   function vistaLeads(main, id) {
-    var sel = id ? state.leads.filter(function (l) { return String(l.id) === id; })[0] : null;
+    var nuevo = id === "nuevo";
+    var sel = nuevo ? {} : id ? state.leads.filter(function (l) { return String(l.id) === id; })[0] : null;
     var split = h("div", { class: "pn-split" + (sel ? " has-detail" : "") });
     var lista = h("div", { class: "pn-list" });
 
     function pintarLista() {
       var filas = leadsFiltrados();
       lista.replaceChildren();
-      if (!filas.length) { lista.appendChild(h("p", { class: "pn-empty", text: "No hay leads con este filtro." })); return; }
+      if (!state.leads.length) { lista.appendChild(h("p", { class: "pn-empty", text: "Aún no hay clientes de reforma en el panel. Cuando entre una solicitud, se verifica y se manda a 3 empresas como máximo." })); return; }
+      if (!filas.length) { lista.appendChild(h("p", { class: "pn-empty", text: "No hay clientes con este filtro." })); return; }
       filas.forEach(function (l) {
         var n = (l.envios || []).length;
         lista.appendChild(h("button", {
@@ -302,19 +861,70 @@
     var toolbar = h("div", { class: "pn-toolbar" },
       chip("nuevo", "Nuevos"), chip("verificado", "Verificados"), chip("enviado", "Enviados"),
       chip("cerrado", "Cerrados"), chip("descartado", "Descartados"), chip("", "Todos"),
-      tipoSel, buscar);
+      tipoSel, buscar, h("a", { class: "btn btn-sm", href: "#leads/nuevo", text: "+ Nuevo cliente" }));
 
     pintarLista();
     var detalle = h("div", { class: "pn-detail" });
-    if (sel) { detalleLead(detalle, sel); }
+    if (nuevo) { detalleLeadNuevo(detalle); }
+    else if (sel) { detalleLead(detalle, sel); }
     else if (id) { detalle.appendChild(h("p", { class: "pn-empty", text: "Ese lead no existe o no está entre los cargados." })); }
-    else { detalle.appendChild(h("p", { class: "pn-empty", text: "Elige un lead de la lista." })); }
+    else { detalle.appendChild(h("p", { class: "pn-empty", text: state.leads.length ? "Elige un cliente de la lista." : "Si te llega una solicitud por teléfono, WhatsApp o un canal, dala de alta con «+ Nuevo cliente»." })); }
 
     if (sel) { main.classList.add("has-detail"); }
     main.appendChild(toolbar);
     split.appendChild(lista);
     split.appendChild(detalle);
     main.appendChild(split);
+  }
+
+  // Alta manual de un cliente final: llamada, WhatsApp o derivado por un canal.
+  function detalleLeadNuevo(cont) {
+    var canales = state.contactos.filter(function (c) { return c.tipo === "canal"; });
+    function campo(nombre, etiqueta, tipoInput, extra) {
+      return h("div", { class: "field" }, h("label", { for: "cl-" + nombre, text: etiqueta }),
+        h("input", Object.assign({ type: tipoInput || "text", id: "cl-" + nombre, name: nombre }, extra || {})));
+    }
+    var via = h("select", { id: "cl-via", name: "via", onchange: function () { canalSel.hidden = via.value !== "canal"; } },
+      Object.keys(VIAS).map(function (k) { return h("option", { value: k, text: VIAS[k], selected: state.altaCanal ? k === "canal" : k === "telefono" }); }));
+    var canalSel = h("select", { id: "cl-canal", name: "canal", "aria-label": "Canal que lo deriva" },
+      h("option", { value: "", text: "¿Qué canal lo deriva?" }),
+      canales.map(function (c) { return h("option", { value: c.id, text: c.nombre + " (" + SUBTIPOS[c.subtipo] + ")", selected: state.altaCanal === c.id }); }));
+    canalSel.hidden = via.value !== "canal";
+    var tipo = h("select", { id: "cl-tipo", name: "tipo" }, ["bano", "cocina", "integral"].map(function (k) { return h("option", { value: k, text: TIPOS[k] }); }));
+    var vivienda = h("select", { id: "cl-vivienda", name: "vivienda" }, ["", "Propietario", "Inquilino", "Comunidad", "Local"].map(function (v) { return h("option", { value: v, text: v || "Vivienda…" }); }));
+    var mensaje = h("textarea", { id: "cl-mensaje", name: "mensaje", placeholder: "Alcance de la obra, comentarios…" });
+    var form = h("form", {
+      onsubmit: function (ev) {
+        ev.preventDefault();
+        var f = ev.target;
+        var datos = {
+          tipo: f.tipo.value, nombre: f.nombre.value.trim(), telefono: f.telefono.value.trim(), email: f.email.value.trim().toLowerCase() || null,
+          zona: f.zona.value.trim() || null, plazo: f.plazo.value.trim() || null, vivienda: f.vivienda.value || null, mensaje: f.mensaje.value.trim() || null,
+          origen: { via: f.via.value }, canal_id: f.via.value === "canal" && f.canal.value ? Number(f.canal.value) : null
+        };
+        if (f.via.value === "canal" && !datos.canal_id) { toast("Elige el canal que lo deriva", true); f.canal.focus(); return; }
+        if (!datos.nombre || !datos.telefono) { toast("Nombre y teléfono son obligatorios", true); return; }
+        state.altaCanal = null;
+        sb.from("leads").insert(datos).select("id").single().then(function (res) {
+          if (res.error) { toast("No se ha podido guardar: " + res.error.message, true); return; }
+          toast("Cliente dado de alta: verifícalo con una llamada");
+          location.hash = "leads/" + res.data.id;
+          cargar();
+        });
+      }
+    },
+      h("div", { class: "grid2" },
+        campo("nombre", "Nombre", "text", { required: true }), campo("telefono", "Teléfono", "tel", { required: true }),
+        campo("email", "Correo", "email"),
+        h("div", { class: "field" }, h("label", { for: "cl-tipo", text: "Tipo de reforma" }), tipo),
+        campo("zona", "Zona (barrio, CP o municipio)"), campo("plazo", "Plazo (cuándo quiere empezar)"),
+        h("div", { class: "field" }, h("label", { for: "cl-vivienda", text: "Vivienda" }), vivienda),
+        h("div", { class: "field" }, h("label", { for: "cl-via", text: "Origen" }), via, canalSel)),
+      h("div", { class: "field" }, h("label", { for: "cl-mensaje", text: "Comentario / alcance" }), mensaje),
+      h("div", { class: "actions" }, h("button", { class: "btn btn-sm", type: "submit", text: "Dar de alta" })));
+    cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a la lista", onclick: function () { state.altaCanal = null; location.hash = "leads"; } }));
+    cont.appendChild(h("div", { class: "card" }, h("h2", { text: "Nuevo cliente" }),
+      h("p", { class: "meta", text: "Entra como «nuevo»: llámale para verificar que es real y quiere presupuesto antes de enviarlo a las empresas." }), form));
   }
 
   function textoParaEmpresa(l) {
@@ -342,7 +952,7 @@
     var envios = l.envios || [];
     var reps = duplicados(l);
     var origen = l.origen || {};
-    var canal = [origen.utm_source, origen.utm_campaign].filter(Boolean).join(" / ") || (origen.gclid ? "Google Ads" : origen.fbclid ? "Meta" : origen.referrer ? "Enlace: " + origen.referrer : "Directo");
+    var canal = origen.via ? "Alta manual · " + (VIAS[origen.via] || origen.via) : [origen.utm_source, origen.utm_campaign].filter(Boolean).join(" / ") || (origen.gclid ? "Google Ads" : origen.fbclid ? "Meta" : origen.referrer ? "Enlace: " + origen.referrer : "Directo");
 
     // Cabecera y contacto
     var saludo = "Hola " + l.nombre.split(" ")[0] + ", te escribo de Pimen Reformas por tu solicitud de presupuesto. ¿Te va bien que te llame un momento?";
@@ -360,7 +970,8 @@
       h("dl", { class: "kv" },
         kv("Tipo", TIPOS[l.tipo]), kv("Reforma", l.reforma), kv("Cuándo", l.plazo), kv("Vivienda", l.vivienda),
         kv("Zona", l.zona), kv("Teléfono", l.telefono), kv("Correo", l.email), kv("Comentario", l.mensaje),
-        kv("Canal", canal), kv("Página", origen.pagina), kv("Consentimiento", l.consentimiento),
+        kv("Canal", canal), l.canal_id && contactoPorId(l.canal_id) ? [h("dt", { text: "Derivado por" }), h("dd", {}, h("a", { href: "#contactos/" + l.canal_id, text: contactoPorId(l.canal_id).nombre }))] : null,
+        kv("Página", origen.pagina), kv("Consentimiento", l.consentimiento),
         l.estado === "descartado" ? kv("Motivo de descarte", l.motivo_descarte) : null)
     ));
 
@@ -787,11 +1398,11 @@
 
   // ── Arranque ──────────────────────────────────────────────────────────
 
-  window.addEventListener("hashchange", function () { window.scrollTo(0, 0); render(); });
+  window.addEventListener("hashchange", function () { state.registrando = null; window.scrollTo(0, 0); render(); });
   // Refresca cada minuto si nadie está escribiendo en el panel.
   setInterval(function () {
     var a = document.activeElement;
-    var escribiendo = a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+    var escribiendo = (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) || state.registrando;
     if (sb && state.session && !document.hidden && !escribiendo) { cargar(); }
   }, 60000);
   arrancar();
