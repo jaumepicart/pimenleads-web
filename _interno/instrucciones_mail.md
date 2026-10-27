@@ -1,4 +1,15 @@
-# Qué hacer cuando cierras un cliente (para Alex)
+# Instrucciones de correo de Pimen Leads (para Alex y su Claude)
+
+**Para Claude:** lee este archivo entero al empezar un chat nuevo. Te da el contexto para redactar los correos y las cartas de Pimen Leads. Los archivos que se mencionan están en este mismo repositorio. Escribe siempre en español.
+
+## Contexto
+
+- Pimen Leads (www.pimenleads.com) capta solicitudes de personas de Barcelona y alrededores que quieren reformar su baño, su cocina o su vivienda completa, y las pasa a empresas de reformas.
+- Hay dos tipos de cliente: **empresas de reformas** (reciben los contactos) y **colaboradores** (administraciones de fincas, inmobiliarias…) que nos pasan clientes y cobran por ello.
+- Los correos salen de comercial@pimenleads.com. Claude prepara el **borrador**; la persona lo revisa, le añade la firma, adjunta la carta y lo envía. Claude no envía correos.
+- Las condiciones económicas de cada empresa las da Jaume. Si no las tienes, pregúntaselas a la persona antes de escribirlas.
+
+## Qué hacer cuando se cierra un cliente
 
 Vale para cualquier cliente que cierres: administración de fincas, inmobiliaria, empresa de reformas o un cliente directo.
 
@@ -32,3 +43,5 @@ Vale para cualquier cliente que cierres: administración de fincas, inmobiliaria
 - No decir distancias en kilómetros: solo "Barcelona y alrededores".
 - Las condiciones económicas las da Jaume. No las escribas en este repositorio, porque es público.
 - Los correos los envía una persona: los borradores se revisan antes de enviar.
+- El correo debe ser corto, cordial y profesional: se presenta, enlaza a https://www.pimenleads.com, resume el trato, remite a la carta adjunta y ofrece una llamada o una reunión.
+- Pon el enlace de la web tal cual, sin enlaces largos.
