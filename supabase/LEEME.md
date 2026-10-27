@@ -96,6 +96,16 @@ Las pestañas **Pendientes** y **Directorio** del panel necesitan dos tablas má
 3. Si ya tenías los avisos de Telegram, vuelve a ejecutar [`avisos.sql`](avisos.sql): ahora los clientes que
    dais de alta vosotros desde el panel tampoco avisan.
 
+4. Ejecuta [`crm-ampliacion.sql`](crm-ampliacion.sql) (después del 1). Añade: asignación estricta (solo empresas
+   activas o en prueba que hagan ese tipo de reforma, máximo 3), sincronía de estado y tipos entre la ficha del
+   reformista y su ficha en Empresas, el estado «por verificar» y el historial de llamadas también en los clientes.
+   El panel nuevo lo necesita para esas funciones.
+5. Opcional: [`recordatorios.sql`](recordatorios.sql) manda cada día laborable un resumen de pendientes por Telegram
+   (necesita los avisos del apartado 6 ya configurados).
+
+Para añadir teléfonos, tandas de correo que falten o marcar quién ha respondido sin ir ficha a ficha, usa
+**Directorio → Importar lista** (pegas columnas de Excel o los correos de las respuestas de Gmail).
+
 Hasta que no ejecutes el paso 1, el resto del panel funciona igual y esas pestañas avisan de que faltan las tablas.
 
 Reglas del modelo: las fichas son de **dos tipos** (reformista y canal; el canal exige tipo: administración,

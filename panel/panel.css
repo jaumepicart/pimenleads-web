@@ -143,3 +143,6 @@ details.card > summary { cursor: pointer; font-weight: 700; font-family: "Bricol
   .reg-form .fields label { flex: 1 1 100%; }
   .reg-form .actions .btn, .actions .btn-sm { padding-block: .7rem; }
 }
+.imp-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; font-size: .9rem; max-height: 22rem; overflow-y: auto; }
+.imp-lista .ko { color: var(--muted); }
+.panel label.inline { display: inline-flex; gap: .4rem; align-items: center; }
