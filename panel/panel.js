@@ -58,6 +58,11 @@
     altaTipo: "proveedor",
     altaCanal: null,
     registrando: null,
+    orden: {},
+    dirTel: "",
+    dirSeg: "",
+    busquedaEmpresa: "",
+    tipoEmpresa: "",
     filtroLead: "nuevo",
     filtroTipo: "",
     busqueda: "",
@@ -285,6 +290,409 @@
     window.scrollTo(0, scroll);
   }
 
+  // ── Piezas de interfaz comunes: navegación, tablas, filtros y barras ──
+
+  // Cambia de vista; si ya estamos en ella (hash igual), vuelve a pintar.
+  function ir(hash) {
+    if (location.hash === "#" + hash) { render(); } else { location.hash = hash; }
+  }
+  function irADirectorio(tipo, estado) {
+    state.dirTipo = tipo || ""; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = estado || "";
+    state.dirBusqueda = ""; state.dirTel = ""; state.dirSeg = "";
+    ir("contactos");
+  }
+  function irASeguimientos() { irADirectorio("", ""); state.dirSeg = "vencido"; ir("contactos"); }
+  function irAClientes(estado) { state.filtroLead = estado; state.filtroTipo = ""; state.busqueda = ""; ir("leads"); }
+
+  // Orden por columna: el estado se recuerda por vista y se cambia pulsando la cabecera.
+  function ordenador(vista, defecto) {
+    var o = state.orden[vista] || (state.orden[vista] = { k: defecto.k, dir: defecto.dir });
+    o.alt = function (k) { if (o.k === k) { o.dir = -o.dir; } else { o.k = k; o.dir = 1; } render(); };
+    return o;
+  }
+  // Los valores vacíos van siempre al final, sea cual sea el sentido.
+  function ordenar(lista, o, claves) {
+    var f = claves[o.k];
+    function vacio(v) { return v === null || v === undefined || v === ""; }
+    return lista.slice().sort(function (a, b) {
+      var va = f(a), vb = f(b);
+      if (vacio(va) && vacio(vb)) { return 0; }
+      if (vacio(va)) { return 1; }
+      if (vacio(vb)) { return -1; }
+      return va === vb ? 0 : (va < vb ? -1 : 1) * o.dir;
+    });
+  }
+  // cols: [{ t, k (ordenable), cls }]; filas: [{ href, celdas: [nodo|texto] }]. En móvil cada fila pasa a tarjeta.
+  function tablaPn(cols, filas, orden) {
+    var thead = h("thead", {}, h("tr", {}, cols.map(function (c) {
+      var th = h("th", { scope: "col", class: c.cls || null });
+      if (c.k && orden) {
+        th.appendChild(h("button", { class: "th-sort", type: "button", onclick: function () { orden.alt(c.k); },
+          text: c.t + (orden.k === c.k ? (orden.dir > 0 ? " ↑" : " ↓") : "") }));
+        th.setAttribute("aria-sort", orden.k === c.k ? (orden.dir > 0 ? "ascending" : "descending") : "none");
+      } else { th.textContent = c.t; }
+      return th;
+    })));
+    var tbody = h("tbody", {}, filas.map(function (f) {
+      var tr = h("tr", {
+        class: "pn-tr" + (f.sel ? " sel" : ""), tabindex: "0",
+        onclick: function (ev) { if (!ev.target.closest("a, button, select, input")) { location.hash = f.href; } },
+        onkeydown: function (ev) { if (ev.key === "Enter" && ev.target === tr) { location.hash = f.href; } }
+      });
+      f.celdas.forEach(function (c, i) { tr.appendChild(h("td", { "data-label": cols[i].t, class: cols[i].cls || null }, c)); });
+      return tr;
+    }));
+    return h("div", { class: "pn-tablewrap" }, h("table", { class: "pn-table" }, thead, tbody));
+  }
+  // Celda de dos líneas: texto principal y detalle apagado.
+  function celda2(a, b, href) {
+    return h("div", { class: "c2" }, href ? h("a", { class: "c2-main", href: href, text: a }) : h("span", { class: "c2-main", text: a }), b ? h("small", { text: b }) : null);
+  }
+  function chipN(texto, n, activo, onclick) {
+    return h("button", { class: "chip", type: "button", "aria-pressed": activo ? "true" : "false", onclick: onclick }, texto, h("b", { text: n }));
+  }
+  function selFiltro(etiqueta, opciones, valor, onchange) {
+    var sel = h("select", { "aria-label": etiqueta, onchange: function () { onchange(sel.value); } },
+      opciones.map(function (o) { return h("option", { value: o[0], text: o[1], selected: valor === o[0] }); }));
+    return h("label", { class: "f-sel" }, h("span", { text: etiqueta }), sel);
+  }
+  function nodoVacio(texto) { return h("p", { class: "pn-empty", text: texto }); }
+  function barras(filas) {
+    var max = Math.max.apply(null, filas.map(function (f) { return f.n; }).concat([1]));
+    return h("div", { class: "bars" }, filas.map(function (f) {
+      var fila = h(f.onclick ? "button" : "div", { class: "bar-row", type: f.onclick ? "button" : null, onclick: f.onclick || null },
+        h("span", { class: "bar-l", text: f.label }),
+        h("span", { class: "bar-t" }, h("span", { class: "bar-f" + (f.tono ? " " + f.tono : ""), style: "width:" + Math.round(f.n / max * 100) + "%" })),
+        h("span", { class: "bar-n", text: f.n }));
+      return fila;
+    }));
+  }
+
+  // Lo que hay que hacer, con un clic al sitio donde se hace.
+  function kpisPendientes() {
+    var g = gruposPendientes();
+    function n(i) { return g[i].items.length; }
+    var porVerificar = state.leads.filter(function (l) { return l.estado === "nuevo" || l.estado === "por_verificar"; }).length;
+    var lista = [
+      { t: "Clientes por verificar", n: porVerificar, tono: "urg", f: function () { irAClientes("nuevo"); } },
+      { t: "Llamada pendiente", n: n(0), tono: "urg", f: function () { irADirectorio("proveedor", "llamada_pendiente"); } },
+      { t: "Respondieron: llamar", n: n(1), tono: "urg", f: function () { irADirectorio("proveedor", "respondio"); } },
+      { t: "Acuerdo cerrado", n: n(2), tono: "ok", f: function () { irADirectorio("proveedor", "acuerdo_cerrado"); } },
+      { t: "Canal a la espera", n: n(3), tono: "", f: function () { irADirectorio("canal", "llamada_hecha"); } },
+      { t: "Seguimientos vencidos", n: n(4), tono: "urg", f: irASeguimientos },
+      { t: "Inválidos por avisar", n: invalidosPorAvisar().length, tono: "urg", f: function () { irAClientes("descartado"); } }
+    ];
+    return h("div", { class: "kpis kpis-link" }, lista.map(function (k) {
+      return h("button", { class: "kpi " + (k.n ? k.tono : "cero"), type: "button", onclick: k.f },
+        h("span", { text: k.t }), h("strong", { text: k.n }), h("small", { text: k.n ? "Ver →" : "Nada pendiente" }));
+    }));
+  }
+
+  // ── Pendientes ────────────────────────────────────────────────────────
+
+  function tablaContactosCompacta(items) {
+    return tablaPn([{ t: "Ficha" }, { t: "Estado" }, { t: "Toca" }], items.map(function (c) {
+      return { href: "contactos/" + c.id, celdas: [celda2(c.nombre, tipoTexto(c), "#contactos/" + c.id), badge(c.estado, ESTADOS_CONTACTO),
+        celda2(c.proxima_accion || "—", c.proxima_fecha ? dia(c.proxima_fecha) : lineaUltima(c))] };
+    }));
+  }
+
+  function vistaPendientes(main) {
+    main.appendChild(h("div", { class: "pn-cab" }, h("div", {}, h("h1", { text: "Pendientes" }), h("p", { class: "meta", text: "Lo que toca hoy, por prioridad. Pulsa una tarjeta para ver la lista." })),
+      h("div", { class: "actions" },
+        h("a", { class: "btn btn-sm btn-ghost", href: "#contactos", text: "Buscar antes de llamar" }),
+        h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" }))));
+    if (!state.sinProspeccion) { main.appendChild(kpisPendientes()); }
+    var cards = [];
+    var nuevos = state.leads.filter(function (l) { return l.estado === "nuevo" || l.estado === "por_verificar"; });
+    if (nuevos.length) {
+      cards.push(h("div", { class: "card" }, h("h3", { text: "Clientes por verificar (" + nuevos.length + ")" }),
+        h("p", { class: "meta", text: "Solicitudes que han entrado y todavía no se han llamado." }),
+        tablaPn([{ t: "Cliente" }, { t: "Estado" }, { t: "Recibido" }], nuevos.map(function (l) {
+          return { href: "leads/" + l.id, celdas: [celda2(l.nombre, [TIPOS[l.tipo], l.zona, l.plazo].filter(Boolean).join(" · "), "#leads/" + l.id), badge(l.estado, ESTADOS_LEAD), fecha(l.created_at)] };
+        }))));
+    }
+    var invalidos = invalidosPorAvisar();
+    if (invalidos.length) {
+      cards.push(h("div", { class: "card" }, h("h3", { text: "Leads inválidos: avisar a las empresas (" + invalidos.length + ")" }),
+        h("p", { class: "meta", text: "No se cobran, pero hay que avisar en los 7 días siguientes al envío." }),
+        tablaPn([{ t: "Cliente" }, { t: "Límite" }], invalidos.map(function (l) {
+          var primero = l.envios.reduce(function (m, e) { return e.created_at < m ? e.created_at : m; }, l.envios[0].created_at);
+          return { href: "leads/" + l.id, celdas: [celda2(l.nombre, [TIPOS[l.tipo], l.zona].filter(Boolean).join(" · "), "#leads/" + l.id), "Antes del " + dia(new Date(new Date(primero).getTime() + 7 * 864e5))] };
+        }))));
+    }
+    if (state.sinProspeccion) {
+      cards.push(avisoProspeccion());
+    } else {
+      gruposPendientes().forEach(function (g) {
+        if (!g.items.length) { return; }
+        cards.push(h("div", { class: "card" }, h("h3", { text: g.titulo + " (" + g.items.length + ")" }),
+          g.nota ? h("p", { class: "meta", text: g.nota }) : null, tablaContactosCompacta(g.items)));
+      });
+    }
+    if (!cards.length) { main.appendChild(nodoVacio("Nada pendiente ahora mismo.")); }
+    else { main.appendChild(h("div", { class: "pn-grid2" }, cards)); }
+    if (!state.sinProspeccion) {
+      var sinRespuesta = state.contactos.filter(function (c) { return c.estado === "email_enviado"; }).length;
+      if (sinRespuesta) {
+        main.appendChild(h("p", { class: "meta pie" }, sinRespuesta + " fichas con el correo enviado y sin respuesta anotada. Se siguen desde el ",
+          h("a", { href: "#contactos", text: "directorio" }), "; no ensucian los pendientes."));
+      }
+    }
+  }
+
+  // ── Directorio ────────────────────────────────────────────────────────
+
+  function ultimoTs(c) {
+    var i = internasDe(c.id).filter(function (x) { return x.ocurrio_at; })[0];
+    return i ? new Date(i.ocurrio_at).getTime() : null;
+  }
+
+  function vistaContactos(main, id) {
+    if (state.sinProspeccion) { main.appendChild(avisoProspeccion()); return; }
+    if (id === "importar") { vistaImportar(main); return; }
+    var nuevo = id === "nuevo";
+    var sel = nuevo ? {} : id ? contactoPorId(Number(id)) : null;
+    if (sel) {
+      var detalle = h("div", { class: "pn-detail" });
+      detalleContacto(detalle, sel, nuevo);
+      main.appendChild(detalle);
+      return;
+    }
+    if (id) { main.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver al directorio", onclick: function () { location.hash = "contactos"; } })); main.appendChild(nodoVacio("Esa ficha no existe.")); return; }
+
+    var porTipo = { proveedor: 0, canal: 0 };
+    state.contactos.forEach(function (c) { porTipo[c.tipo]++; });
+    var orden = ordenador("contactos", { k: "nombre", dir: 1 });
+    var res = h("div", {});
+
+    function pintar() {
+      var filas = ordenar(contactosFiltrados(), orden, {
+        nombre: function (c) { return norm(c.nombre); }, tipo: function (c) { return norm(tipoTexto(c)); },
+        estado: function (c) { return Object.keys(ESTADOS_CONTACTO).indexOf(c.estado); }, ultimo: ultimoTs,
+        toca: function (c) { return c.proxima_fecha || null; }, telefono: function (c) { return c.telefono; }
+      });
+      res.replaceChildren(h("p", { class: "meta" }, filas.length + " de " + state.contactos.length + " fichas"));
+      if (!filas.length) { res.appendChild(nodoVacio("Ninguna ficha con estos filtros. Si no aparece, es que aún no le hemos escrito.")); return; }
+      res.appendChild(tablaPn([
+        { t: "Nombre", k: "nombre" }, { t: "Tipo", k: "tipo" }, { t: "Estado", k: "estado", cls: "nw" },
+        { t: "Último movimiento", k: "ultimo" }, { t: "Toca", k: "toca" }, { t: "Teléfono", k: "telefono", cls: "nw" }
+      ], filas.map(function (c) {
+        var its = internasDe(c.id), u = its[0];
+        return { href: "contactos/" + c.id, celdas: [
+          celda2(c.nombre, c.email, "#contactos/" + c.id),
+          c.tipo === "canal" ? SUBTIPOS[c.subtipo] : celda2("Reformista", (c.reformas || []).length ? reformasTexto(c) : "Tipo por clasificar"), badge(c.estado, ESTADOS_CONTACTO),
+          u ? celda2(CANALES[u.canal] + " " + (ESTADOS_INTER_TODOS[u.estado] || u.estado).toLowerCase(), fechaInter(u) + (u.canal === "email" && u.desde && u.desde !== CUENTA_COMERCIAL ? " · " + u.desde : "")) : h("span", { class: "muted", text: "Sin contacto aún" }),
+          c.proxima_accion ? celda2(c.proxima_accion, c.proxima_fecha ? dia(c.proxima_fecha) : "") : h("span", { class: "muted", text: "—" }),
+          c.telefono || h("span", { class: "muted", text: "Sin teléfono" })
+        ] };
+      }), orden));
+    }
+
+    var buscar = h("input", {
+      type: "search", placeholder: "Buscar por nombre, correo o dominio (ej. finquesfalcon.com)", value: state.dirBusqueda, "aria-label": "Buscar contactos",
+      oninput: function () { state.dirBusqueda = buscar.value; pintar(); }
+    });
+    function chipTipo(valor, texto, n) {
+      return chipN(texto, n, state.dirTipo === valor, function () { state.dirTipo = valor; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = ""; render(); });
+    }
+    var fila1 = h("div", { class: "f-fila" },
+      h("div", { class: "chips" }, chipTipo("", "Todos", state.contactos.length), chipTipo("proveedor", "Reformistas", porTipo.proveedor), chipTipo("canal", "Canal", porTipo.canal)),
+      buscar);
+    var fila2 = h("div", { class: "f-fila" });
+    if (state.dirTipo === "canal") {
+      var cuenta = {};
+      state.contactos.forEach(function (c) { if (c.tipo === "canal") { cuenta[c.subtipo] = (cuenta[c.subtipo] || 0) + 1; } });
+      fila2.appendChild(selFiltro("Tipo de canal", [["", "Todos"]].concat(Object.keys(SUBTIPOS_PLURAL).map(function (k) { return [k, SUBTIPOS_PLURAL[k] + " (" + (cuenta[k] || 0) + ")"]; })),
+        state.dirSub, function (v) { state.dirSub = v; pintar(); }));
+    }
+    if (state.dirTipo === "proveedor") {
+      fila2.appendChild(selFiltro("Tipo de reforma", [["", "Todos"], ["bano", "Baños"], ["cocina", "Cocinas"], ["integral", "Integrales"], ["mixto", "Mixto"], ["sin", "Por clasificar"]],
+        state.dirReforma, function (v) { state.dirReforma = v; pintar(); }));
+    }
+    var etiquetas = state.dirTipo ? (state.dirTipo === "canal" ? ESTADOS_CANAL : ESTADOS_PROV) : ESTADOS_CONTACTO;
+    fila2.appendChild(selFiltro("Estado", [["", "Todos"]].concat(Object.keys(etiquetas).map(function (k) { return [k, etiquetas[k]]; })), state.dirEstado, function (v) { state.dirEstado = v; pintar(); }));
+    fila2.appendChild(selFiltro("Teléfono", [["", "Todos"], ["con", "Con teléfono"], ["sin", "Sin teléfono"]], state.dirTel, function (v) { state.dirTel = v; pintar(); }));
+    fila2.appendChild(selFiltro("Seguimiento", [["", "Todos"], ["vencido", "Vencido o de hoy"], ["con", "Con próxima acción"]], state.dirSeg, function (v) { state.dirSeg = v; pintar(); }));
+    fila2.appendChild(h("button", {
+      class: "linkbtn", type: "button", text: "Quitar filtros",
+      onclick: function () { state.dirTipo = ""; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = ""; state.dirBusqueda = ""; state.dirTel = ""; state.dirSeg = ""; render(); }
+    }));
+
+    main.appendChild(h("div", { class: "pn-cab" }, h("div", {}, h("h1", { text: "Directorio" }), h("p", { class: "meta", text: "Busca aquí antes de llamar o escribir a nadie." })),
+      h("div", { class: "actions" },
+        h("a", { class: "btn btn-sm btn-ghost", href: "#contactos/importar", text: "Importar lista" }),
+        h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Exportar CSV", onclick: exportarContactos }),
+        h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" }))));
+    main.appendChild(h("div", { class: "pn-filtros" }, fila1, fila2));
+    pintar();
+    main.appendChild(res);
+  }
+
+  // ── Clientes (leads) ──────────────────────────────────────────────────
+
+  function vistaLeads(main, id) {
+    var nuevo = id === "nuevo";
+    var sel = nuevo ? {} : id ? state.leads.filter(function (l) { return String(l.id) === id; })[0] : null;
+    if (nuevo || sel) {
+      var detalle = h("div", { class: "pn-detail" });
+      if (nuevo) { detalleLeadNuevo(detalle); } else { detalleLead(detalle, sel); }
+      main.appendChild(detalle);
+      return;
+    }
+    if (id) { main.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a clientes", onclick: function () { location.hash = "leads"; } })); main.appendChild(nodoVacio("Ese lead no existe o no está entre los cargados.")); return; }
+
+    var orden = ordenador("leads", { k: "fecha", dir: -1 });
+    var res = h("div", {});
+    var counts = {};
+    state.leads.forEach(function (l) { counts[l.estado] = (counts[l.estado] || 0) + 1; });
+    function pintar() {
+      var filas = ordenar(leadsFiltrados(), orden, {
+        nombre: function (l) { return norm(l.nombre); }, tipo: function (l) { return l.tipo; }, zona: function (l) { return norm(l.zona); },
+        plazo: function (l) { return norm(l.plazo); }, estado: function (l) { return Object.keys(ESTADOS_LEAD).indexOf(l.estado); },
+        fecha: function (l) { return new Date(l.created_at).getTime(); }, envios: function (l) { return (l.envios || []).length; }
+      });
+      res.replaceChildren(h("p", { class: "meta", text: filas.length + " de " + state.leads.length + " clientes" }));
+      if (!state.leads.length) { res.appendChild(nodoVacio("Aún no hay clientes de reforma en el panel. Cuando entre una solicitud, se verifica y se manda a 3 empresas como máximo.")); return; }
+      if (!filas.length) { res.appendChild(nodoVacio("No hay clientes con estos filtros.")); return; }
+      res.appendChild(tablaPn([
+        { t: "Cliente", k: "nombre" }, { t: "Reforma", k: "tipo" }, { t: "Zona", k: "zona" }, { t: "Plazo", k: "plazo" },
+        { t: "Estado", k: "estado" }, { t: "Recibido", k: "fecha" }, { t: "Empresas", k: "envios" }
+      ], filas.map(function (l) {
+        var n = (l.envios || []).length;
+        return { href: "leads/" + l.id, celdas: [
+          h("div", { class: "c2" }, h("a", { class: "c2-main", href: "#leads/" + l.id, text: l.nombre }), h("small", { text: l.telefono }), duplicados(l).length ? h("span", { class: "badge warn", text: "Repetido" }) : null),
+          TIPOS[l.tipo], l.zona || h("span", { class: "muted", text: "—" }), l.plazo || h("span", { class: "muted", text: "—" }),
+          badge(l.estado, ESTADOS_LEAD), fecha(l.created_at), n ? n + " de 3" : h("span", { class: "muted", text: "Ninguna" })
+        ] };
+      }), orden));
+    }
+    var buscar = h("input", {
+      type: "search", placeholder: "Buscar nombre, teléfono, zona o #id", value: state.busqueda, "aria-label": "Buscar clientes",
+      oninput: function () { state.busqueda = buscar.value; pintar(); }
+    });
+    var chips = h("div", { class: "chips" },
+      [["nuevo", "Nuevos"], ["por_verificar", "Por verificar"], ["verificado", "Verificados"], ["enviado", "Enviados"], ["cerrado", "Cerrados"], ["descartado", "Inválidos"], ["", "Todos"]].map(function (o) {
+        return chipN(o[1], o[0] ? (counts[o[0]] || 0) : state.leads.length, state.filtroLead === o[0], function () { state.filtroLead = o[0]; render(); });
+      }));
+    main.appendChild(h("div", { class: "pn-cab" }, h("div", {}, h("h1", { text: "Clientes" }), h("p", { class: "meta", text: "Personas que quieren reformar: se verifican y se mandan a 3 empresas como máximo." })),
+      h("div", { class: "actions" }, h("a", { class: "btn btn-sm", href: "#leads/nuevo", text: "+ Nuevo cliente" }))));
+    main.appendChild(h("div", { class: "pn-filtros" }, h("div", { class: "f-fila" }, chips),
+      h("div", { class: "f-fila" }, buscar,
+        selFiltro("Reforma", [["", "Todas"]].concat(Object.keys(TIPOS).map(function (k) { return [k, TIPOS[k]]; })), state.filtroTipo, function (v) { state.filtroTipo = v; pintar(); }))));
+    pintar();
+    main.appendChild(res);
+  }
+
+  // ── Empresas ──────────────────────────────────────────────────────────
+
+  function vistaEmpresas(main, id) {
+    var nueva = id === "nueva";
+    var sel = nueva ? {} : id ? empresaPorId(Number(id)) : null;
+    if (sel) {
+      var detalle = h("div", { class: "pn-detail" });
+      detalleEmpresa(detalle, sel, nueva);
+      main.appendChild(detalle);
+      return;
+    }
+    if (id) { main.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a empresas", onclick: function () { location.hash = "empresas"; } })); main.appendChild(nodoVacio("Esa empresa no existe.")); return; }
+
+    var counts = {};
+    state.empresas.forEach(function (e) { counts[e.estado] = (counts[e.estado] || 0) + 1; });
+    var orden = ordenador("empresas", { k: "nombre", dir: 1 });
+    var envs = todosLosEnvios(), porEmpresa = {};
+    envs.forEach(function (x) { (porEmpresa[x.empresa_id] = porEmpresa[x.empresa_id] || []).push(x); });
+    function st(e) {
+      var suyos = porEmpresa[e.id] || [];
+      return { n: suyos.length, ganados: suyos.filter(function (x) { return x.resultado === "ganado"; }).length,
+        pendiente: suyos.filter(function (x) { return !x.cobrado && cuenta(x); }).reduce(function (s, x) { return s + Number(x.precio); }, 0) };
+    }
+    var res = h("div", {});
+    function pintar() {
+      var q = norm(state.busquedaEmpresa);
+      var lista = state.empresas.filter(function (e) {
+        if (state.filtroEmpresa && e.estado !== state.filtroEmpresa) { return false; }
+        if (state.tipoEmpresa && (e.tipos || []).indexOf(state.tipoEmpresa) === -1) { return false; }
+        return !q || norm([e.nombre, e.email, e.zonas, e.contacto].join(" ")).indexOf(q) !== -1;
+      });
+      lista = ordenar(lista, orden, {
+        nombre: function (e) { return norm(e.nombre); }, estado: function (e) { return Object.keys(ESTADOS_EMPRESA).indexOf(e.estado); },
+        zonas: function (e) { return norm(e.zonas); }, leads: function (e) { return st(e).n; }, ganados: function (e) { return st(e).ganados; }, cobrar: function (e) { return st(e).pendiente; }
+      });
+      res.replaceChildren(h("p", { class: "meta", text: lista.length + " de " + state.empresas.length + " empresas" }));
+      if (!lista.length) { res.appendChild(nodoVacio("No hay empresas con estos filtros.")); return; }
+      res.appendChild(tablaPn([
+        { t: "Empresa", k: "nombre" }, { t: "Estado", k: "estado" }, { t: "Reformas" }, { t: "Zonas", k: "zonas" },
+        { t: "Leads", k: "leads", cls: "num" }, { t: "Ganados", k: "ganados", cls: "num" }, { t: "Por cobrar", k: "cobrar", cls: "num" }
+      ], lista.map(function (e) {
+        var s = st(e);
+        return { href: "empresas/" + e.id, celdas: [
+          celda2(e.nombre, e.email, "#empresas/" + e.id), badge(e.estado, ESTADOS_EMPRESA),
+          (e.tipos || []).length ? e.tipos.map(function (t) { return TIPOS[t]; }).join(", ") : h("span", { class: "muted", text: "Sin tipos" }),
+          e.zonas || h("span", { class: "muted", text: "—" }), String(s.n), String(s.ganados), s.pendiente ? euros(s.pendiente) : "—"
+        ] };
+      }), orden));
+    }
+    var buscar = h("input", {
+      type: "search", placeholder: "Buscar empresa, correo o zona", value: state.busquedaEmpresa, "aria-label": "Buscar empresas",
+      oninput: function () { state.busquedaEmpresa = buscar.value; pintar(); }
+    });
+    var chips = h("div", { class: "chips" }, [["", "Todas"], ["interesada", "Interesadas"], ["prueba", "En prueba"], ["activa", "Activas"], ["pausada", "Pausadas"], ["baja", "Bajas"]].map(function (o) {
+      return chipN(o[1], o[0] ? (counts[o[0]] || 0) : state.empresas.length, state.filtroEmpresa === o[0], function () { state.filtroEmpresa = o[0]; render(); });
+    }));
+    main.appendChild(h("div", { class: "pn-cab" }, h("div", {}, h("h1", { text: "Empresas" }), h("p", { class: "meta", text: "Las que reciben leads: estado, tipos de reforma, precios y cobros." })),
+      h("div", { class: "actions" }, h("a", { class: "btn btn-sm", href: "#empresas/nueva", text: "+ Nueva empresa" }))));
+    main.appendChild(h("div", { class: "pn-filtros" }, h("div", { class: "f-fila" }, chips),
+      h("div", { class: "f-fila" }, buscar,
+        selFiltro("Reforma", [["", "Todas"], ["bano", "Baños"], ["cocina", "Cocinas"], ["integral", "Integrales"]], state.tipoEmpresa, function (v) { state.tipoEmpresa = v; pintar(); }))));
+    pintar();
+    main.appendChild(res);
+  }
+
+  // ── Resumen: prospección y pendientes ─────────────────────────────────
+
+  function bloqueProspeccion() {
+    var cont = h("div", { class: "pn-resumen-top" });
+    cont.appendChild(h("h2", { text: "Pendiente ahora" }));
+    cont.appendChild(kpisPendientes());
+    if (state.sinProspeccion) { cont.appendChild(avisoProspeccion()); return cont; }
+
+    function embudo(tipo, etiquetas) {
+      var cs = state.contactos.filter(function (c) { return c.tipo === tipo; });
+      return barras(Object.keys(etiquetas).map(function (k) {
+        var n = cs.filter(function (c) { return c.estado === k; }).length;
+        return { label: etiquetas[k], n: n, tono: ["respondio", "llamada_pendiente", "llamada_hecha"].indexOf(k) !== -1 ? "urg" : ["acuerdo_cerrado", "activo", "colabora"].indexOf(k) !== -1 ? "ok" : "", onclick: function () { irADirectorio(tipo, k); } };
+      }));
+    }
+    var porEstadoLead = {};
+    state.leads.forEach(function (l) { porEstadoLead[l.estado] = (porEstadoLead[l.estado] || 0) + 1; });
+
+    // Actividad de los últimos 28 días (los registros importados no tienen fecha y no cuentan).
+    var dias = [], hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    for (var i = 27; i >= 0; i--) { dias.push({ d: new Date(hoy.getTime() - i * 864e5), n: 0 }); }
+    var fechados = state.interacciones.filter(function (x) { return x.ocurrio_at; });
+    fechados.forEach(function (x) {
+      var t = new Date(x.ocurrio_at); t.setHours(0, 0, 0, 0);
+      var d = dias.filter(function (z) { return z.d.getTime() === t.getTime(); })[0];
+      if (d) { d.n++; }
+    });
+    var max = Math.max.apply(null, dias.map(function (d) { return d.n; }).concat([1]));
+    var totalVentana = dias.reduce(function (s, d) { return s + d.n; }, 0);
+    var actividad = h("div", {},
+      h("div", { class: "spark", role: "img", "aria-label": "Correos y llamadas registrados por día en los últimos 28 días" },
+        dias.map(function (d) { return h("span", { class: "spark-b", title: fecha(d.d).split(",")[0] + ": " + d.n, style: "height:" + (d.n ? Math.max(8, Math.round(d.n / max * 100)) : 3) + "%" }); })),
+      h("div", { class: "spark-ejes" }, h("span", { text: dia(dias[0].d) }), h("span", { text: "hoy" })),
+      h("p", { class: "meta", text: totalVentana + " registros en 28 días · " + (state.interacciones.length - fechados.length) + " sin fecha (importados)" }));
+
+    cont.appendChild(h("div", { class: "pn-grid3" },
+      h("div", { class: "card" }, h("h3", { text: "Embudo de reformistas" }), h("p", { class: "meta", text: "Pulsa una barra para ver esas fichas." }), embudo("proveedor", ESTADOS_PROV)),
+      h("div", { class: "card" }, h("h3", { text: "Embudo de canal" }), h("p", { class: "meta", text: "Administraciones, inmobiliarias y gestoras." }), embudo("canal", ESTADOS_CANAL)),
+      h("div", { class: "card" }, h("h3", { text: "Clientes por estado" }), h("p", { class: "meta", text: "Personas que quieren reformar." }),
+        barras(Object.keys(ESTADOS_LEAD).map(function (k) { return { label: ESTADOS_LEAD[k], n: porEstadoLead[k] || 0, tono: k === "nuevo" || k === "por_verificar" ? "urg" : k === "enviado" ? "ok" : "", onclick: function () { irAClientes(k); } }; }))),
+      h("div", { class: "card pn-span" }, h("h3", { text: "Actividad: correos y llamadas por día" }), actividad)));
+    return cont;
+  }
+
   // ── Prospección: pendientes y directorio de reformistas y canal ───────
 
   function ordenInter(a, b) {
@@ -353,18 +761,6 @@
     return partes.join(" ");
   }
 
-  function filaContacto(c, selId) {
-    return h("button", {
-      class: "row", type: "button", "aria-current": selId === c.id ? "true" : null,
-      onclick: function () { location.hash = "contactos/" + c.id; }
-    },
-      h("span", { class: "l1" }, h("span", { class: "name", text: c.nombre }), badge(c.estado, ESTADOS_CONTACTO)),
-      h("span", { class: "l2", text: [tipoTexto(c), c.email].filter(Boolean).join(" · ") }),
-      h("span", { class: "l2", text: lineaUltima(c) }),
-      c.proxima_accion ? h("span", { class: "l2 toca", text: "Toca: " + c.proxima_accion + (c.proxima_fecha ? " · " + dia(c.proxima_fecha) : "") }) : null
-    );
-  }
-
   function avisoProspeccion() {
     return h("div", { class: "card" }, h("h2", { text: "Falta crear las tablas de prospección" }),
       h("p", { text: "Ejecuta supabase/prospeccion.sql en el SQL Editor de Supabase y, después, la carga de contactos. Los pasos están en supabase/LEEME.md." }));
@@ -399,55 +795,6 @@
     return n;
   }
 
-  function vistaPendientes(main) {
-    main.appendChild(h("div", { class: "pn-toolbar" }, h("h2", { text: "Pendientes" }), h("span", { class: "spacer" }),
-      h("a", { class: "btn btn-sm btn-ghost", href: "#contactos", text: "Buscar antes de llamar" }),
-      h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" })));
-    var cont = h("div", { class: "pn-pend" });
-    var nuevos = state.leads.filter(function (l) { return l.estado === "nuevo" || l.estado === "por_verificar"; });
-    var hay = false;
-    if (nuevos.length) {
-      hay = true;
-      cont.appendChild(h("section", {}, h("h3", { text: "Clientes por verificar (" + nuevos.length + ")" }),
-        h("p", { class: "meta", text: "Solicitudes que han entrado y todavía no se han llamado." }),
-        h("div", { class: "pn-list" }, nuevos.map(function (l) {
-          return h("button", { class: "row", type: "button", onclick: function () { location.hash = "leads/" + l.id; } },
-            h("span", { class: "l1" }, h("span", { class: "name", text: l.nombre }), badge(l.estado, ESTADOS_LEAD), h("span", { class: "when", text: fecha(l.created_at) })),
-            h("span", { class: "l2", text: [TIPOS[l.tipo], l.zona, l.plazo].filter(Boolean).join(" · ") }));
-        }))));
-    }
-    var invalidos = invalidosPorAvisar();
-    if (invalidos.length) {
-      hay = true;
-      cont.appendChild(h("section", {}, h("h3", { text: "Leads inválidos: avisar a las empresas (" + invalidos.length + ")" }),
-        h("p", { class: "meta", text: "No se cobran, pero hay que avisar en los 7 días siguientes al envío." }),
-        h("div", { class: "pn-list" }, invalidos.map(function (l) {
-          var primero = l.envios.reduce(function (m, e) { return e.created_at < m ? e.created_at : m; }, l.envios[0].created_at);
-          return h("button", { class: "row", type: "button", onclick: function () { location.hash = "leads/" + l.id; } },
-            h("span", { class: "l1" }, h("span", { class: "name", text: l.nombre }), badge(l.estado, ESTADOS_LEAD)),
-            h("span", { class: "l2 toca", text: "Avisar antes del " + dia(new Date(new Date(primero).getTime() + 7 * 864e5)) }));
-        }))));
-    }
-    if (state.sinProspeccion) {
-      cont.appendChild(avisoProspeccion());
-    } else {
-      gruposPendientes().forEach(function (g) {
-        if (!g.items.length) { return; }
-        hay = true;
-        cont.appendChild(h("section", {}, h("h3", { text: g.titulo + " (" + g.items.length + ")" }),
-          g.nota ? h("p", { class: "meta", text: g.nota }) : null,
-          h("div", { class: "pn-list" }, g.items.map(function (c) { return filaContacto(c, null); }))));
-      });
-      var sinRespuesta = state.contactos.filter(function (c) { return c.estado === "email_enviado"; }).length;
-      if (sinRespuesta) {
-        cont.appendChild(h("p", { class: "meta" }, sinRespuesta + " fichas con el correo enviado y sin respuesta anotada. Se siguen desde el ",
-          h("a", { href: "#contactos", text: "directorio" }), "; no ensucian los pendientes."));
-      }
-    }
-    if (!hay && !state.sinProspeccion) { cont.insertBefore(h("p", { class: "pn-empty", text: "Nada pendiente ahora mismo." }), cont.firstChild); }
-    main.appendChild(cont);
-  }
-
   function contactosFiltrados() {
     var q = norm(state.dirBusqueda);
     return state.contactos.filter(function (c) {
@@ -458,6 +805,8 @@
         if (state.dirReforma === "sin" ? r.length : state.dirReforma === "mixto" ? r.length < 2 : r.indexOf(state.dirReforma) === -1) { return false; }
       }
       if (state.dirEstado && c.estado !== state.dirEstado) { return false; }
+      if (state.dirTel === "con" ? !c.telefono : state.dirTel === "sin" ? c.telefono : false) { return false; }
+      if (state.dirSeg === "con" ? !c.proxima_accion : state.dirSeg === "vencido" ? !(c.proxima_fecha && c.proxima_fecha <= hoyISO() && ["no_interesa", "pausado", "inactivo"].indexOf(c.estado) === -1) : false) { return false; }
       if (q) {
         var texto = norm([c.nombre, c.email, c.dominio, c.contacto, c.telefono].join(" "));
         if (texto.indexOf(q) === -1 && digitos(c.telefono).indexOf(digitos(q) || "@@") === -1) { return false; }
@@ -649,79 +998,6 @@
     toast("Descargando directorio e historial (" + fichas.length + " fichas)");
   }
 
-  function vistaContactos(main, id) {
-    if (state.sinProspeccion) { main.appendChild(avisoProspeccion()); return; }
-    if (id === "importar") { vistaImportar(main); return; }
-    var nuevo = id === "nuevo";
-    var sel = nuevo ? {} : id ? contactoPorId(Number(id)) : null;
-    var split = h("div", { class: "pn-split" + (sel ? " has-detail" : "") });
-    if (sel) { main.classList.add("has-detail"); }
-    var lista = h("div", { class: "pn-list" });
-    var contador = h("p", { class: "meta" });
-
-    function pintarLista() {
-      var filas = contactosFiltrados();
-      lista.replaceChildren(contador);
-      contador.textContent = filas.length + (filas.length === 1 ? " ficha" : " fichas");
-      if (!filas.length) { lista.appendChild(h("p", { class: "pn-empty", text: "Ninguna ficha con este filtro. Si no aparece, es que aún no le hemos escrito." })); return; }
-      filas.forEach(function (c) { lista.appendChild(filaContacto(c, sel && sel.id)); });
-    }
-
-    var porTipo = { proveedor: 0, canal: 0 };
-    state.contactos.forEach(function (c) { porTipo[c.tipo]++; });
-    function chipTipo(valor, texto, n) {
-      return h("button", {
-        class: "chip", type: "button", "aria-pressed": state.dirTipo === valor ? "true" : "false",
-        onclick: function () { state.dirTipo = valor; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = ""; render(); }
-      }, texto, h("b", { text: n }));
-    }
-    var buscar = h("input", {
-      type: "search", placeholder: "Buscar por nombre, correo o dominio (ej. finquesfalcon.com)", value: state.dirBusqueda, "aria-label": "Buscar contactos",
-      oninput: function () { state.dirBusqueda = buscar.value; pintarLista(); }
-    });
-    var tb1 = h("div", { class: "pn-toolbar" },
-      chipTipo("", "Todos", state.contactos.length), chipTipo("proveedor", "Reformistas", porTipo.proveedor), chipTipo("canal", "Canal", porTipo.canal),
-      buscar, h("a", { class: "btn btn-sm btn-ghost", href: "#contactos/importar", text: "Importar lista" }),
-      h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Exportar CSV", onclick: exportarContactos }),
-      h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" }));
-
-    var tb2 = h("div", { class: "pn-toolbar" });
-    if (state.dirTipo === "canal") {
-      var cuenta = {};
-      state.contactos.forEach(function (c) { if (c.tipo === "canal") { cuenta[c.subtipo] = (cuenta[c.subtipo] || 0) + 1; } });
-      [["", "Todos los canales"]].concat(Object.keys(SUBTIPOS_PLURAL).map(function (k) { return [k, SUBTIPOS_PLURAL[k]]; })).forEach(function (o) {
-        tb2.appendChild(h("button", {
-          class: "chip", type: "button", "aria-pressed": state.dirSub === o[0] ? "true" : "false",
-          onclick: function () { state.dirSub = o[0]; render(); }
-        }, o[1], h("b", { text: o[0] ? (cuenta[o[0]] || 0) : porTipo.canal })));
-      });
-    }
-    if (state.dirTipo === "proveedor") {
-      var refSel = h("select", { "aria-label": "Tipo de reforma", onchange: function () { state.dirReforma = refSel.value; pintarLista(); } },
-        [["", "Todos los tipos de reforma"], ["bano", "Baños"], ["cocina", "Cocinas"], ["integral", "Integrales"], ["mixto", "Mixto"], ["sin", "Por clasificar"]].map(function (o) {
-          return h("option", { value: o[0], text: o[1], selected: state.dirReforma === o[0] });
-        }));
-      tb2.appendChild(refSel);
-    }
-    var etiquetas = state.dirTipo ? (state.dirTipo === "canal" ? ESTADOS_CANAL : ESTADOS_PROV) : ESTADOS_CONTACTO;
-    var estSel = h("select", { "aria-label": "Estado", onchange: function () { state.dirEstado = estSel.value; pintarLista(); } },
-      h("option", { value: "", text: "Todos los estados" }),
-      Object.keys(etiquetas).map(function (k) { return h("option", { value: k, text: etiquetas[k], selected: state.dirEstado === k }); }));
-    tb2.appendChild(estSel);
-
-    pintarLista();
-    var detalle = h("div", { class: "pn-detail" });
-    if (sel) { detalleContacto(detalle, sel, nuevo); }
-    else if (id) { detalle.appendChild(h("p", { class: "pn-empty", text: "Esa ficha no existe." })); }
-    else { detalle.appendChild(h("p", { class: "pn-empty", text: "Busca por nombre o dominio antes de llamar, o elige una ficha." })); }
-
-    main.appendChild(tb1);
-    if (!sel) { main.appendChild(tb2); }
-    split.appendChild(lista);
-    split.appendChild(detalle);
-    main.appendChild(split);
-  }
-
   // Fichas que comparten correo o dominio (salvo gmail, etc.) con otra ficha o con una empresa.
   function avisoDuplicados(email, excluirId) {
     var e = String(email || "").trim().toLowerCase();
@@ -908,7 +1184,7 @@
   }
 
   function detalleContacto(cont, c, nuevo) {
-    cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a la lista", onclick: function () { state.registrando = null; location.hash = "contactos"; } }));
+    cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver al directorio", onclick: function () { state.registrando = null; location.hash = "contactos"; } }));
 
     // Formulario de alta / edición. El tipo no se cambia: cada ficha nace con su tipo y subtipo.
     var tipo = nuevo ? state.altaTipo : c.tipo;
@@ -997,9 +1273,11 @@
       return;
     }
 
+    var cols = h("div", { class: "pn-cols" }), izq = h("div", { class: "pn-col" }), der = h("div", { class: "pn-col" });
+    cols.appendChild(izq); cols.appendChild(der); cont.appendChild(cols);
     // Cabecera: quién es y si ya le hemos escrito
     var dup = avisoDuplicados(c.email, c.id);
-    cont.appendChild(h("div", { class: "card" },
+    izq.appendChild(h("div", { class: "card" },
       h("div", { class: "card-head" },
         h("h2", {}, c.nombre, " ", badge(c.estado, ESTADOS_CONTACTO)),
         h("span", { class: "meta", text: tipoTexto(c) })),
@@ -1016,15 +1294,15 @@
       c.contacto || c.notas ? h("dl", { class: "kv" }, kv("Persona de contacto", c.contacto), kv("Notas", c.notas)) : null
     ));
 
-    cont.appendChild(bloqueRegistro({ c: c }));
-    cont.appendChild(bloqueHistorial({ c: c }));
+    izq.appendChild(bloqueRegistro({ c: c }));
+    der.appendChild(bloqueHistorial({ c: c }));
 
     // Reformista: paso a empresa que recibe leads
     if (c.tipo === "proveedor") {
       var emp = c.empresa_id ? empresaPorId(c.empresa_id) : null;
       var puedeCrear = !emp && ["acuerdo_cerrado", "activo"].indexOf(c.estado) !== -1;
       if (emp || puedeCrear) {
-        cont.appendChild(h("div", { class: "card" }, h("h3", { text: "Recibir leads" }),
+        der.appendChild(h("div", { class: "card" }, h("h3", { text: "Recibir leads" }),
           emp ? h("p", {}, "Ficha en Empresas: ", h("a", { href: "#empresas/" + emp.id, text: emp.nombre }), " (" + ESTADOS_EMPRESA[emp.estado] + "). Ahí se le asignan los leads: solo tipos y zonas que encajen, 3 empresas como máximo por solicitud.")
             : [h("p", { class: "meta", text: "Para asignarle clientes finales hace falta su ficha en Empresas. Se crea «en prueba»: el primer lead que reciba es gratis." }),
               h("div", { class: "actions" }, h("button", {
@@ -1043,7 +1321,7 @@
     // Canal: clientes que nos ha derivado
     if (c.tipo === "canal") {
       var derivados = state.leads.filter(function (l) { return l.canal_id === c.id; });
-      cont.appendChild(h("div", { class: "card" }, h("h3", { text: "Clientes derivados (" + derivados.length + ")" }),
+      der.appendChild(h("div", { class: "card" }, h("h3", { text: "Clientes derivados (" + derivados.length + ")" }),
         derivados.length ? derivados.map(function (l) { return h("p", {}, h("a", { href: "#leads/" + l.id, text: "#" + l.id + " " + l.nombre }), " · " + [TIPOS[l.tipo], l.zona].filter(Boolean).join(" · ")); })
           : h("p", { class: "meta", text: "Todavía no nos ha derivado a nadie. Cuando mande a alguien que quiera reformar, se da de alta como cliente con este canal de origen." }),
         h("div", { class: "actions" }, h("button", {
@@ -1052,7 +1330,7 @@
         }))));
     }
 
-    cont.appendChild(h("details", { class: "card" }, h("summary", { text: "Editar ficha" }), form));
+    izq.appendChild(h("details", { class: "card" }, h("summary", { text: "Editar ficha" }), form));
   }
 
   // ── Leads ─────────────────────────────────────────────────────────────
@@ -1074,69 +1352,6 @@
     var d = digitos(lead.telefono).slice(-9);
     if (!d) { return []; }
     return state.leads.filter(function (l) { return l.id !== lead.id && digitos(l.telefono).slice(-9) === d; });
-  }
-
-  function vistaLeads(main, id) {
-    var nuevo = id === "nuevo";
-    var sel = nuevo ? {} : id ? state.leads.filter(function (l) { return String(l.id) === id; })[0] : null;
-    var split = h("div", { class: "pn-split" + (sel ? " has-detail" : "") });
-    var lista = h("div", { class: "pn-list" });
-
-    function pintarLista() {
-      var filas = leadsFiltrados();
-      lista.replaceChildren();
-      if (!state.leads.length) { lista.appendChild(h("p", { class: "pn-empty", text: "Aún no hay clientes de reforma en el panel. Cuando entre una solicitud, se verifica y se manda a 3 empresas como máximo." })); return; }
-      if (!filas.length) { lista.appendChild(h("p", { class: "pn-empty", text: "No hay clientes con este filtro." })); return; }
-      filas.forEach(function (l) {
-        var n = (l.envios || []).length;
-        lista.appendChild(h("button", {
-          class: "row", type: "button", "aria-current": sel && sel.id === l.id ? "true" : null,
-          onclick: function () { location.hash = "leads/" + l.id; }
-        },
-          h("span", { class: "l1" },
-            h("span", { class: "name", text: l.nombre }),
-            duplicados(l).length ? h("span", { class: "badge warn", text: "Repetido" }) : null,
-            badge(l.estado, ESTADOS_LEAD),
-            h("span", { class: "when", text: fecha(l.created_at) })),
-          h("span", { class: "l2", text: [TIPOS[l.tipo], l.reforma, l.zona, l.plazo].filter(Boolean).join(" · ") }),
-          n ? h("span", { class: "l2", text: "Enviado a " + n + " de 3 empresas" }) : null
-        ));
-      });
-    }
-
-    var counts = {};
-    state.leads.forEach(function (l) { counts[l.estado] = (counts[l.estado] || 0) + 1; });
-    function chip(valor, texto) {
-      return h("button", {
-        class: "chip", type: "button", "aria-pressed": state.filtroLead === valor ? "true" : "false",
-        onclick: function () { state.filtroLead = valor; render(); }
-      }, texto, h("b", { text: valor ? (counts[valor] || 0) : state.leads.length }));
-    }
-    var buscar = h("input", {
-      type: "search", placeholder: "Buscar nombre, teléfono, zona o #id", value: state.busqueda, "aria-label": "Buscar leads",
-      oninput: function () { state.busqueda = buscar.value; pintarLista(); }
-    });
-    var tipoSel = h("select", { "aria-label": "Tipo de reforma", onchange: function () { state.filtroTipo = tipoSel.value; pintarLista(); } },
-      h("option", { value: "", text: "Todos los tipos" }),
-      Object.keys(TIPOS).map(function (k) { return h("option", { value: k, text: TIPOS[k], selected: state.filtroTipo === k }); }));
-
-    var toolbar = h("div", { class: "pn-toolbar" },
-      chip("nuevo", "Nuevos"), chip("por_verificar", "Por verificar"), chip("verificado", "Verificados"), chip("enviado", "Enviados"),
-      chip("cerrado", "Cerrados"), chip("descartado", "Descartados"), chip("", "Todos"),
-      tipoSel, buscar, h("a", { class: "btn btn-sm", href: "#leads/nuevo", text: "+ Nuevo cliente" }));
-
-    pintarLista();
-    var detalle = h("div", { class: "pn-detail" });
-    if (nuevo) { detalleLeadNuevo(detalle); }
-    else if (sel) { detalleLead(detalle, sel); }
-    else if (id) { detalle.appendChild(h("p", { class: "pn-empty", text: "Ese lead no existe o no está entre los cargados." })); }
-    else { detalle.appendChild(h("p", { class: "pn-empty", text: state.leads.length ? "Elige un cliente de la lista." : "Si te llega una solicitud por teléfono, WhatsApp o un canal, dala de alta con «+ Nuevo cliente»." })); }
-
-    if (sel) { main.classList.add("has-detail"); }
-    main.appendChild(toolbar);
-    split.appendChild(lista);
-    split.appendChild(detalle);
-    main.appendChild(split);
   }
 
   // Alta manual de un cliente final: llamada, WhatsApp o derivado por un canal.
@@ -1184,7 +1399,7 @@
         h("div", { class: "field" }, h("label", { for: "cl-via", text: "Origen" }), via, canalSel)),
       h("div", { class: "field" }, h("label", { for: "cl-mensaje", text: "Comentario / alcance" }), mensaje),
       h("div", { class: "actions" }, h("button", { class: "btn btn-sm", type: "submit", text: "Dar de alta" })));
-    cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a la lista", onclick: function () { state.altaCanal = null; location.hash = "leads"; } }));
+    cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a clientes", onclick: function () { state.altaCanal = null; location.hash = "leads"; } }));
     cont.appendChild(h("div", { class: "card" }, h("h2", { text: "Nuevo cliente" }),
       h("p", { class: "meta", text: "Entra como «nuevo»: llámale para verificar que es real y quiere presupuesto antes de enviarlo a las empresas." }), form));
   }
@@ -1216,10 +1431,12 @@
     var origen = l.origen || {};
     var canal = origen.via ? "Alta manual · " + (VIAS[origen.via] || origen.via) : [origen.utm_source, origen.utm_campaign].filter(Boolean).join(" / ") || (origen.gclid ? "Google Ads" : origen.fbclid ? "Meta" : origen.referrer ? "Enlace: " + origen.referrer : "Directo");
 
+    var cols = h("div", { class: "pn-cols" }), izq = h("div", { class: "pn-col" }), der = h("div", { class: "pn-col" });
+    cols.appendChild(izq); cols.appendChild(der);
     // Cabecera y contacto
     var saludo = "Hola " + l.nombre.split(" ")[0] + ", te escribo de Pimen Reformas por tu solicitud de presupuesto. ¿Te va bien que te llame un momento?";
-    cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a la lista", onclick: function () { location.hash = "leads"; } }));
-    cont.appendChild(h("div", { class: "card" },
+    cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a clientes", onclick: function () { location.hash = "leads"; } }));
+    izq.appendChild(h("div", { class: "card" },
       h("div", { class: "card-head" },
         h("h2", {}, l.nombre, " ", badge(l.estado, ESTADOS_LEAD)),
         h("span", { class: "meta", text: "#" + l.id + " · " + fecha(l.created_at) })),
@@ -1274,7 +1491,7 @@
       acciones.appendChild(h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Reabrir", onclick: function () { cambiarEstado(envios.length ? "enviado" : "nuevo", { motivo_descarte: null }, "Lead reabierto"); } }));
     }
     var notas = h("textarea", { "aria-label": "Notas internas", placeholder: "Notas internas: qué dijo al llamarle, cuándo volver a llamar…", value: l.notas || "" });
-    cont.appendChild(h("div", { class: "card" },
+    izq.appendChild(h("div", { class: "card" },
       h("h3", { text: "Estado" }),
       l.estado === "nuevo" || l.estado === "por_verificar" ? h("p", { class: "meta", text: "Llama o escribe al cliente para confirmar que es real y que quiere presupuesto antes de enviarlo a las empresas." }) : null,
       avisoInvalido(l, envios),
@@ -1283,8 +1500,8 @@
       h("div", { class: "actions" }, h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Guardar notas", onclick: function () { guardar(sb.from("leads").update({ notas: notas.value.trim() || null }).eq("id", l.id), "Notas guardadas"); } }))
     ));
 
-    cont.appendChild(bloqueRegistro({ l: l }));
-    cont.appendChild(bloqueHistorial({ l: l }));
+    der.appendChild(bloqueRegistro({ l: l }));
+    der.appendChild(bloqueHistorial({ l: l }));
 
     // Envíos
     var cardEnvios = h("div", { class: "card" }, h("h3", { text: "Empresas (" + envios.length + " de 3)" }));
@@ -1297,7 +1514,8 @@
     } else if (l.estado === "nuevo" || l.estado === "por_verificar") {
       cardEnvios.appendChild(h("p", { class: "meta", text: "Para enviarlo, primero márcalo como verificado." }));
     }
-    cont.appendChild(cardEnvios);
+    der.insertBefore(cardEnvios, der.firstChild);
+    cont.appendChild(cols);
   }
 
   // Un lead inválido ya enviado no se cobra: hay que avisar a las empresas en los 7 días siguientes al envío.
@@ -1414,49 +1632,6 @@
     };
   }
 
-  function vistaEmpresas(main, id) {
-    var nueva = id === "nueva";
-    var sel = nueva ? {} : id ? empresaPorId(Number(id)) : null;
-    var split = h("div", { class: "pn-split" + (sel ? " has-detail" : "") });
-    if (sel) { main.classList.add("has-detail"); }
-    var counts = {};
-    state.empresas.forEach(function (e) { counts[e.estado] = (counts[e.estado] || 0) + 1; });
-    function chip(valor, texto) {
-      return h("button", {
-        class: "chip", type: "button", "aria-pressed": state.filtroEmpresa === valor ? "true" : "false",
-        onclick: function () { state.filtroEmpresa = valor; render(); }
-      }, texto, h("b", { text: valor ? (counts[valor] || 0) : state.empresas.length }));
-    }
-    main.appendChild(h("div", { class: "pn-toolbar" },
-      chip("", "Todas"), chip("interesada", "Interesadas"), chip("prueba", "En prueba"), chip("activa", "Activas"),
-      chip("pausada", "Pausadas"), chip("baja", "Bajas"),
-      h("span", { class: "spacer" }),
-      h("a", { class: "btn btn-sm", href: "#empresas/nueva", text: "+ Nueva empresa" })));
-
-    var lista = h("div", { class: "pn-list" });
-    var filas = state.empresas.filter(function (e) { return !state.filtroEmpresa || e.estado === state.filtroEmpresa; });
-    if (!filas.length) { lista.appendChild(h("p", { class: "pn-empty", text: "No hay empresas con este filtro." })); }
-    filas.forEach(function (e) {
-      var st = statsEmpresa(e.id);
-      lista.appendChild(h("button", {
-        class: "row", type: "button", "aria-current": sel && sel.id === e.id ? "true" : null,
-        onclick: function () { location.hash = "empresas/" + e.id; }
-      },
-        h("span", { class: "l1" }, h("span", { class: "name", text: e.nombre }), badge(e.estado, ESTADOS_EMPRESA)),
-        h("span", { class: "l2", text: [(e.tipos || []).map(function (t) { return TIPOS[t]; }).join(", "), e.zonas].filter(Boolean).join(" · ") || "Sin tipos ni zonas" }),
-        h("span", { class: "l2", text: st.envios.length + " leads · " + st.ganados + " ganados" + (st.pendiente ? " · " + euros(st.pendiente) + " por cobrar" : "") })
-      ));
-    });
-
-    var detalle = h("div", { class: "pn-detail" });
-    if (sel) { detalleEmpresa(detalle, sel, nueva); }
-    else if (id) { detalle.appendChild(h("p", { class: "pn-empty", text: "Esa empresa no existe." })); }
-    else { detalle.appendChild(h("p", { class: "pn-empty", text: "Elige una empresa de la lista o crea una nueva." })); }
-    split.appendChild(lista);
-    split.appendChild(detalle);
-    main.appendChild(split);
-  }
-
   function detalleEmpresa(cont, e, nueva) {
     function campo(nombre, etiqueta, tipo, extra) {
       var input = h("input", Object.assign({ type: tipo || "text", id: "emp-" + nombre, name: nombre, value: e[nombre] == null ? "" : e[nombre] }, extra || {}));
@@ -1514,16 +1689,18 @@
       h("div", { class: "actions" }, h("button", { class: "btn btn-sm", type: "submit", text: nueva ? "Crear empresa" : "Guardar cambios" }))
     );
 
-    cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a la lista", onclick: function () { location.hash = "empresas"; } }));
+    cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a empresas", onclick: function () { location.hash = "empresas"; } }));
     if (nueva) {
       cont.appendChild(h("div", { class: "card" }, h("h2", { text: "Nueva empresa" }), form));
       return;
     }
 
+    var cols = h("div", { class: "pn-cols" }), izq = h("div", { class: "pn-col" }), der = h("div", { class: "pn-col" });
+    cols.appendChild(izq); cols.appendChild(der); cont.appendChild(cols);
     var st = statsEmpresa(e.id);
     var origen = e.origen || {};
     var saludo = "Hola" + (e.contacto ? " " + e.contacto.split(" ")[0] : "") + ", te escribo de Pimen Leads por tu solicitud del primer lead gratis.";
-    cont.appendChild(h("div", { class: "card" },
+    izq.appendChild(h("div", { class: "card" },
       h("div", { class: "card-head" },
         h("h2", {}, e.nombre, " ", badge(e.estado, ESTADOS_EMPRESA)),
         h("span", { class: "meta", text: "Alta: " + dia(e.created_at) })),
@@ -1568,10 +1745,10 @@
             h("td", { text: x.devolucion === "aceptada" ? "Devuelto" : !Number(x.precio) ? "Gratis" : x.cobrado ? "Cobrado" : "Pendiente" }));
         })))));
     }
-    cont.appendChild(lista);
+    der.appendChild(lista);
 
     if (!st.envios.length) {
-      cont.appendChild(h("div", { class: "actions" }, h("button", {
+      der.appendChild(h("div", { class: "actions" }, h("button", {
         class: "btn btn-sm btn-danger", type: "button", text: "Eliminar empresa",
         onclick: function () {
           if (confirm("¿Eliminar " + e.nombre + "? No se puede deshacer.")) {
@@ -1627,7 +1804,9 @@
       [["mes", "Este mes"], ["mes-pasado", "Mes pasado"], ["30", "Últimos 30 días"], ["90", "Últimos 90 días"], ["todo", "Todo"]].map(function (o) {
         return h("option", { value: o[0], text: o[1], selected: state.periodo === o[0] });
       }));
-    main.appendChild(h("div", { class: "pn-toolbar" }, h("h2", { text: "Resumen" }), h("span", { class: "spacer" }), periodo,
+    main.appendChild(h("div", { class: "pn-cab" }, h("div", {}, h("h1", { text: "Resumen" }), h("p", { class: "meta", text: "Pendientes, embudos y facturación." }))));
+    main.appendChild(bloqueProspeccion());
+    main.appendChild(h("div", { class: "pn-toolbar pn-sep" }, h("h2", { text: "Leads y facturación" }), h("span", { class: "spacer" }), periodo,
       h("button", {
         class: "btn btn-sm btn-ghost", type: "button", text: "Exportar envíos del periodo (CSV)", disabled: !envios.length,
         onclick: function () {
