@@ -20,7 +20,7 @@ Vale para cualquier cliente que cierres: administración de fincas, inmobiliaria
 - Usa la plantilla que corresponda (ábrela en tu ordenador, con el navegador):
   - Administración de fincas, inmobiliaria u otro colaborador que nos pasa clientes: `_interno/plantilla-carta.html`.
   - Empresa de reformas (proveedor que recibe los contactos): `_interno/plantilla-carta-proveedor.html`. Es el mismo modelo que usa Jaume con todos los proveedores, por ejemplo con Grupo SRZ.
-- No cambies el formato: logo a la izquierda con los cuatro cuadrados, la línea amarilla bajo el título, los títulos de cada apartado en verde, el recuadro amarillo de las condiciones y la tabla.
+- No cambies el formato: tiene que verse igual que las cartas de Jaume (mira "Estilo de la carta" más abajo).
 - Rellena solo lo que está entre corchetes `[ ]`: fecha, nombre de la empresa, la frase inicial, las condiciones, la tabla de ejemplos y tu nombre.
 - Adapta los textos al tipo de cliente:
   - Administración de fincas: dejar claro que es solo para reformas de viviendas particulares, no para obras de la comunidad.
@@ -34,6 +34,19 @@ Vale para cualquier cliente que cierres: administración de fincas, inmobiliaria
 - La firma de Alex está en `firma-alex.html` y se ve en https://www.pimenleads.com/firma-alex.html
 - Lleva tu nombre (Alex), el teléfono de Jaume (644 48 91 80) y comercial@pimenleads.com.
 - Cópiala en Gmail desde Ajustes → Firma y añádela al final de cada correo.
+
+## Estilo de la carta (obligatorio, igual en todas)
+
+La carta siempre sigue este modelo. No la rediseñes ni cambies el orden: copia la plantilla y cambia solo el contenido.
+
+- **Cabecera:** logo a la izquierda (cuatro cuadrados, tres verdes y uno amarillo) y "Pimen Leads" en verde `#0d5c58`, con una línea amarilla `#f0b429` debajo.
+- **Datos:** debajo, en gris, la ciudad y la fecha, y "Para: nombre de la empresa".
+- **Tipografía:** Helvetica o Arial, texto de 9,5 pt. Los títulos de cada apartado van en verde.
+- **Orden de los apartados:** saludo y frase inicial → Quiénes somos → Cómo funciona o Cómo colaboraríamos → Qué os ofrecemos → Condiciones propuestas → Siguientes pasos → despedida → firma.
+- **Condiciones propuestas:** dentro de un recuadro beis `#f7f4ec` con el borde izquierdo amarillo. Si hay ejemplos, en una tabla de dos columnas con borde fino y cabecera beis.
+- **Pie:** firma (nombre, "Pimen Leads", correo y teléfono) y, debajo, "Pimen Leads · Barcelona" en gris.
+- **Longitud:** una sola página A4.
+- **Tono:** cordial, profesional y directo. Tutea o trata de "vosotros" igual que la plantilla.
 
 ## Reglas al escribir
 
