@@ -1266,7 +1266,21 @@
         tipoCampo),
       avisoEl,
       h("div", { class: "field" }, h("label", { for: "ct-notas", text: "Notas internas" }), notas),
-      h("div", { class: "actions" }, h("button", { class: "btn btn-sm", type: "submit", text: nuevo ? "Crear ficha" : "Guardar cambios" }))
+      h("div", { class: "actions" },
+        h("button", { class: "btn btn-sm", type: "submit", text: nuevo ? "Crear ficha" : "Guardar cambios" }),
+        nuevo ? null : h("button", {
+          class: "btn btn-sm btn-danger", type: "button", text: "Eliminar ficha",
+          onclick: function () {
+            if (confirm("¿Eliminar " + c.nombre + " con todo su historial? No se puede deshacer.")) {
+              sb.from("contactos").delete().eq("id", c.id).then(function (res) {
+                if (res.error) { toast("No se ha podido eliminar: " + res.error.message, true); return; }
+                toast("Ficha eliminada");
+                location.hash = "contactos";
+                cargar();
+              });
+            }
+          }
+        }))
     );
 
     if (nuevo) {
