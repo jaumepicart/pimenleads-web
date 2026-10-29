@@ -54,6 +54,12 @@ a ti; en la importación masiva hay un selector «Asignar las fichas a».
    - **Próxima acción** y **Para el día**: qué hay que hacer y cuándo (por ejemplo «Llamar el jueves»).
 4. **Guardar**.
 
+Si el resultado es **No contesta** o **Devolver llamada**, el panel propone solo la próxima acción y la fecha (volver a
+llamar mañana, hasta 3 intentos); revísalo antes de guardar. Puedes poner también la hora.
+
+Si te encuentras **dos fichas de la misma empresa**, abre una y usa «¿Ficha duplicada? Fusionar con otra»: su historial
+pasa a la que elijas. No borres una a mano.
+
 ## Caso 2: ha enviado un correo o le han contestado
 
 - Correo enviado: ficha → **Registrar correo**. «Enviado desde» ya trae `comercial@pimenleads.com`; cambia solo si fue otra cuenta. Pon la campaña o asunto.
