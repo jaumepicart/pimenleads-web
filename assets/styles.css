@@ -310,3 +310,14 @@ html:has(.top-nav) { scroll-padding-top: 7rem; }
   .bonus-flow { grid-template-columns: repeat(3, 1fr); }
   .bonus-tiers { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* Línea de bonificación en la parte alta */
+.bonus-line { margin-top: 1rem; }
+.bonus-line a { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .6rem; padding: .55rem .85rem; background: var(--surface); border: 1.5px solid var(--accent); border-radius: 10px; color: var(--ink); text-decoration: none; font-size: .97rem; }
+.bonus-line a span { color: var(--teal); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Aviso de cookies más compacto en móvil para no tapar el formulario */
+@media (max-width: 519px) {
+  .cookies { left: .5rem; right: .5rem; bottom: .5rem; padding: .65rem .8rem; gap: .5rem; font-size: .82rem; line-height: 1.35; border-radius: 12px; }
+  .cookies-btn { padding: .45rem .75rem; font-size: .9rem; }
+}
