@@ -33,6 +33,14 @@ Si el contacto es una empresa que llamas o a la que escribes para venderle leads
 
 Los correos de la empresa salen de `comercial@pimenleads.com`.
 
+## A quién le toca cada ficha
+
+Cada ficha tiene un **Responsable** (la persona a la que le toca llamar). En **Pendientes** se ve por defecto lo
+tuyo más lo que aún no tiene dueño; el selector «Responsable» deja ver lo del otro o todo. En el **Directorio**
+se ve todo por defecto, para poder buscar antes de llamar. Si llamas a una ficha del otro, registra la llamada
+igual (queda «por» tu nombre) y, si pasa a ser tuya, cámbiala en «Editar ficha». Las fichas nuevas se te asignan
+a ti; en la importación masiva hay un selector «Asignar las fichas a».
+
 ## Caso 1: la persona ha llamado o ha contado una llamada
 
 1. Busca la ficha (regla de oro) y ábrela.
@@ -45,6 +53,12 @@ Los correos de la empresa salen de `comercial@pimenleads.com`.
    - **La ficha pasa a**: el panel sugiere el estado; revísalo (ver «Estados»).
    - **Próxima acción** y **Para el día**: qué hay que hacer y cuándo (por ejemplo «Llamar el jueves»).
 4. **Guardar**.
+
+Si el resultado es **No contesta** o **Devolver llamada**, el panel propone solo la próxima acción y la fecha (volver a
+llamar mañana, hasta 3 intentos); revísalo antes de guardar. Puedes poner también la hora.
+
+Si te encuentras **dos fichas de la misma empresa**, abre una y usa «¿Ficha duplicada? Fusionar con otra»: su historial
+pasa a la que elijas. No borres una a mano.
 
 ## Caso 2: ha enviado un correo o le han contestado
 

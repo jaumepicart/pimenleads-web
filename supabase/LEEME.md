@@ -109,6 +109,40 @@ inmobiliaria, gestora u otro) y los **clientes finales** son los leads de siempr
 queda en el historial de la ficha. En los datos importados la fecha de envío no estaba en el documento, así que
 aparece «sin fecha anotada».
 
+## 8. Asignar fichas (a quién le toca llamar)
+
+Ejecuta [`asignacion.sql`](asignacion.sql) en el **SQL Editor** (después del apartado 7; se puede repetir). Añade el
+campo *Responsable* a cada ficha y hace que el resumen diario de Telegram agrupe los pendientes por persona.
+
+Los responsables son los correos de la tabla `admins`, así que antes hay que haber dado de alta a las dos personas
+(apartado 3). Después, en **Directorio**, el botón **Repartir N sin asignar** divide las fichas a partes iguales
+(alternando dentro de cada tipo). **Pendientes** enseña por defecto lo tuyo y lo que no tiene dueño; el selector
+«Responsable» cambia la vista. Quién hizo cada llamada ya queda en el historial («por …»).
+
+## 9. Hora de llamada, avisos por persona y fusionar fichas
+
+Ejecuta [`mejoras-crm.sql`](mejoras-crm.sql) después de `asignacion.sql` (se puede repetir). Añade:
+
+- **Hora de la próxima acción** al registrar una llamada (opcional). Sale también en el resumen de Telegram.
+- **Reintentos**: si registras «No contesta», la próxima acción se propone sola para el siguiente día laborable
+  (intento 2 de 3, luego 3 de 3). Al tercer intento sin respuesta propone probar por correo o WhatsApp, o dejarlo.
+  «Devolver llamada» propone devolverla hoy. Todo se puede cambiar antes de guardar.
+- **Telegram por persona**: cada uno puede recibir su resumen en su propio chat. Escribid cada uno al bot, mirad
+  vuestro `chat_id` (abre `https://api.telegram.org/botTOKEN/getUpdates`, campo `chat.id`) y guardadlo en el SQL Editor:
+
+  ```sql
+  update public.admins set telegram_chat_id = 'EL_CHAT_ID' where email = 'correo@ejemplo.com';
+  ```
+
+  Quien no tenga chat propio sigue recibiendo lo suyo en el chat común, que además recibe lo general y lo sin asignar.
+- **Fusionar fichas duplicadas**: en la ficha, «¿Ficha duplicada? Fusionar con otra». Solo entre fichas del mismo tipo.
+
+En **Resumen** salen además las llamadas por persona y lo que se tarda en hacer la primera llamada a un cliente nuevo.
+
+**Copias de seguridad**: borrar y fusionar fichas no se puede deshacer. Mira en Supabase (*Database → Backups*) si tu
+plan hace copias diarias; si no, usa **Resumen → Copia completa (JSON)** de vez en cuando y guarda el archivo fuera
+del repositorio (lleva datos personales).
+
 ## Cómo funciona
 
 - Los formularios de la web envían cada solicitud a la base de datos **y** a Formspree (correo). Basta con que llegue a uno de los dos.

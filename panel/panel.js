@@ -49,6 +49,11 @@
     empresas: [],
     contactos: [],
     interacciones: [],
+    admins: [],
+    sinAsignacion: false,
+    sinHora: false,
+    dirResp: "",
+    pendResp: "mias",
     sinProspeccion: false,
     dirTipo: "",
     dirSub: "",
@@ -174,7 +179,8 @@
       sb.from("leads").select("*, envios(*)").order("created_at", { ascending: false }).limit(2000),
       sb.from("empresas").select("*").order("nombre"),
       sb.from("contactos").select("*").order("nombre").limit(5000),
-      sb.from("interacciones").select("*").limit(20000)
+      sb.from("interacciones").select("*").limit(20000),
+      sb.from("admins").select("email").order("email")
     ]).then(function (r) {
       if (r[0].error) { throw r[0].error; }
       if (r[1].error) { throw r[1].error; }
@@ -184,6 +190,11 @@
       state.sinProspeccion = !!(r[2].error || r[3].error);
       state.contactos = state.sinProspeccion ? [] : r[2].data;
       state.interacciones = state.sinProspeccion ? [] : r[3].data;
+      state.admins = r[4].error ? [] : r[4].data.map(function (a) { return a.email; });
+      // Si todavía no se ha ejecutado supabase/asignacion.sql, no hay columna responsable y se oculta todo lo de asignar.
+      state.sinAsignacion = !state.contactos.length || !("responsable" in state.contactos[0]);
+      // Igual con supabase/mejoras-crm.sql: sin la columna proxima_hora no se ofrece la hora.
+      state.sinHora = !state.contactos.length || !("proxima_hora" in state.contactos[0]);
       render();
     }).catch(function (err) {
       toast("Error al cargar datos: " + (err.message || err), true);
@@ -304,12 +315,14 @@
   function ir(hash) {
     if (location.hash === "#" + hash) { render(); } else { location.hash = hash; }
   }
-  function irADirectorio(tipo, estado) {
+  // resp: filtro de responsable con el que llegar (las tarjetas de Pendientes pasan el que se está viendo).
+  function irADirectorio(tipo, estado, resp) {
     state.dirTipo = tipo || ""; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = estado || "";
-    state.dirBusqueda = ""; state.dirTel = ""; state.dirSeg = "";
+    state.dirBusqueda = ""; state.dirTel = ""; state.dirSeg = ""; state.dirResp = resp || "";
     ir("contactos");
   }
-  function irASeguimientos() { irADirectorio("", ""); state.dirSeg = "vencido"; ir("contactos"); }
+  function irASeguimientos() { irADirectorio("", "", respPendientes()); state.dirSeg = "vencido"; ir("contactos"); }
+  function respPendientes() { return state.pendResp === "todas" ? "" : state.pendResp; }
   function irAClientes(estado) { state.filtroLead = estado; state.filtroTipo = ""; state.busqueda = ""; ir("leads"); }
 
   // Orden por columna: el estado se recuerda por vista y se cambia pulsando la cabecera.
@@ -383,10 +396,10 @@
     var porVerificar = state.leads.filter(function (l) { return l.estado === "nuevo" || l.estado === "por_verificar"; }).length;
     var lista = [
       { t: "Clientes por verificar", n: porVerificar, tono: "urg", f: function () { irAClientes("nuevo"); } },
-      { t: "Llamada pendiente", n: n(0), tono: "urg", f: function () { irADirectorio("proveedor", "llamada_pendiente"); } },
-      { t: "Respondieron: llamar", n: n(1), tono: "urg", f: function () { irADirectorio("proveedor", "respondio"); } },
-      { t: "Acuerdo cerrado", n: n(2), tono: "ok", f: function () { irADirectorio("proveedor", "acuerdo_cerrado"); } },
-      { t: "Canal a la espera", n: n(3), tono: "", f: function () { irADirectorio("canal", "llamada_hecha"); } },
+      { t: "Llamada pendiente", n: n(0), tono: "urg", f: function () { irADirectorio("proveedor", "llamada_pendiente", respPendientes()); } },
+      { t: "Respondieron: llamar", n: n(1), tono: "urg", f: function () { irADirectorio("proveedor", "respondio", respPendientes()); } },
+      { t: "Acuerdo cerrado", n: n(2), tono: "ok", f: function () { irADirectorio("proveedor", "acuerdo_cerrado", respPendientes()); } },
+      { t: "Canal a la espera", n: n(3), tono: "", f: function () { irADirectorio("canal", "llamada_hecha", respPendientes()); } },
       { t: "Seguimientos vencidos", n: n(4), tono: "urg", f: irASeguimientos },
       { t: "Inválidos por avisar", n: invalidosPorAvisar().length, tono: "urg", f: function () { irAClientes("descartado"); } }
     ];
@@ -401,13 +414,15 @@
   function tablaContactosCompacta(items) {
     return tablaPn([{ t: "Ficha" }, { t: "Estado" }, { t: "Toca" }], items.map(function (c) {
       return { href: "contactos/" + c.id, celdas: [celda2(c.nombre, tipoTexto(c), "#contactos/" + c.id), badge(c.estado, ESTADOS_CONTACTO),
-        celda2(c.proxima_accion || "—", c.proxima_fecha ? dia(c.proxima_fecha) : lineaUltima(c))] };
+        celda2(c.proxima_accion || "—", c.proxima_fecha ? diaHora(c) : lineaUltima(c))] };
     }));
   }
 
   function vistaPendientes(main) {
     main.appendChild(h("div", { class: "pn-cab" }, h("div", {}, h("h1", { text: "Pendientes" }), h("p", { class: "meta", text: "Lo que toca hoy, por prioridad. Pulsa una tarjeta para ver la lista." })),
       h("div", { class: "actions" },
+        state.sinAsignacion ? null : selFiltro("Responsable", opcionesResp("", "Mías y sin asignar").map(function (o) { return [o[0] || "todas", o[0] ? o[1] : "Todas"]; }),
+          state.pendResp, function (v) { state.pendResp = v; render(); }),
         h("a", { class: "btn btn-sm btn-ghost", href: "#contactos", text: "Buscar antes de llamar" }),
         h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" }))));
     if (!state.sinProspeccion) { main.appendChild(kpisPendientes()); }
@@ -416,8 +431,8 @@
     if (nuevos.length) {
       cards.push(h("div", { class: "card" }, h("h3", { text: "Clientes por verificar (" + nuevos.length + ")" }),
         h("p", { class: "meta", text: "Solicitudes que han entrado y todavía no se han llamado." }),
-        tablaPn([{ t: "Cliente" }, { t: "Estado" }, { t: "Recibido" }], nuevos.map(function (l) {
-          return { href: "leads/" + l.id, celdas: [celda2(l.nombre, [TIPOS[l.tipo], l.zona, l.plazo].filter(Boolean).join(" · "), "#leads/" + l.id), badge(l.estado, ESTADOS_LEAD), fecha(l.created_at)] };
+        tablaPn([{ t: "Cliente" }, { t: "Estado" }, { t: "Espera" }], nuevos.map(function (l) {
+          return { href: "leads/" + l.id, celdas: [celda2(l.nombre, [TIPOS[l.tipo], l.zona, l.plazo].filter(Boolean).join(" · "), "#leads/" + l.id), badge(l.estado, ESTADOS_LEAD), celda2(hace(l.created_at), fecha(l.created_at))] };
         }))));
     }
     var invalidos = invalidosPorAvisar();
@@ -456,6 +471,47 @@
     return i ? new Date(i.ocurrio_at).getTime() : null;
   }
 
+  // Reparte las fichas sin responsable a partes iguales entre todos los administradores.
+  function botonRepartir() {
+    var sin = state.contactos.filter(function (c) { return !c.responsable; }).length;
+    if (state.sinAsignacion || state.admins.length < 2 || !sin) { return null; }
+    return h("button", {
+      class: "btn btn-sm btn-ghost", type: "button", text: "Repartir " + sin + " sin asignar",
+      onclick: function () {
+        var quienes = state.admins.map(nombreResp).join(" y ");
+        if (!confirm("Se repartirán las " + sin + " fichas sin asignar a partes iguales entre " + quienes + ", alternando dentro de cada tipo. Luego se puede cambiar ficha a ficha. ¿Repartir?")) { return; }
+        guardar(sb.rpc("repartir_contactos", { responsables: state.admins }), "Fichas repartidas");
+      }
+    });
+  }
+
+  // Junta esta ficha con otra del mismo tipo: esta desaparece y su historial pasa a la que se elija.
+  function bloqueFusionar(c) {
+    if (state.sinHora) { return null; }  // sin mejoras-crm.sql todavía no existe fusionar_contactos
+    var candidatas = state.contactos.filter(function (x) { return x.id !== c.id && x.tipo === c.tipo; });
+    var etiquetas = {};
+    candidatas.forEach(function (x) { etiquetas[x.nombre + (x.email ? " <" + x.email + ">" : "") + " · #" + x.id] = x; });
+    var entrada = h("input", { type: "text", list: "fusionar-lista", placeholder: "Escribe el nombre o el correo de la otra ficha", "aria-label": "Ficha con la que fusionar" });
+    var lista = h("datalist", { id: "fusionar-lista" }, Object.keys(etiquetas).map(function (k) { return h("option", { value: k }); }));
+    return h("details", { class: "card" }, h("summary", { text: "¿Ficha duplicada? Fusionar con otra" }),
+      h("p", { class: "meta", text: "Esta ficha desaparece. Su historial y sus datos pasan a la ficha que elijas (si los dos tienen un dato distinto, se queda el de la otra y este se anota en sus notas)." }),
+      entrada, lista,
+      h("div", { class: "actions" }, h("button", {
+        class: "btn btn-sm btn-danger", type: "button", text: "Fusionar",
+        onclick: function () {
+          var destino = etiquetas[entrada.value];
+          if (!destino) { toast("Elige una ficha de la lista", true); return; }
+          if (!confirm("Se eliminará «" + c.nombre + "» y todo pasará a «" + destino.nombre + "». No se puede deshacer. ¿Fusionar?")) { return; }
+          sb.rpc("fusionar_contactos", { origen: c.id, destino: destino.id }).then(function (res) {
+            if (res.error) { toast("No se ha podido fusionar: " + res.error.message, true); return; }
+            toast("Fichas fusionadas");
+            location.hash = "contactos/" + destino.id;
+            cargar();
+          });
+        }
+      })));
+  }
+
   function vistaContactos(main, id) {
     if (state.sinProspeccion) { main.appendChild(avisoProspeccion()); return; }
     if (id === "importar") { vistaImportar(main); return; }
@@ -478,22 +534,22 @@
       var filas = ordenar(contactosFiltrados(), orden, {
         nombre: function (c) { return norm(c.nombre); }, tipo: function (c) { return norm(tipoTexto(c)); },
         estado: function (c) { return Object.keys(ESTADOS_CONTACTO).indexOf(c.estado); }, ultimo: ultimoTs,
-        toca: function (c) { return c.proxima_fecha || null; }, telefono: function (c) { return c.telefono; }
+        toca: function (c) { return c.proxima_fecha || null; }, resp: function (c) { return c.responsable || null; }, telefono: function (c) { return c.telefono; }
       });
       res.replaceChildren(h("p", { class: "meta" }, filas.length + " de " + state.contactos.length + " fichas"));
       if (!filas.length) { res.appendChild(nodoVacio("Ninguna ficha con estos filtros. Si no aparece, es que aún no le hemos escrito.")); return; }
       res.appendChild(tablaPn([
         { t: "Nombre", k: "nombre" }, { t: "Tipo", k: "tipo" }, { t: "Estado", k: "estado", cls: "nw" },
-        { t: "Último movimiento", k: "ultimo" }, { t: "Toca", k: "toca" }, { t: "Teléfono", k: "telefono", cls: "nw" }
-      ], filas.map(function (c) {
+        { t: "Último movimiento", k: "ultimo" }, { t: "Toca", k: "toca" }].concat(state.sinAsignacion ? [] : [{ t: "Responsable", k: "resp", cls: "nw" }], [{ t: "Teléfono", k: "telefono", cls: "nw" }]), filas.map(function (c) {
         var its = internasDe(c.id), u = its[0];
         return { href: "contactos/" + c.id, celdas: [
           celda2(c.nombre, c.email, "#contactos/" + c.id),
           c.tipo === "canal" ? SUBTIPOS[c.subtipo] : celda2("Reformista", (c.reformas || []).length ? reformasTexto(c) : "Tipo por clasificar"), badge(c.estado, ESTADOS_CONTACTO),
           u ? celda2(CANALES[u.canal] + " " + (ESTADOS_INTER_TODOS[u.estado] || u.estado).toLowerCase(), fechaInter(u) + (u.canal === "email" && u.desde && u.desde !== CUENTA_COMERCIAL ? " · " + u.desde : "")) : h("span", { class: "muted", text: "Sin contacto aún" }),
-          c.proxima_accion ? celda2(c.proxima_accion, c.proxima_fecha ? dia(c.proxima_fecha) : "") : h("span", { class: "muted", text: "—" }),
+          c.proxima_accion ? celda2(c.proxima_accion, c.proxima_fecha ? diaHora(c) : "") : h("span", { class: "muted", text: "—" })
+        ].concat(state.sinAsignacion ? [] : [c.responsable ? nombreResp(c.responsable) : h("span", { class: "muted", text: "Sin asignar" })], [
           c.telefono || h("span", { class: "muted", text: "Sin teléfono" })
-        ] };
+        ]) };
       }), orden));
     }
 
@@ -520,15 +576,19 @@
     }
     var etiquetas = state.dirTipo ? (state.dirTipo === "canal" ? ESTADOS_CANAL : ESTADOS_PROV) : ESTADOS_CONTACTO;
     fila2.appendChild(selFiltro("Estado", [["", "Todos"]].concat(Object.keys(etiquetas).map(function (k) { return [k, etiquetas[k]]; })), state.dirEstado, function (v) { state.dirEstado = v; pintar(); }));
+    if (!state.sinAsignacion) {
+      fila2.appendChild(selFiltro("Responsable", opcionesResp("Todas", "Mías y sin asignar"), state.dirResp, function (v) { state.dirResp = v; pintar(); }));
+    }
     fila2.appendChild(selFiltro("Teléfono", [["", "Todos"], ["con", "Con teléfono"], ["sin", "Sin teléfono"]], state.dirTel, function (v) { state.dirTel = v; pintar(); }));
     fila2.appendChild(selFiltro("Seguimiento", [["", "Todos"], ["vencido", "Vencido o de hoy"], ["con", "Con próxima acción"]], state.dirSeg, function (v) { state.dirSeg = v; pintar(); }));
     fila2.appendChild(h("button", {
       class: "linkbtn", type: "button", text: "Quitar filtros",
-      onclick: function () { state.dirTipo = ""; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = ""; state.dirBusqueda = ""; state.dirTel = ""; state.dirSeg = ""; render(); }
+      onclick: function () { state.dirTipo = ""; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = ""; state.dirBusqueda = ""; state.dirTel = ""; state.dirSeg = ""; state.dirResp = ""; render(); }
     }));
 
     main.appendChild(h("div", { class: "pn-cab" }, h("div", {}, h("h1", { text: "Directorio" }), h("p", { class: "meta", text: "Busca aquí antes de llamar o escribir a nadie." })),
       h("div", { class: "actions" },
+        botonRepartir(),
         h("a", { class: "btn btn-sm btn-ghost", href: "#contactos/importar", text: "Importar lista" }),
         h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Exportar CSV", onclick: exportarContactos }),
         h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" }))));
@@ -733,6 +793,25 @@
     return r.length > 1 ? "mixto (" + nombres + ")" : nombres;
   }
   function tipoTexto(c) { return c.tipo === "canal" ? SUBTIPOS[c.subtipo] : "Reformista · " + reformasTexto(c); }
+  // ── Responsables (a quién le toca cada ficha) ──
+  function nombreResp(email) { return email ? email.split("@")[0].replace(/^./, function (x) { return x.toUpperCase(); }) : "Sin asignar"; }
+  // «mias» incluye las fichas sin asignar: mientras no se reparta, cada uno ve todo en vez de una lista vacía.
+  function coincideResp(c, v) {
+    if (!v || state.sinAsignacion) { return true; }
+    if (v === "mias") { return !c.responsable || c.responsable === autorActual(); }
+    if (v === "sin") { return !c.responsable; }
+    return c.responsable === v;
+  }
+  function opcionesResp(todas, mias) {
+    var o = [["", todas], ["mias", mias]];
+    state.admins.forEach(function (e) { if (e !== autorActual()) { o.push([e, "De " + nombreResp(e)]); } });
+    o.push(["sin", "Sin asignar"]);
+    return o;
+  }
+  function selResponsable(id, valor) {
+    return h("select", { id: id, name: "responsable" }, h("option", { value: "", text: "Sin asignar" }),
+      state.admins.map(function (e) { return h("option", { value: e, text: nombreResp(e) + (e === autorActual() ? " (yo)" : ""), selected: valor === e }); }));
+  }
   function autorActual() { return state.session && state.session.user.email ? state.session.user.email.toLowerCase() : null; }
   function ahoraLocal() {
     var d = new Date();
@@ -740,6 +819,40 @@
     return d.toISOString().slice(0, 16);
   }
   function hoyISO() { return ahoraLocal().slice(0, 10); }
+  // Fecha ISO local dentro de n días; con laborable, salta al lunes si cae en fin de semana.
+  function fechaMas(dias, laborable) {
+    var d = new Date();
+    d.setDate(d.getDate() + dias);
+    while (laborable && (d.getDay() === 0 || d.getDay() === 6)) { d.setDate(d.getDate() + 1); }
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
+  }
+  function hace(d) {
+    var m = Math.max(0, (Date.now() - new Date(d).getTime()) / 6e4);
+    return "hace " + (m < 60 ? Math.round(m) + " min" : m < 1440 ? Math.floor(m / 60) + " h" : Math.floor(m / 1440) + " d");
+  }
+  function duracion(m) {
+    return m < 60 ? Math.round(m) + " min" : m < 1440 ? (m / 60).toFixed(1).replace(".", ",") + " h" : (m / 1440).toFixed(1).replace(".", ",") + " d";
+  }
+  // «viernes 3 · 10:30» si hay hora anotada.
+  function diaHora(c) { return dia(c.proxima_fecha) + (c.proxima_hora ? " · " + c.proxima_hora.slice(0, 5) : ""); }
+  // Llamadas salientes seguidas sin respuesta (de la más reciente hacia atrás, hasta una que sí contestó).
+  function intentosSinRespuesta(c) {
+    var n = 0;
+    for (var i = 0, its = internasDe(c.id); i < its.length; i++) {
+      if (its[i].canal !== "llamada" || its[i].direccion !== "saliente") { continue; }
+      if (its[i].estado !== "no_contesta") { break; }
+      n++;
+    }
+    return n;
+  }
+  // Próxima acción que se propone al registrar una llamada que no se contesta o que hay que devolver.
+  function propuestaReintento(c, estado) {
+    if (estado === "devolver_llamada") { return { accion: "Devolver la llamada", fecha: hoyISO() }; }
+    var n = intentosSinRespuesta(c) + 1;
+    return n < 3 ? { accion: "Volver a llamar (intento " + (n + 1) + " de 3)", fecha: fechaMas(1, true) }
+      : { accion: n + " llamadas sin respuesta: probar por correo o WhatsApp, o dejarlo", fecha: fechaMas(7, true) };
+  }
   function contactoPorId(id) { return state.contactos.filter(function (c) { return c.id === id; })[0]; }
 
   function lineaUltima(c) {
@@ -776,7 +889,7 @@
 
   // Cuenta lo que hay que hacer hoy, en orden de prioridad.
   function gruposPendientes() {
-    var cs = state.contactos, hoy = hoyISO(), usados = {};
+    var cs = state.contactos.filter(function (c) { return coincideResp(c, respPendientes()); }), hoy = hoyISO(), usados = {};
     function grupo(titulo, nota, filtro) {
       var items = cs.filter(function (c) { return !usados[c.id] && filtro(c); });
       items.forEach(function (c) { usados[c.id] = true; });
@@ -813,6 +926,7 @@
         if (state.dirReforma === "sin" ? r.length : state.dirReforma === "mixto" ? r.length < 2 : r.indexOf(state.dirReforma) === -1) { return false; }
       }
       if (state.dirEstado && c.estado !== state.dirEstado) { return false; }
+      if (!coincideResp(c, state.dirResp)) { return false; }
       if (state.dirTel === "con" ? !c.telefono : state.dirTel === "sin" ? c.telefono : false) { return false; }
       if (state.dirSeg === "con" ? !c.proxima_accion : state.dirSeg === "vencido" ? !(c.proxima_fecha && c.proxima_fecha <= hoyISO() && ["no_interesa", "pausado", "inactivo"].indexOf(c.estado) === -1) : false) { return false; }
       if (q) {
@@ -841,7 +955,7 @@
     var texto = h("textarea", { id: "imp-texto", rows: "8", placeholder: "Pega aquí…" });
     var opciones = h("div", { class: "grid2" });
     var salida = h("div", {});
-    var tipo, sub, reformas, registrar, fechaEnvio, campana;
+    var tipo, sub, reformas, registrar, fechaEnvio, campana, asignar;
 
     function pintarOpciones() {
       ayuda.textContent = AYUDA[modo.value];
@@ -863,6 +977,8 @@
       opciones.appendChild(h("label", { class: "inline" }, registrar, " Ya les hemos escrito: anotar el correo enviado desde " + CUENTA_COMERCIAL));
       opciones.appendChild(h("div", { class: "field" }, h("label", { text: "Fecha del envío (vacío = sin fecha anotada)" }), fechaEnvio));
       opciones.appendChild(h("div", { class: "field" }, h("label", { text: "Campaña o asunto" }), campana));
+      asignar = state.sinAsignacion ? null : selResponsable("imp-resp", autorActual());
+      if (asignar) { opciones.appendChild(h("div", { class: "field" }, h("label", { for: "imp-resp", text: "Asignar las fichas a" }), asignar)); }
     }
 
     function lineas() { return texto.value.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean); }
@@ -933,6 +1049,7 @@
             tipo: tipo.value, nombre: nombre, nombre_derivado: derivado, email: correo, telefono: tel,
             estado: registrar.checked ? "email_enviado" : "nuevo"
           };
+          if (asignar) { fila.responsable = asignar.value || null; }
           if (tipo.value === "canal") { fila.subtipo = sub.value; }
           else { fila.reformas = Array.prototype.filter.call(reformas.querySelectorAll("input"), function (x) { return x.checked; }).map(function (x) { return x.value; }); }
           items.push({ texto: nombre + (correo ? " (" + correo + ")" : "") + (derivado ? " · nombre sacado del dominio" : ""), ok: true, fila: fila });
@@ -987,10 +1104,10 @@
     var fichas = contactosFiltrados(), dia0 = new Date().toISOString().slice(0, 10);
     function ultimo(its, canal) { var i = its.filter(function (x) { return x.canal === canal; })[0]; return i ? (ESTADOS_INTER_TODOS[i.estado] + " · " + fechaInter(i)) : ""; }
     descargarCSV("directorio-" + dia0 + ".csv",
-      ["Tipo", "Subtipo / reformas", "Nombre", "Correo", "Teléfono", "Estado", "Próxima acción", "Fecha próxima acción", "Correos enviados", "Último correo", "Última llamada", "Notas"],
+      ["Tipo", "Subtipo / reformas", "Nombre", "Correo", "Teléfono", "Estado", "Responsable", "Próxima acción", "Fecha próxima acción", "Correos enviados", "Último correo", "Última llamada", "Notas"],
       fichas.map(function (c) {
         var its = internasDe(c.id);
-        return [CONTACTO_TIPOS[c.tipo], c.tipo === "canal" ? SUBTIPOS[c.subtipo] : reformasTexto(c), c.nombre, c.email, c.telefono, ESTADOS_CONTACTO[c.estado],
+        return [CONTACTO_TIPOS[c.tipo], c.tipo === "canal" ? SUBTIPOS[c.subtipo] : reformasTexto(c), c.nombre, c.email, c.telefono, ESTADOS_CONTACTO[c.estado], c.responsable,
           c.proxima_accion, c.proxima_fecha, its.filter(function (i) { return i.canal === "email" && i.direccion === "saliente"; }).length, ultimo(its, "email"), ultimo(its, "llamada"), c.notas];
       }));
     var filas = [];
@@ -1062,7 +1179,7 @@
       var desde = h("input", { type: "text", value: CUENTA_COMERCIAL, "aria-label": "Enviado desde" });
       var campana = h("input", { type: "text", value: esLead ? "" : c.tipo === "canal" ? "Primer contacto canal" : "Primer contacto sin coste", "aria-label": "Campaña o asunto" });
       var resumen = h("textarea", { "aria-label": "Resumen o resultado", placeholder: canal === "llamada" ? "Qué dijo, qué hay que hacer…" : "Resumen" });
-      var nuevoEstado, accion, fechaProx, accionTocada = false;
+      var nuevoEstado, accion, fechaProx, horaProx, accionTocada = false;
       function recalcular() {
         if (esLead) { return; }
         nuevoEstado.value = sugerenciaEstado(c, canal, dir.value, est.value);
@@ -1070,6 +1187,12 @@
           var igual = nuevoEstado.value === c.estado;
           accion.value = igual ? (c.proxima_accion || "") : (ACCION_POR_ESTADO[nuevoEstado.value] || "");
           fechaProx.value = igual ? (c.proxima_fecha || "") : "";
+          if (horaProx) { horaProx.value = igual && c.proxima_hora ? c.proxima_hora.slice(0, 5) : ""; }
+          if (canal === "llamada" && dir.value === "saliente" && (est.value === "no_contesta" || est.value === "devolver_llamada")) {
+            var p = propuestaReintento(c, est.value);
+            accion.value = p.accion; fechaProx.value = p.fecha;
+            if (horaProx) { horaProx.value = ""; }
+          }
         }
       }
       if (!esLead) {
@@ -1078,6 +1201,7 @@
         accion = h("input", { type: "text", value: c.proxima_accion || "", placeholder: "Próxima acción (ej. Llamar el jueves)", "aria-label": "Próxima acción" });
         fechaProx = h("input", { type: "date", value: c.proxima_fecha || "", "aria-label": "Fecha de la próxima acción" });
         accion.addEventListener("input", function () { accionTocada = true; });
+        if (!state.sinHora) { horaProx = h("input", { type: "time", value: (c.proxima_hora || "").slice(0, 5), "aria-label": "Hora de la próxima acción" }); }
       }
       dir.addEventListener("change", function () {
         if (canal !== "llamada") { est.value = dir.value === "entrante" ? "respondido" : "enviado"; }
@@ -1104,6 +1228,7 @@
           var texto = (canal === "llamada" ? "Llamada" : canal === "email" ? "Correo" : "WhatsApp") + " registrado";
           if (esLead) { guardar(sb.from("interacciones").insert(fila), texto); return; }
           var cambios = { estado: nuevoEstado.value, proxima_accion: accion.value.trim() || null, proxima_fecha: fechaProx.value || null };
+          if (horaProx) { cambios.proxima_hora = fechaProx.value && horaProx.value ? horaProx.value : null; }
           guardar(sb.from("interacciones").insert(fila).then(function (res) {
             return res.error ? res : sb.from("contactos").update(cambios).eq("id", c.id);
           }), texto);
@@ -1113,7 +1238,7 @@
         h("h3", { text: canal === "llamada" ? "Registrar llamada" : canal === "email" ? "Registrar correo" : "Registrar WhatsApp" }),
         h("div", { class: "fields" }, h("label", {}, "Quién", dir), h("label", {}, "Resultado", est), h("label", {}, "Cuándo", cuando)),
         extraCorreo, resumen,
-        esLead ? null : h("div", { class: "fields" }, h("label", {}, "La ficha pasa a", nuevoEstado), h("label", {}, "Próxima acción", accion), h("label", {}, "Para el día", fechaProx)),
+        esLead ? null : h("div", { class: "fields" }, h("label", {}, "La ficha pasa a", nuevoEstado), h("label", {}, "Próxima acción", accion), h("label", {}, "Para el día", fechaProx), horaProx ? h("label", {}, "A las (opcional)", horaProx) : null),
         h("div", { class: "actions" }, guardarBtn, h("button", { class: "linkbtn", type: "button", text: "Cancelar", onclick: cerrarRegistro }))));
       recalcular();
     }
@@ -1236,6 +1361,7 @@
           estado: f.estado.value,
           notas: f.notas.value.trim() || null
         };
+        if (!state.sinAsignacion) { datos.responsable = f.responsable.value || null; }
         if (tipo === "canal") {
           datos.subtipo = f.subtipo.value;
           if (!datos.subtipo) { toast("Elige el tipo de canal: administración, inmobiliaria, gestora u otro", true); f.subtipo.focus(); return; }
@@ -1263,6 +1389,8 @@
         campo("nombre", "Nombre", "text", { required: true }), campo("contacto", "Persona de contacto"),
         emailCampo, campo("telefono", "Teléfono", "tel"),
         h("div", { class: "field" }, h("label", { for: "ct-estado", text: "Estado" }), estadoSel),
+        state.sinAsignacion ? null : h("div", { class: "field" }, h("label", { for: "ct-responsable", text: "Responsable (a quién le toca)" }),
+          selResponsable("ct-responsable", nuevo ? autorActual() : c.responsable)),
         tipoCampo),
       avisoEl,
       h("div", { class: "field" }, h("label", { for: "ct-notas", text: "Notas internas" }), notas),
@@ -1302,11 +1430,11 @@
     izq.appendChild(h("div", { class: "card" },
       h("div", { class: "card-head" },
         h("h2", {}, c.nombre, " ", badge(c.estado, ESTADOS_CONTACTO)),
-        h("span", { class: "meta", text: tipoTexto(c) })),
+        h("span", { class: "meta", text: tipoTexto(c) + (state.sinAsignacion ? "" : " · Le toca a: " + nombreResp(c.responsable)) })),
       c.tipo === "proveedor" && !(c.reformas || []).length ? h("p", { class: "alert", text: "Tipo de reforma por clasificar: pregúntaselo en la llamada y márcalo en «Editar ficha»." }) : null,
       c.nombre_derivado ? h("p", { class: "meta", text: "Nombre sacado del dominio del correo: corrígelo en «Editar ficha» cuando lo sepas." }) : null,
       h("p", { class: "ya" }, yaEscritos(c)),
-      c.proxima_accion ? h("p", { class: "toca-grande" }, h("strong", { text: "Toca: " }), c.proxima_accion + (c.proxima_fecha ? " · " + dia(c.proxima_fecha) : "")) : null,
+      c.proxima_accion ? h("p", { class: "toca-grande" }, h("strong", { text: "Toca: " }), c.proxima_accion + (c.proxima_fecha ? " · " + diaHora(c) : "")) : null,
       h("div", { class: "actions" },
         c.telefono ? h("a", { class: "btn btn-sm", href: "tel:" + digitos(c.telefono), text: "Llamar " + c.telefono }) : null,
         c.telefono ? h("a", { class: "btn btn-sm btn-ghost", href: waUrl(c.telefono, "Hola, soy de Pimen Leads."), target: "_blank", rel: "noopener", text: "WhatsApp" }) : null,
@@ -1318,6 +1446,7 @@
 
     izq.appendChild(bloqueRegistro({ c: c }));
     der.appendChild(bloqueHistorial({ c: c }));
+    der.appendChild(bloqueFusionar(c));
 
     // Reformista: paso a empresa que recibe leads
     if (c.tipo === "proveedor") {
@@ -1809,6 +1938,18 @@
     return "directo";
   }
 
+  // Copia de todo lo que hay en el panel, por si hace falta recuperar algo (borrar fichas no se puede deshacer).
+  function descargarCopia() {
+    var datos = { fecha: new Date().toISOString(), leads: state.leads, empresas: state.empresas, contactos: state.contactos, interacciones: state.interacciones };
+    var url = URL.createObjectURL(new Blob([JSON.stringify(datos, null, 1)], { type: "application/json" }));
+    var a = h("a", { href: url, download: "copia-panel-" + new Date().toISOString().slice(0, 10) + ".json" });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    toast("Copia descargada");
+  }
+
   function vistaResumen(main) {
     var desde = desdePeriodo(state.periodo), hasta = hastaPeriodo(state.periodo);
     function enPeriodo(x) { var t = new Date(x.created_at); return t >= desde && t < hasta; }
@@ -1829,6 +1970,7 @@
     main.appendChild(h("div", { class: "pn-cab" }, h("div", {}, h("h1", { text: "Resumen" }), h("p", { class: "meta", text: "Pendientes, embudos y facturación." }))));
     main.appendChild(bloqueProspeccion());
     main.appendChild(h("div", { class: "pn-toolbar pn-sep" }, h("h2", { text: "Leads y facturación" }), h("span", { class: "spacer" }), periodo,
+      h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Copia completa (JSON)", onclick: descargarCopia }),
       h("button", {
         class: "btn btn-sm btn-ghost", type: "button", text: "Exportar envíos del periodo (CSV)", disabled: !envios.length,
         onclick: function () {
@@ -1840,6 +1982,19 @@
         }
       })));
 
+    // Rapidez: minutos desde que entra el cliente hasta la primera llamada que le hacemos.
+    var primera = {};
+    state.interacciones.forEach(function (i) {
+      if (!i.lead_id || i.canal !== "llamada" || i.direccion !== "saliente" || !i.ocurrio_at) { return; }
+      var t = new Date(i.ocurrio_at).getTime();
+      if (!(i.lead_id in primera) || t < primera[i.lead_id]) { primera[i.lead_id] = t; }
+    });
+    var esperas = leads.filter(function (l) { return l.id in primera; })
+      .map(function (l) { return Math.max(0, (primera[l.id] - new Date(l.created_at).getTime()) / 6e4); }).sort(function (a, b) { return a - b; });
+    var mediana = esperas.length ? esperas[Math.floor((esperas.length - 1) / 2)] : null;
+    var sinLlamar = leads.filter(function (l) { return !(l.id in primera) && ["nuevo", "por_verificar"].indexOf(l.estado) !== -1; }).length;
+    var rapidos = esperas.filter(function (m) { return m < 60; }).length;
+
     function kpi(titulo, valor, nota) { return h("div", { class: "kpi" }, h("span", { text: titulo }), h("strong", { text: valor }), nota ? h("small", { text: nota }) : null); }
     main.appendChild(h("div", { class: "kpis" },
       kpi("Leads recibidos", leads.length, leads.filter(function (l) { return l.estado === "nuevo"; }).length + " sin revisar"),
@@ -1847,7 +2002,8 @@
       kpi("Envíos a empresas", envios.length, enviadosLeads.length ? (envios.length / enviadosLeads.length).toFixed(1).replace(".", ",") + " empresas por lead" : null),
       kpi("Facturable", euros(facturable), "sin contar devoluciones"),
       kpi("Pendiente de cobro", euros(pendienteTotal), "total, de cualquier fecha"),
-      kpi("Obras ganadas", ganados.length, pct(ganados.length, conResultado.length) + " de los envíos con resultado")
+      kpi("Obras ganadas", ganados.length, pct(ganados.length, conResultado.length) + " de los envíos con resultado"),
+      kpi("Hasta la 1.ª llamada", mediana === null ? "—" : duracion(mediana), mediana === null ? "sin llamadas a clientes" : pct(rapidos, esperas.length) + " en menos de 1 h · " + sinLlamar + " sin llamar")
     ));
 
     function tabla(titulo, columnas, filas) {
@@ -1877,9 +2033,18 @@
       return [nombre, ls.length, val, pct(val, ls.length), euros(env.filter(cuenta).reduce(function (s, e) { return s + Number(e.precio); }, 0))];
     }
     var porEmpresa = agrupar(envios, function (e) { return e.empresa_id; });
+    var llamadas = state.interacciones.filter(function (i) {
+      return i.canal === "llamada" && i.direccion === "saliente" && i.ocurrio_at && enPeriodo({ created_at: i.ocurrio_at });
+    });
+    var porAutor = agrupar(llamadas, function (i) { return i.autor ? nombreResp(i.autor) : "Sin autor anotado"; });
     var motivos = agrupar(descartados, function (l) { return l.motivo_descarte || "Sin motivo"; });
 
     main.appendChild(h("div", { class: "reports" },
+      tabla("Llamadas por persona", ["Persona", "Llamadas", "Hechas", "No contestan", "% contacto"],
+        Object.keys(porAutor).map(function (k) {
+          var ls = porAutor[k], hechas = ls.filter(function (i) { return i.estado === "hecha"; }).length;
+          return [k, ls.length, hechas, ls.filter(function (i) { return i.estado === "no_contesta"; }).length, pct(hechas, ls.length)];
+        }).sort(function (a, b) { return b[1] - a[1]; })),
       tabla("Leads por canal", ["Canal", "Leads", "Válidos", "% válidos", "Facturable"],
         Object.keys(porCanal).map(function (k) { return filaLeads(k, porCanal[k]); }).sort(function (a, b) { return b[1] - a[1]; })),
       tabla("Leads por tipo de reforma", ["Tipo", "Leads", "Válidos", "% válidos", "Facturable"],
