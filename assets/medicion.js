@@ -67,8 +67,8 @@
     caja.setAttribute("role", "region");
     caja.setAttribute("aria-label", "Aviso de cookies");
     caja.innerHTML =
-      '<p>Usamos cookies de Google solo para saber qué anuncios nos traen solicitudes. ' +
-      'No las usamos para mostrarte publicidad. <a href="legal.html#cookies">Más información</a></p>' +
+      '<p>Usamos cookies de Google solo para medir qué anuncios nos traen solicitudes, no para mostrarte publicidad. ' +
+      '<a href="legal.html#cookies">Más información</a></p>' +
       '<div class="cookies-botones">' +
       '<button type="button" class="cookies-btn" data-v="no">Rechazar</button>' +
       '<button type="button" class="cookies-btn" data-v="si">Aceptar</button>' +
