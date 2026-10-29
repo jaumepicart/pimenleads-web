@@ -50,7 +50,7 @@ Puntos a tener en cuenta:
 - **Se financia sola**: solo se paga si la obra se cierra y sale de una comisión que ya se cobra.
 - **Un descuento pequeño es un gancho débil**: sirve para que pidan presupuesto con nosotros y no directamente a la empresa, no para disparar los clientes.
 - **No acumular todo**: descuento al cliente y pago al prescriptor salen de la misma comisión. Propuesta: descuento al cliente en las solicitudes de anuncios, y pago al prescriptor en las que traiga él.
-- **Tope**: importe fijo por tramos de obra, siempre por debajo de un tercio de la comisión. Empezar prudente (subir es fácil, bajar no).
+- **Importes elegidos** (en las landings): 50 € en obras de 5.000 a 9.999 €, 100 € de 10.000 a 19.999 €, 200 € de 20.000 a 34.999 € y 350 € desde 35.000 €. Es aproximadamente el 1 % del extremo bajo de cada tramo: con la comisión más baja (3 %) la bonificación nunca pasa de un tercio de lo que cobramos, y con la media (4 %) ronda el 17–25 %. Sin bonificación por debajo de 5.000 €, donde la comisión es muy pequeña. Condiciones: se aplica en la factura de la empresa, solo si se firma en 6 meses, una por vivienda, sobre el importe sin IVA. Revisar con datos reales tras las 3–5 primeras obras cerradas.
 - **Por escrito con cada empresa**: comisión, cálculo sobre el importe previo al descuento y obligación de informar de las obras cerradas.
 - **Transparencia**: decir al cliente que las empresas nos pagan una comisión si contrata.
 

@@ -290,3 +290,23 @@ html:has(.top-nav) { scroll-padding-top: 7rem; }
 [data-cookies] { display: none; }
 .cookies-activas [data-cookies] { display: inline; }
 .linkbtn-plain { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* Bonificación al contratar */
+.bonus h2 { max-width: 22ch; }
+.bonus-flow { list-style: none; margin: 2.5rem 0 0; padding: 0; display: grid; gap: 1rem; counter-reset: b; }
+.bonus-flow li { counter-increment: b; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 1.25rem; display: grid; gap: .5rem; justify-items: start; position: relative; }
+.bonus-flow li::after { content: counter(b); position: absolute; top: .9rem; right: 1rem; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--teal); }
+.bonus-flow svg { width: 2.6rem; height: 2.6rem; color: var(--teal); }
+.bonus-flow h3 { font-size: 1.15rem; }
+.bonus-flow p { color: var(--muted); font-size: .97rem; }
+.bonus-tiers { margin-top: 2rem; display: grid; gap: .75rem; }
+.bonus-tiers article { background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 1.1rem 1.25rem; display: grid; gap: .5rem; }
+.bonus-tiers .amount { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 1.9rem; color: var(--teal); letter-spacing: -0.02em; line-height: 1; }
+.bonus-tiers .range { color: var(--muted); font-size: .97rem; }
+.bonus-tiers .bar { height: .55rem; background: var(--tile); border-radius: 99px; overflow: hidden; }
+.bonus-tiers .bar span { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.bonus .terms { margin: 1.5rem 0 0; padding-left: 1.2rem; color: var(--muted); font-size: .92rem; max-width: 62ch; display: grid; gap: .3rem; }
+@media (min-width: 820px) {
+  .bonus-flow { grid-template-columns: repeat(3, 1fr); }
+  .bonus-tiers { grid-template-columns: repeat(4, 1fr); }
+}
