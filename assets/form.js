@@ -79,8 +79,18 @@
 
     function nextStep() {
       var bad = invalidFields(steps[current]);
-      if (bad.length) { showError(steps[current].dataset.error || form.dataset.error, bad[0]); return; }
+      if (bad.length) { showError(bad[0].getAttribute("data-error") || steps[current].dataset.error || form.dataset.error, bad[0]); return; }
       showStep(current + 1, true);
+    }
+
+    // "Todavía no lo sé": aparece un cuadro para que la persona cuente qué quiere hacer.
+    var detalleBox = form.querySelector("[data-detalle-box]");
+    var detalleTa = detalleBox && detalleBox.querySelector("textarea");
+    function syncDetalle() {
+      if (!detalleBox) { return; }
+      var on = !!form.querySelector("input[data-detalle]:checked");
+      detalleBox.hidden = !on;
+      detalleTa.required = on;
     }
 
     if (steps.length) {
@@ -92,7 +102,8 @@
       var tarjetas = steps[0].querySelectorAll("input[type=radio]");
       if (opcion > 0 && tarjetas[opcion - 1]) {
         tarjetas[opcion - 1].checked = true;
-        showStep(1, false);
+        syncDetalle();
+        showStep(tarjetas[opcion - 1].hasAttribute("data-detalle") ? 0 : 1, false);
       }
       form.addEventListener("click", function (e) {
         if (e.target.closest(".step-next")) { nextStep(); }
@@ -103,7 +114,8 @@
       form.addEventListener("pointerdown", function () { lastPointer = Date.now(); });
       form.addEventListener("change", function (e) {
         var step = e.target.closest(".step");
-        if (e.target.type === "radio" && step && step.hasAttribute("data-auto") && Date.now() - lastPointer < 1500) {
+        syncDetalle();
+        if (e.target.type === "radio" && step && step.hasAttribute("data-auto") && !e.target.hasAttribute("data-detalle") && Date.now() - lastPointer < 1500) {
           mark(e.target.closest("fieldset"), true);
           setTimeout(nextStep, 180);
         }
@@ -151,8 +163,12 @@
           if (el.checked) { groups[el.name].push(el.value); }
           return;
         }
-        datos[el.name] = el.value.trim();
-        data.append(el.name, el.value.trim() || (el.name === "_gotcha" ? "" : "—"));
+        var val = el.value.trim();
+        if (el.name === "mensaje" && detalleTa && detalleTa.value.trim() && !detalleBox.hidden) {
+          val = "Qué quiere hacer: " + detalleTa.value.trim() + (val ? " | " + val : "");
+        }
+        datos[el.name] = val;
+        data.append(el.name, val || (el.name === "_gotcha" ? "" : "—"));
       });
       Object.keys(groups).forEach(function (k) {
         // En la base de datos, las casillas múltiples van como lista y las de una opción como texto.

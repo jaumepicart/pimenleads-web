@@ -128,7 +128,11 @@
               <label class="tile"><input type="radio" name="reforma" value="Reforma completa del baño"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h18v2a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5v-2z"/><path d="M6 12V5a2 2 0 0 1 4 0"/><path d="M7 19l-1 2M17 19l1 2"/></svg>Reforma completa del baño</span></label>
               <label class="tile"><input type="radio" name="reforma" value="Cambiar la bañera por un plato de ducha"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V7a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3"/><path d="M10 10h6"/><path d="M11 13v1M13 13v2M15 13v1M12 17v1M14 17v1"/></svg>Cambiar la bañera por un plato de ducha</span></label>
               <label class="tile"><input type="radio" name="reforma" value="Reformar solo una parte del baño"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>Reformar solo una parte del baño</span></label>
-              <label class="tile"><input type="radio" name="reforma" value="Todavía no lo sé"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17h.01"/></svg>Todavía no lo sé</span></label>
+              <label class="tile"><input type="radio" name="reforma" value="Todavía no lo sé" data-detalle><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17h.01"/></svg>Todavía no lo sé</span></label>
+            </div>
+            <div class="field" data-detalle-box hidden>
+              <label for="detalle">Cuéntanos qué quieres hacer</label>
+              <textarea id="detalle" data-error="Cuéntanos qué quieres hacer para continuar." placeholder="Ej.: reforma integral del piso, cocina y baño, o cambiar solo los suelos"></textarea>
             </div>
             <div class="step-nav"><button type="button" class="btn step-next">Siguiente</button></div>
           </fieldset>
@@ -370,6 +374,6 @@
 
 <script src="assets/config.js?v=4" defer></script>
 <script src="assets/medicion.js?v=1" defer></script>
-<script src="assets/form.js?v=3" defer></script>
+<script src="assets/form.js?v=4" defer></script>
 </body>
 </html>

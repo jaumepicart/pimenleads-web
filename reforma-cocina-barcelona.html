@@ -128,7 +128,11 @@
               <label class="tile"><input type="radio" name="reforma" value="Reforma completa de la cocina"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 10h16"/><circle cx="9" cy="6.5" r="1"/><circle cx="15" cy="6.5" r="1"/><path d="M8 14h8"/></svg>Reforma completa de la cocina</span></label>
               <label class="tile"><input type="radio" name="reforma" value="Cambiar muebles y encimera"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v3H6z"/><path d="M3 10h18"/><rect x="4" y="10" width="16" height="10" rx="1"/><path d="M12 10v10M9 14v2M15 14v2"/></svg>Cambiar muebles y encimera</span></label>
               <label class="tile"><input type="radio" name="reforma" value="Cambiar la distribución o abrir la cocina"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M12 4v7M12 15v5M3 12h5"/></svg>Cambiar la distribución o abrir la cocina</span></label>
-              <label class="tile"><input type="radio" name="reforma" value="Todavía no lo sé"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17h.01"/></svg>Todavía no lo sé</span></label>
+              <label class="tile"><input type="radio" name="reforma" value="Todavía no lo sé" data-detalle><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17h.01"/></svg>Todavía no lo sé</span></label>
+            </div>
+            <div class="field" data-detalle-box hidden>
+              <label for="detalle">Cuéntanos qué quieres hacer</label>
+              <textarea id="detalle" data-error="Cuéntanos qué quieres hacer para continuar." placeholder="Ej.: reforma integral del piso, cocina y baño, o cambiar solo los suelos"></textarea>
             </div>
             <div class="step-nav"><button type="button" class="btn step-next">Siguiente</button></div>
           </fieldset>
@@ -368,6 +372,6 @@
 
 <script src="assets/config.js?v=4" defer></script>
 <script src="assets/medicion.js?v=1" defer></script>
-<script src="assets/form.js?v=3" defer></script>
+<script src="assets/form.js?v=4" defer></script>
 </body>
 </html>
