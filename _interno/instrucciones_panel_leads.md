@@ -92,13 +92,13 @@ Pestaña **Clientes → + Nuevo cliente**. Datos: nombre y teléfono (obligatori
 
 Entra como «Nuevo». Después hay que llamarle para verificar que es real y quiere presupuesto; eso lo hace Alex o la persona desde la ficha del cliente.
 
-- **No envíes un cliente a empresas** sin confirmárselo a la persona: cada cliente va a **3 empresas como máximo**, solo de su tipo y zona, y el primer lead de cada empresa es gratis.
+- **No envíes un cliente a empresas** sin confirmárselo a la persona: cada cliente va a **3 empresas como máximo**, solo de su tipo y zona. Ya no hay primer lead gratis: todos los leads se cobran.
 - Si el teléfono no existe o no pidió presupuesto, se marca como inválido, no se cobra.
 
 ## Estados (para elegir el correcto)
 
 **Reformista**: Nuevo → Email enviado → Respondió → Llamada pendiente → Contactado → No interesa ahora → Acuerdo cerrado → Activo → Pausado / descartado.
-Un acuerdo cerrado no es el final: toca enviarle el primer lead gratis y pasarlo a Activo.
+Un acuerdo cerrado no es el final: toca enviarle su primer lead (de pago) y pasarlo a Activo.
 
 **Canal**: Nuevo → Email enviado → Llamada hecha → No interesa ahora → Colabora → Inactivo.
 

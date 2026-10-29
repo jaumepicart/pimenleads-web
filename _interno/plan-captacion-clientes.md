@@ -10,7 +10,7 @@ Nota para quien lo lea (persona o Claude): este documento está en un repositori
 
 ## Cómo se gana dinero
 
-- A la **empresa reformista**: un precio por lead (el primero, gratis) y una **comisión sobre la obra cerrada**, que depende del importe de la obra.
+- A la **empresa reformista**: un precio por lead (sin primer lead gratis) y una **comisión sobre la obra cerrada**, que depende del importe de la obra.
 - Al **particular** no se le cobra nada ("Gratis para ti").
 - A los **prescriptores** (inmobiliarias, administradores de fincas, tiendas): una cantidad fija por contacto válido más una comisión si la obra se cierra (ver `_interno/plantilla-carta.html`).
 
