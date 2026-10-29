@@ -49,6 +49,10 @@
     empresas: [],
     contactos: [],
     interacciones: [],
+    admins: [],
+    sinAsignacion: false,
+    dirResp: "",
+    pendResp: "mias",
     sinProspeccion: false,
     dirTipo: "",
     dirSub: "",
@@ -174,7 +178,8 @@
       sb.from("leads").select("*, envios(*)").order("created_at", { ascending: false }).limit(2000),
       sb.from("empresas").select("*").order("nombre"),
       sb.from("contactos").select("*").order("nombre").limit(5000),
-      sb.from("interacciones").select("*").limit(20000)
+      sb.from("interacciones").select("*").limit(20000),
+      sb.from("admins").select("email").order("email")
     ]).then(function (r) {
       if (r[0].error) { throw r[0].error; }
       if (r[1].error) { throw r[1].error; }
@@ -184,6 +189,9 @@
       state.sinProspeccion = !!(r[2].error || r[3].error);
       state.contactos = state.sinProspeccion ? [] : r[2].data;
       state.interacciones = state.sinProspeccion ? [] : r[3].data;
+      state.admins = r[4].error ? [] : r[4].data.map(function (a) { return a.email; });
+      // Si todavía no se ha ejecutado supabase/asignacion.sql, no hay columna responsable y se oculta todo lo de asignar.
+      state.sinAsignacion = !state.contactos.length || !("responsable" in state.contactos[0]);
       render();
     }).catch(function (err) {
       toast("Error al cargar datos: " + (err.message || err), true);
@@ -304,12 +312,14 @@
   function ir(hash) {
     if (location.hash === "#" + hash) { render(); } else { location.hash = hash; }
   }
-  function irADirectorio(tipo, estado) {
+  // resp: filtro de responsable con el que llegar (las tarjetas de Pendientes pasan el que se está viendo).
+  function irADirectorio(tipo, estado, resp) {
     state.dirTipo = tipo || ""; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = estado || "";
-    state.dirBusqueda = ""; state.dirTel = ""; state.dirSeg = "";
+    state.dirBusqueda = ""; state.dirTel = ""; state.dirSeg = ""; state.dirResp = resp || "";
     ir("contactos");
   }
-  function irASeguimientos() { irADirectorio("", ""); state.dirSeg = "vencido"; ir("contactos"); }
+  function irASeguimientos() { irADirectorio("", "", respPendientes()); state.dirSeg = "vencido"; ir("contactos"); }
+  function respPendientes() { return state.pendResp === "todas" ? "" : state.pendResp; }
   function irAClientes(estado) { state.filtroLead = estado; state.filtroTipo = ""; state.busqueda = ""; ir("leads"); }
 
   // Orden por columna: el estado se recuerda por vista y se cambia pulsando la cabecera.
@@ -383,10 +393,10 @@
     var porVerificar = state.leads.filter(function (l) { return l.estado === "nuevo" || l.estado === "por_verificar"; }).length;
     var lista = [
       { t: "Clientes por verificar", n: porVerificar, tono: "urg", f: function () { irAClientes("nuevo"); } },
-      { t: "Llamada pendiente", n: n(0), tono: "urg", f: function () { irADirectorio("proveedor", "llamada_pendiente"); } },
-      { t: "Respondieron: llamar", n: n(1), tono: "urg", f: function () { irADirectorio("proveedor", "respondio"); } },
-      { t: "Acuerdo cerrado", n: n(2), tono: "ok", f: function () { irADirectorio("proveedor", "acuerdo_cerrado"); } },
-      { t: "Canal a la espera", n: n(3), tono: "", f: function () { irADirectorio("canal", "llamada_hecha"); } },
+      { t: "Llamada pendiente", n: n(0), tono: "urg", f: function () { irADirectorio("proveedor", "llamada_pendiente", respPendientes()); } },
+      { t: "Respondieron: llamar", n: n(1), tono: "urg", f: function () { irADirectorio("proveedor", "respondio", respPendientes()); } },
+      { t: "Acuerdo cerrado", n: n(2), tono: "ok", f: function () { irADirectorio("proveedor", "acuerdo_cerrado", respPendientes()); } },
+      { t: "Canal a la espera", n: n(3), tono: "", f: function () { irADirectorio("canal", "llamada_hecha", respPendientes()); } },
       { t: "Seguimientos vencidos", n: n(4), tono: "urg", f: irASeguimientos },
       { t: "Inválidos por avisar", n: invalidosPorAvisar().length, tono: "urg", f: function () { irAClientes("descartado"); } }
     ];
@@ -408,6 +418,8 @@
   function vistaPendientes(main) {
     main.appendChild(h("div", { class: "pn-cab" }, h("div", {}, h("h1", { text: "Pendientes" }), h("p", { class: "meta", text: "Lo que toca hoy, por prioridad. Pulsa una tarjeta para ver la lista." })),
       h("div", { class: "actions" },
+        state.sinAsignacion ? null : selFiltro("Responsable", opcionesResp("", "Mías y sin asignar").map(function (o) { return [o[0] || "todas", o[0] ? o[1] : "Todas"]; }),
+          state.pendResp, function (v) { state.pendResp = v; render(); }),
         h("a", { class: "btn btn-sm btn-ghost", href: "#contactos", text: "Buscar antes de llamar" }),
         h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" }))));
     if (!state.sinProspeccion) { main.appendChild(kpisPendientes()); }
@@ -456,6 +468,20 @@
     return i ? new Date(i.ocurrio_at).getTime() : null;
   }
 
+  // Reparte las fichas sin responsable a partes iguales entre todos los administradores.
+  function botonRepartir() {
+    var sin = state.contactos.filter(function (c) { return !c.responsable; }).length;
+    if (state.sinAsignacion || state.admins.length < 2 || !sin) { return null; }
+    return h("button", {
+      class: "btn btn-sm btn-ghost", type: "button", text: "Repartir " + sin + " sin asignar",
+      onclick: function () {
+        var quienes = state.admins.map(nombreResp).join(" y ");
+        if (!confirm("Se repartirán las " + sin + " fichas sin asignar a partes iguales entre " + quienes + ", alternando dentro de cada tipo. Luego se puede cambiar ficha a ficha. ¿Repartir?")) { return; }
+        guardar(sb.rpc("repartir_contactos", { responsables: state.admins }), "Fichas repartidas");
+      }
+    });
+  }
+
   function vistaContactos(main, id) {
     if (state.sinProspeccion) { main.appendChild(avisoProspeccion()); return; }
     if (id === "importar") { vistaImportar(main); return; }
@@ -478,22 +504,22 @@
       var filas = ordenar(contactosFiltrados(), orden, {
         nombre: function (c) { return norm(c.nombre); }, tipo: function (c) { return norm(tipoTexto(c)); },
         estado: function (c) { return Object.keys(ESTADOS_CONTACTO).indexOf(c.estado); }, ultimo: ultimoTs,
-        toca: function (c) { return c.proxima_fecha || null; }, telefono: function (c) { return c.telefono; }
+        toca: function (c) { return c.proxima_fecha || null; }, resp: function (c) { return c.responsable || null; }, telefono: function (c) { return c.telefono; }
       });
       res.replaceChildren(h("p", { class: "meta" }, filas.length + " de " + state.contactos.length + " fichas"));
       if (!filas.length) { res.appendChild(nodoVacio("Ninguna ficha con estos filtros. Si no aparece, es que aún no le hemos escrito.")); return; }
       res.appendChild(tablaPn([
         { t: "Nombre", k: "nombre" }, { t: "Tipo", k: "tipo" }, { t: "Estado", k: "estado", cls: "nw" },
-        { t: "Último movimiento", k: "ultimo" }, { t: "Toca", k: "toca" }, { t: "Teléfono", k: "telefono", cls: "nw" }
-      ], filas.map(function (c) {
+        { t: "Último movimiento", k: "ultimo" }, { t: "Toca", k: "toca" }].concat(state.sinAsignacion ? [] : [{ t: "Responsable", k: "resp", cls: "nw" }], [{ t: "Teléfono", k: "telefono", cls: "nw" }]), filas.map(function (c) {
         var its = internasDe(c.id), u = its[0];
         return { href: "contactos/" + c.id, celdas: [
           celda2(c.nombre, c.email, "#contactos/" + c.id),
           c.tipo === "canal" ? SUBTIPOS[c.subtipo] : celda2("Reformista", (c.reformas || []).length ? reformasTexto(c) : "Tipo por clasificar"), badge(c.estado, ESTADOS_CONTACTO),
           u ? celda2(CANALES[u.canal] + " " + (ESTADOS_INTER_TODOS[u.estado] || u.estado).toLowerCase(), fechaInter(u) + (u.canal === "email" && u.desde && u.desde !== CUENTA_COMERCIAL ? " · " + u.desde : "")) : h("span", { class: "muted", text: "Sin contacto aún" }),
-          c.proxima_accion ? celda2(c.proxima_accion, c.proxima_fecha ? dia(c.proxima_fecha) : "") : h("span", { class: "muted", text: "—" }),
+          c.proxima_accion ? celda2(c.proxima_accion, c.proxima_fecha ? dia(c.proxima_fecha) : "") : h("span", { class: "muted", text: "—" })
+        ].concat(state.sinAsignacion ? [] : [c.responsable ? nombreResp(c.responsable) : h("span", { class: "muted", text: "Sin asignar" })], [
           c.telefono || h("span", { class: "muted", text: "Sin teléfono" })
-        ] };
+        ]) };
       }), orden));
     }
 
@@ -520,15 +546,19 @@
     }
     var etiquetas = state.dirTipo ? (state.dirTipo === "canal" ? ESTADOS_CANAL : ESTADOS_PROV) : ESTADOS_CONTACTO;
     fila2.appendChild(selFiltro("Estado", [["", "Todos"]].concat(Object.keys(etiquetas).map(function (k) { return [k, etiquetas[k]]; })), state.dirEstado, function (v) { state.dirEstado = v; pintar(); }));
+    if (!state.sinAsignacion) {
+      fila2.appendChild(selFiltro("Responsable", opcionesResp("Todas", "Mías y sin asignar"), state.dirResp, function (v) { state.dirResp = v; pintar(); }));
+    }
     fila2.appendChild(selFiltro("Teléfono", [["", "Todos"], ["con", "Con teléfono"], ["sin", "Sin teléfono"]], state.dirTel, function (v) { state.dirTel = v; pintar(); }));
     fila2.appendChild(selFiltro("Seguimiento", [["", "Todos"], ["vencido", "Vencido o de hoy"], ["con", "Con próxima acción"]], state.dirSeg, function (v) { state.dirSeg = v; pintar(); }));
     fila2.appendChild(h("button", {
       class: "linkbtn", type: "button", text: "Quitar filtros",
-      onclick: function () { state.dirTipo = ""; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = ""; state.dirBusqueda = ""; state.dirTel = ""; state.dirSeg = ""; render(); }
+      onclick: function () { state.dirTipo = ""; state.dirSub = ""; state.dirReforma = ""; state.dirEstado = ""; state.dirBusqueda = ""; state.dirTel = ""; state.dirSeg = ""; state.dirResp = ""; render(); }
     }));
 
     main.appendChild(h("div", { class: "pn-cab" }, h("div", {}, h("h1", { text: "Directorio" }), h("p", { class: "meta", text: "Busca aquí antes de llamar o escribir a nadie." })),
       h("div", { class: "actions" },
+        botonRepartir(),
         h("a", { class: "btn btn-sm btn-ghost", href: "#contactos/importar", text: "Importar lista" }),
         h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Exportar CSV", onclick: exportarContactos }),
         h("a", { class: "btn btn-sm", href: "#contactos/nuevo", text: "+ Nuevo contacto" }))));
@@ -733,6 +763,25 @@
     return r.length > 1 ? "mixto (" + nombres + ")" : nombres;
   }
   function tipoTexto(c) { return c.tipo === "canal" ? SUBTIPOS[c.subtipo] : "Reformista · " + reformasTexto(c); }
+  // ── Responsables (a quién le toca cada ficha) ──
+  function nombreResp(email) { return email ? email.split("@")[0].replace(/^./, function (x) { return x.toUpperCase(); }) : "Sin asignar"; }
+  // «mias» incluye las fichas sin asignar: mientras no se reparta, cada uno ve todo en vez de una lista vacía.
+  function coincideResp(c, v) {
+    if (!v || state.sinAsignacion) { return true; }
+    if (v === "mias") { return !c.responsable || c.responsable === autorActual(); }
+    if (v === "sin") { return !c.responsable; }
+    return c.responsable === v;
+  }
+  function opcionesResp(todas, mias) {
+    var o = [["", todas], ["mias", mias]];
+    state.admins.forEach(function (e) { if (e !== autorActual()) { o.push([e, "De " + nombreResp(e)]); } });
+    o.push(["sin", "Sin asignar"]);
+    return o;
+  }
+  function selResponsable(id, valor) {
+    return h("select", { id: id, name: "responsable" }, h("option", { value: "", text: "Sin asignar" }),
+      state.admins.map(function (e) { return h("option", { value: e, text: nombreResp(e) + (e === autorActual() ? " (yo)" : ""), selected: valor === e }); }));
+  }
   function autorActual() { return state.session && state.session.user.email ? state.session.user.email.toLowerCase() : null; }
   function ahoraLocal() {
     var d = new Date();
@@ -776,7 +825,7 @@
 
   // Cuenta lo que hay que hacer hoy, en orden de prioridad.
   function gruposPendientes() {
-    var cs = state.contactos, hoy = hoyISO(), usados = {};
+    var cs = state.contactos.filter(function (c) { return coincideResp(c, respPendientes()); }), hoy = hoyISO(), usados = {};
     function grupo(titulo, nota, filtro) {
       var items = cs.filter(function (c) { return !usados[c.id] && filtro(c); });
       items.forEach(function (c) { usados[c.id] = true; });
@@ -813,6 +862,7 @@
         if (state.dirReforma === "sin" ? r.length : state.dirReforma === "mixto" ? r.length < 2 : r.indexOf(state.dirReforma) === -1) { return false; }
       }
       if (state.dirEstado && c.estado !== state.dirEstado) { return false; }
+      if (!coincideResp(c, state.dirResp)) { return false; }
       if (state.dirTel === "con" ? !c.telefono : state.dirTel === "sin" ? c.telefono : false) { return false; }
       if (state.dirSeg === "con" ? !c.proxima_accion : state.dirSeg === "vencido" ? !(c.proxima_fecha && c.proxima_fecha <= hoyISO() && ["no_interesa", "pausado", "inactivo"].indexOf(c.estado) === -1) : false) { return false; }
       if (q) {
@@ -841,7 +891,7 @@
     var texto = h("textarea", { id: "imp-texto", rows: "8", placeholder: "Pega aquí…" });
     var opciones = h("div", { class: "grid2" });
     var salida = h("div", {});
-    var tipo, sub, reformas, registrar, fechaEnvio, campana;
+    var tipo, sub, reformas, registrar, fechaEnvio, campana, asignar;
 
     function pintarOpciones() {
       ayuda.textContent = AYUDA[modo.value];
@@ -863,6 +913,8 @@
       opciones.appendChild(h("label", { class: "inline" }, registrar, " Ya les hemos escrito: anotar el correo enviado desde " + CUENTA_COMERCIAL));
       opciones.appendChild(h("div", { class: "field" }, h("label", { text: "Fecha del envío (vacío = sin fecha anotada)" }), fechaEnvio));
       opciones.appendChild(h("div", { class: "field" }, h("label", { text: "Campaña o asunto" }), campana));
+      asignar = state.sinAsignacion ? null : selResponsable("imp-resp", autorActual());
+      if (asignar) { opciones.appendChild(h("div", { class: "field" }, h("label", { for: "imp-resp", text: "Asignar las fichas a" }), asignar)); }
     }
 
     function lineas() { return texto.value.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean); }
@@ -933,6 +985,7 @@
             tipo: tipo.value, nombre: nombre, nombre_derivado: derivado, email: correo, telefono: tel,
             estado: registrar.checked ? "email_enviado" : "nuevo"
           };
+          if (asignar) { fila.responsable = asignar.value || null; }
           if (tipo.value === "canal") { fila.subtipo = sub.value; }
           else { fila.reformas = Array.prototype.filter.call(reformas.querySelectorAll("input"), function (x) { return x.checked; }).map(function (x) { return x.value; }); }
           items.push({ texto: nombre + (correo ? " (" + correo + ")" : "") + (derivado ? " · nombre sacado del dominio" : ""), ok: true, fila: fila });
@@ -987,10 +1040,10 @@
     var fichas = contactosFiltrados(), dia0 = new Date().toISOString().slice(0, 10);
     function ultimo(its, canal) { var i = its.filter(function (x) { return x.canal === canal; })[0]; return i ? (ESTADOS_INTER_TODOS[i.estado] + " · " + fechaInter(i)) : ""; }
     descargarCSV("directorio-" + dia0 + ".csv",
-      ["Tipo", "Subtipo / reformas", "Nombre", "Correo", "Teléfono", "Estado", "Próxima acción", "Fecha próxima acción", "Correos enviados", "Último correo", "Última llamada", "Notas"],
+      ["Tipo", "Subtipo / reformas", "Nombre", "Correo", "Teléfono", "Estado", "Responsable", "Próxima acción", "Fecha próxima acción", "Correos enviados", "Último correo", "Última llamada", "Notas"],
       fichas.map(function (c) {
         var its = internasDe(c.id);
-        return [CONTACTO_TIPOS[c.tipo], c.tipo === "canal" ? SUBTIPOS[c.subtipo] : reformasTexto(c), c.nombre, c.email, c.telefono, ESTADOS_CONTACTO[c.estado],
+        return [CONTACTO_TIPOS[c.tipo], c.tipo === "canal" ? SUBTIPOS[c.subtipo] : reformasTexto(c), c.nombre, c.email, c.telefono, ESTADOS_CONTACTO[c.estado], c.responsable,
           c.proxima_accion, c.proxima_fecha, its.filter(function (i) { return i.canal === "email" && i.direccion === "saliente"; }).length, ultimo(its, "email"), ultimo(its, "llamada"), c.notas];
       }));
     var filas = [];
@@ -1236,6 +1289,7 @@
           estado: f.estado.value,
           notas: f.notas.value.trim() || null
         };
+        if (!state.sinAsignacion) { datos.responsable = f.responsable.value || null; }
         if (tipo === "canal") {
           datos.subtipo = f.subtipo.value;
           if (!datos.subtipo) { toast("Elige el tipo de canal: administración, inmobiliaria, gestora u otro", true); f.subtipo.focus(); return; }
@@ -1263,6 +1317,8 @@
         campo("nombre", "Nombre", "text", { required: true }), campo("contacto", "Persona de contacto"),
         emailCampo, campo("telefono", "Teléfono", "tel"),
         h("div", { class: "field" }, h("label", { for: "ct-estado", text: "Estado" }), estadoSel),
+        state.sinAsignacion ? null : h("div", { class: "field" }, h("label", { for: "ct-responsable", text: "Responsable (a quién le toca)" }),
+          selResponsable("ct-responsable", nuevo ? autorActual() : c.responsable)),
         tipoCampo),
       avisoEl,
       h("div", { class: "field" }, h("label", { for: "ct-notas", text: "Notas internas" }), notas),
@@ -1302,7 +1358,7 @@
     izq.appendChild(h("div", { class: "card" },
       h("div", { class: "card-head" },
         h("h2", {}, c.nombre, " ", badge(c.estado, ESTADOS_CONTACTO)),
-        h("span", { class: "meta", text: tipoTexto(c) })),
+        h("span", { class: "meta", text: tipoTexto(c) + (state.sinAsignacion ? "" : " · Le toca a: " + nombreResp(c.responsable)) })),
       c.tipo === "proveedor" && !(c.reformas || []).length ? h("p", { class: "alert", text: "Tipo de reforma por clasificar: pregúntaselo en la llamada y márcalo en «Editar ficha»." }) : null,
       c.nombre_derivado ? h("p", { class: "meta", text: "Nombre sacado del dominio del correo: corrígelo en «Editar ficha» cuando lo sepas." }) : null,
       h("p", { class: "ya" }, yaEscritos(c)),

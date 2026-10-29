@@ -109,6 +109,16 @@ inmobiliaria, gestora u otro) y los **clientes finales** son los leads de siempr
 queda en el historial de la ficha. En los datos importados la fecha de envío no estaba en el documento, así que
 aparece «sin fecha anotada».
 
+## 8. Asignar fichas (a quién le toca llamar)
+
+Ejecuta [`asignacion.sql`](asignacion.sql) en el **SQL Editor** (después del apartado 7; se puede repetir). Añade el
+campo *Responsable* a cada ficha y hace que el resumen diario de Telegram agrupe los pendientes por persona.
+
+Los responsables son los correos de la tabla `admins`, así que antes hay que haber dado de alta a las dos personas
+(apartado 3). Después, en **Directorio**, el botón **Repartir N sin asignar** divide las fichas a partes iguales
+(alternando dentro de cada tipo). **Pendientes** enseña por defecto lo tuyo y lo que no tiene dueño; el selector
+«Responsable» cambia la vista. Quién hizo cada llamada ya queda en el historial («por …»).
+
 ## Cómo funciona
 
 - Los formularios de la web envían cada solicitud a la base de datos **y** a Formspree (correo). Basta con que llegue a uno de los dos.
