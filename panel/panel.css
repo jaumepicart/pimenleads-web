@@ -98,6 +98,7 @@ body.panel { font-size: .97rem; }
 /* Acceso */
 .pn-login { max-width: 420px; margin: 12vh auto 0; padding: 0 1.25rem; }
 .pn-login .card { padding: 1.5rem; }
+.panel input[type="password"] { font: inherit; color: var(--ink); background: var(--paper); border: 1.5px solid var(--line); border-radius: 8px; padding: .8rem .9rem; width: 100%; }
 
 .pn-toast { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 50; background: var(--ink); color: var(--paper); padding: .7rem 1.1rem; border-radius: 10px; font-weight: 600; font-size: .92rem; max-width: calc(100% - 2rem); box-shadow: 0 8px 24px rgba(0, 0, 0, .2); }
 .pn-toast.err { background: var(--err); color: #fff; }
@@ -133,7 +134,8 @@ body.panel { font-size: .97rem; }
 .reg-form { display: grid; gap: .75rem; }
 .reg-form .fields { display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: end; }
 .reg-form .fields label, .reg-form .grid2 label { display: grid; gap: .2rem; font-size: .8rem; color: var(--muted); }
-.reg-form input[type="text"], .reg-form input[type="date"], .reg-form input[type="datetime-local"] { font: inherit; color: var(--ink); background: var(--paper); border: 1.5px solid var(--line); border-radius: 8px; padding: .5rem .6rem; width: 100%; }
+.reg-form .fields label:has(input[type="text"]) { flex: 1 1 18rem; }
+.reg-form input[type="text"], .reg-form input[type="date"], .reg-form input[type="time"], .reg-form input[type="datetime-local"] { font: inherit; color: var(--ink); background: var(--paper); border: 1.5px solid var(--line); border-radius: 8px; padding: .5rem .6rem; width: 100%; }
 .tl { border-top: 1px solid var(--line); padding-top: .65rem; display: grid; gap: .35rem; }
 .tl .tags { align-items: center; gap: .6rem; }
 .tl select { width: auto; padding: .25rem .5rem; font-size: .85rem; }
