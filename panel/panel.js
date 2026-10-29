@@ -38,7 +38,7 @@
   var CUENTA_COMERCIAL = "comercial@pimenleads.com";
   var DOMINIOS_GENERICOS = ["gmail.com", "hotmail.com", "hotmail.es", "yahoo.es", "yahoo.com", "outlook.com", "outlook.es", "icloud.com", "telefonica.net"];
   var ACCION_POR_ESTADO = {
-    respondio: "Llamar (respondió al correo)", llamada_pendiente: "Llamar", acuerdo_cerrado: "Enviar el primer lead gratis y pasar a activo",
+    respondio: "Llamar (respondió al correo)", llamada_pendiente: "Llamar", acuerdo_cerrado: "Enviar el primer lead y pasar a activo",
     contactado: "Seguimiento", llamada_hecha: "Esperar respuesta / seguimiento"
   };
   var VIAS = { telefono: "Teléfono", whatsapp: "WhatsApp", canal: "Canal (partner)", otro: "Otro" };
@@ -899,7 +899,7 @@
     return [
       grupo("Respondió y tiene llamada pendiente", null, function (c) { return c.tipo === "proveedor" && c.estado === "llamada_pendiente"; }),
       grupo("Respondió: hay que llamar", null, function (c) { return c.tipo === "proveedor" && c.estado === "respondio"; }),
-      grupo("Acuerdo cerrado: activar y mandar el primer lead", "Un acuerdo no es el final: envíale el primer lead gratis y pásalo a activo.", function (c) { return c.tipo === "proveedor" && c.estado === "acuerdo_cerrado"; }),
+      grupo("Acuerdo cerrado: activar y mandar el primer lead", "Un acuerdo no es el final: envíale su primer lead (de pago) y pásalo a activo.", function (c) { return c.tipo === "proveedor" && c.estado === "acuerdo_cerrado"; }),
       grupo("Canal con llamada hecha, a la espera", null, function (c) { return c.tipo === "canal" && c.estado === "llamada_hecha"; }),
       grupo("Seguimiento con fecha de hoy o vencida", null, function (c) { return c.proxima_fecha && c.proxima_fecha <= hoy && cerrados.indexOf(c.estado) === -1; })
     ];
@@ -1455,7 +1455,7 @@
       if (emp || puedeCrear) {
         der.appendChild(h("div", { class: "card" }, h("h3", { text: "Recibir leads" }),
           emp ? h("p", {}, "Ficha en Empresas: ", h("a", { href: "#empresas/" + emp.id, text: emp.nombre }), " (" + ESTADOS_EMPRESA[emp.estado] + "). Ahí se le asignan los leads: solo tipos y zonas que encajen, 3 empresas como máximo por solicitud.")
-            : [h("p", { class: "meta", text: "Para asignarle clientes finales hace falta su ficha en Empresas. Se crea «en prueba»: el primer lead que reciba es gratis." }),
+            : [h("p", { class: "meta", text: "Para asignarle clientes finales hace falta su ficha en Empresas. Se crea «en prueba» y se pasa a activa cuando empiece a recibir leads de pago." }),
               h("div", { class: "actions" }, h("button", {
                 class: "btn btn-sm", type: "button", text: "Crear ficha en Empresas",
                 onclick: function () {
@@ -1760,9 +1760,9 @@
             badge(c.e.estado, ESTADOS_EMPRESA),
             c.tipo ? h("span", { class: "badge", text: "Hace " + TIPOS[l.tipo].toLowerCase() + "s" }) : h("span", { class: "badge warn", text: "No hace este tipo" }),
             c.zona ? h("span", { class: "badge", text: "Trabaja en la zona" }) : null,
-            c.primero ? h("span", { class: "badge", "data-v": "nuevo", text: "1.er lead: gratis" }) : null)),
+            c.primero ? h("span", { class: "badge", "data-v": "nuevo", text: "1.er lead" }) : null)),
         h("div", { class: "actions" },
-          h("span", { class: "meta", text: c.primero ? "0 €" : (precioTipo != null ? euros(precioTipo) : "sin precio") }),
+          h("span", { class: "meta", text: precioTipo != null ? euros(precioTipo) : "sin precio" }),
           h("button", {
             class: "btn btn-sm", type: "button", text: "Asignar",
             onclick: function () { guardar(sb.from("envios").insert({ lead_id: l.id, empresa_id: c.e.id }), "Asignado a " + c.e.nombre); }
@@ -1835,8 +1835,7 @@
         campo("precio_bano", "Precio por lead de baño (€)", "number", { min: "0", step: "1" }),
         campo("precio_cocina", "Precio por lead de cocina (€)", "number", { min: "0", step: "1" }),
         campo("precio_integral", "Precio por lead de integral (€)", "number", { min: "0", step: "1" })),
-      h("p", { class: "meta", text: "El primer lead que reciba cada empresa se pone a 0 € automáticamente." }),
-      h("div", { class: "field" }, h("label", { for: "emp-notas", text: "Notas internas" }), notas),
+            h("div", { class: "field" }, h("label", { for: "emp-notas", text: "Notas internas" }), notas),
       h("div", { class: "actions" }, h("button", { class: "btn btn-sm", type: "submit", text: nueva ? "Crear empresa" : "Guardar cambios" }))
     );
 
@@ -1850,7 +1849,7 @@
     cols.appendChild(izq); cols.appendChild(der); cont.appendChild(cols);
     var st = statsEmpresa(e.id);
     var origen = e.origen || {};
-    var saludo = "Hola" + (e.contacto ? " " + e.contacto.split(" ")[0] : "") + ", te escribo de Pimen Leads por tu solicitud del primer lead gratis.";
+    var saludo = "Hola" + (e.contacto ? " " + e.contacto.split(" ")[0] : "") + ", te escribo de Pimen Leads por tu solicitud de leads.";
     izq.appendChild(h("div", { class: "card" },
       h("div", { class: "card-head" },
         h("h2", {}, e.nombre, " ", badge(e.estado, ESTADOS_EMPRESA)),
