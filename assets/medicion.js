@@ -27,6 +27,64 @@
     if (cargada && ads.id && etiqueta) { gtag("event", "conversion", { send_to: ads.id + "/" + etiqueta }); }
   }
 
+  // Eventos propios de GA4 para saber dónde pulsan las personas. Solo se envían si aceptaron las cookies.
+  function evento(nombre, datos) {
+    if (cargada && ga.id) { gtag("event", nombre, datos || {}); }
+  }
+
+  function zonaDe(el) {
+    var z = el.closest("header, .sticky, footer, form, section, main");
+    return z ? (z.id || (z.className || "").split(" ")[0] || z.tagName.toLowerCase()) : "otra";
+  }
+
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest && e.target.closest("a, button");
+    if (!el) { return; }
+    var href = el.getAttribute("href") || "";
+    var datos = { zona: zonaDe(el), texto: (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 60) };
+    if (/^tel:/.test(href)) { evento("clic_llamar", datos); }
+    else if (/wa\.me\//.test(href)) { evento("clic_whatsapp", datos); }
+    else if (el.classList.contains("step-next")) {
+      var paso = el.closest("fieldset.step");
+      var form = el.closest("form");
+      if (paso && form) { evento("form_paso", { paso: Array.prototype.indexOf.call(form.querySelectorAll("fieldset.step"), paso) + 1 }); }
+    }
+    else if (el.matches('button[type="submit"]')) { evento("form_enviar", datos); }
+    else if (el.classList.contains("btn") || href.charAt(0) === "#") { datos.destino = href; evento("clic_boton", datos); }
+  });
+
+  // Primera interacción con el formulario.
+  var formIniciado = false;
+  function formInicio(e) {
+    if (formIniciado || !(e.target.closest && e.target.closest("[data-lead-form]"))) { return; }
+    formIniciado = true;
+    evento("form_inicio", { tipo: e.target.closest("[data-lead-form]").dataset.tipo || "" });
+  }
+  document.addEventListener("input", formInicio);
+  document.addEventListener("change", formInicio);
+
+  // Profundidad de scroll y secciones vistas.
+  var hitos = [25, 50, 75, 100], vistos = {};
+  window.addEventListener("scroll", function () {
+    var alto = document.documentElement.scrollHeight - window.innerHeight;
+    if (alto <= 0) { return; }
+    var pct = (window.scrollY / alto) * 100;
+    hitos.forEach(function (h) {
+      if (pct >= h - 1 && !vistos[h]) { vistos[h] = true; evento("scroll_profundidad", { porcentaje: h }); }
+    });
+  }, { passive: true });
+
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (items) {
+      items.forEach(function (i) {
+        if (i.isIntersecting) { io.unobserve(i.target); evento("seccion_vista", { seccion: i.target.id }); }
+      });
+    }, { threshold: 0.4 });
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll("section[id]").forEach(function (s) { io.observe(s); });
+    });
+  }
+
   function cargarGoogle() {
     if (cargada) { return; }
     cargada = true;
@@ -41,6 +99,7 @@
     // Página de gracias de particulares = solicitud enviada (la de empresas lleva ?de=empresa).
     if (document.body.dataset.conversion === "lead" && params.get("de") !== "empresa") {
       conversion(ads.conversionLead);
+      evento("generate_lead");
     }
   }
 
