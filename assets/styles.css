@@ -321,3 +321,10 @@ html:has(.top-nav) { scroll-padding-top: 7rem; }
   .cookies { left: .5rem; right: .5rem; bottom: .5rem; padding: .65rem .8rem; gap: .5rem; font-size: .82rem; line-height: 1.35; border-radius: 12px; }
   .cookies-btn { padding: .45rem .75rem; font-size: .9rem; }
 }
+
+/* Portada de particulares: tarjetas de tipo de reforma */
+.svc a.card { display: block; background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 1.5rem; text-decoration: none; color: inherit; }
+.svc a.card:hover, .svc a.card:focus-visible { border-color: var(--teal); }
+.svc a.card h3 { font-size: 1.4rem; margin-bottom: .4rem; }
+.svc a.card p { color: var(--muted); }
+.svc a.card .go { display: inline-block; margin-top: .9rem; font-weight: 600; color: var(--ink); }
