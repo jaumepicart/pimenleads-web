@@ -1,6 +1,6 @@
-// Medición de Google Ads con consentimiento previo.
+// Medición de Google Ads y Google Analytics 4 con consentimiento previo.
 // La etiqueta de Google solo se carga si la persona acepta las cookies en el aviso.
-// Mientras googleAds.id esté vacío en assets/config.js, no se carga nada ni se muestra el aviso.
+// Mientras googleAds.id y analytics.id estén vacíos en assets/config.js, no se carga nada ni se muestra el aviso.
 //
 // Además, si la visita llega desde un anuncio (gclid o utm_medium=cpc), se marca la página con
 // la clase "desde-anuncio" para ocultar los enlaces que sacan de la landing.
@@ -11,7 +11,8 @@
   }
 
   var ads = (window.PIMEN_CONFIG || {}).googleAds || {};
-  if (!ads.id) { return; }
+  var ga = (window.PIMEN_CONFIG || {}).analytics || {};
+  if (!ads.id && !ga.id) { return; }
   document.documentElement.classList.add("cookies-activas");
 
   var CLAVE = "pimen_cookies"; // "si" o "no"; es solo la elección del aviso, no se usa para nada más.
@@ -23,19 +24,20 @@
   var cargada = false;
 
   function conversion(etiqueta) {
-    if (cargada && etiqueta) { gtag("event", "conversion", { send_to: ads.id + "/" + etiqueta }); }
+    if (cargada && ads.id && etiqueta) { gtag("event", "conversion", { send_to: ads.id + "/" + etiqueta }); }
   }
 
   function cargarGoogle() {
     if (cargada) { return; }
     cargada = true;
-    gtag("consent", "default", { ad_storage: "granted", ad_user_data: "granted", ad_personalization: "denied", analytics_storage: "denied" });
+    gtag("consent", "default", { ad_storage: "granted", ad_user_data: "granted", ad_personalization: "denied", analytics_storage: ga.id ? "granted" : "denied" });
     var s = document.createElement("script");
     s.async = true;
-    s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(ads.id);
+    s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(ads.id || ga.id);
     document.head.appendChild(s);
     gtag("js", new Date());
-    gtag("config", ads.id);
+    if (ads.id) { gtag("config", ads.id); }
+    if (ga.id) { gtag("config", ga.id); }
     // Página de gracias de particulares = solicitud enviada (la de empresas lleva ?de=empresa).
     if (document.body.dataset.conversion === "lead" && params.get("de") !== "empresa") {
       conversion(ads.conversionLead);
@@ -67,7 +69,7 @@
     caja.setAttribute("role", "region");
     caja.setAttribute("aria-label", "Aviso de cookies");
     caja.innerHTML =
-      '<p>Usamos cookies de Google solo para medir qué anuncios nos traen solicitudes, no para mostrarte publicidad. ' +
+      '<p>Usamos cookies de Google para medir las visitas y qué anuncios nos traen solicitudes, no para mostrarte publicidad. ' +
       '<a href="legal.html#cookies">Más información</a></p>' +
       '<div class="cookies-botones">' +
       '<button type="button" class="cookies-btn" data-v="no">Rechazar</button>' +
