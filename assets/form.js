@@ -20,6 +20,13 @@
     campaign.referrer = document.referrer;
   }
 
+  // Los enlaces a las landings conservan el origen: si se entra por la portada, el formulario está en otra página.
+  each(document.querySelectorAll('a[href^="reforma-"]'), function (a) {
+    var url = new URL(a.href);
+    UTM_KEYS.forEach(function (k) { if (campaign[k]) { url.searchParams.set(k, campaign[k]); } });
+    a.href = url.href;
+  });
+
   function isValid(el) {
     var v = el.value.trim();
     if (!v) { return false; }
