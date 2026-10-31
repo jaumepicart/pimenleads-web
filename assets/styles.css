@@ -309,6 +309,7 @@ html:has(.top-nav) { scroll-padding-top: 7rem; }
 @media (min-width: 820px) {
   .bonus-flow { grid-template-columns: repeat(3, 1fr); }
   .bonus-tiers { grid-template-columns: repeat(4, 1fr); }
+  .bonus-tiers.dos { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* Línea de bonificación en la parte alta */
