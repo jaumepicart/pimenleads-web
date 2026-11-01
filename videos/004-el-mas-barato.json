@@ -1,11 +1,28 @@
 {
-  "prueba": {"serie": "que-no-te-la-lien", "formato": "documento", "gancho": "aviso", "publico": "propietarios"},
-  "texto": "Un presupuesto más barato puede ser solo un presupuesto que incluye menos.\n\nAntes de elegir tu reforma en Barcelona, mira qué entra en cada precio.\n\n¿Quieres reformar? Cuéntanos tu obra: primero hablas con nosotros, Alex y Jaume. Enlace en el perfil.\n\n#reformasbarcelona #presupuestoreforma #barcelona",
+  "prueba": {"serie": "que-no-te-la-lien", "formato": "impacto", "gancho": "condicional", "publico": "propietarios"},
+  "texto": "Si tienes dos presupuestos de reforma en Barcelona, no elijas el barato todavía.\n\nHaz estas 3 preguntas. Si la respuesta no está por escrito, ese precio no es el precio.\n\n¿Ya tienes presupuestos? Escríbenos por WhatsApp y te ayudamos a compararlos, gratis. Enlace en el perfil.\n\n#reformasbarcelona #presupuestoreforma #barcelona",
   "escenas": [
-    {"tipo": "gancho", "segundos": 2.5, "texto": "El presupuesto más barato de tu reforma **puede no serlo.**"},
-    {"tipo": "documento", "segundos": 4, "titular": "A primera vista:", "nota": "EJEMPLO", "filas": [{"etiqueta": "Empresa A", "valor": "6.000 €"}, {"etiqueta": "Empresa B", "valor": "7.000 €"}], "aviso": "¿Eliges la A?"},
-    {"tipo": "documento", "segundos": 6, "titular": "Antes, mira si la A **incluye:**", "nota": "EJEMPLO", "marcar": true, "filas": [{"etiqueta": "Los mismos materiales"}, {"etiqueta": "Retirar escombros"}, {"etiqueta": "Tasas y permisos"}, {"etiqueta": "Remates finales"}]},
-    {"tipo": "gancho", "segundos": 2.5, "texto": "Compara lo mismo con **lo mismo.**"},
-    {"tipo": "cierre", "segundos": 4, "titular": "¿Quieres **reformar** en Barcelona?", "lineas": ["Primero hablas con Alex o Jaume.", "Gratis y sin compromiso."], "accion": "Enlace en el perfil"}
+    {"tipo": "pantalla", "segundos": 1.4, "texto": "Si vas a **reformar** en Barcelona"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "y tienes dos presupuestos,"},
+    {"tipo": "pantalla", "segundos": 1.2, "texto": "no elijas el barato.", "fondo": "acento"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "**Todavía no.**"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "Te doy **3 preguntas.**"},
+    {"tipo": "pantalla", "segundos": 2.2, "texto": "En 20 segundos sabrás cuál es **más barato de verdad.**"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "¿Incluye **los escombros?**", "etiqueta": "1 de 3"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "Si no lo pone,", "etiqueta": "1 de 3"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "puedes acabar **pagándolo aparte.**", "etiqueta": "1 de 3"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "¿Qué **materiales** lleva?", "etiqueta": "2 de 3"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "Un azulejo más barato", "etiqueta": "2 de 3"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "también baja **el precio.**", "etiqueta": "2 de 3"},
+    {"tipo": "pantalla", "segundos": 1.8, "texto": "¿Y si aparece algo **detrás de la pared?**", "etiqueta": "3 de 3"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "¿Quién **decide?**", "etiqueta": "3 de 3"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "¿Y **cuánto** cuesta?", "etiqueta": "3 de 3"},
+    {"tipo": "pantalla", "segundos": 1.2, "texto": "Si no está **por escrito,**"},
+    {"tipo": "pantalla", "segundos": 1.6, "texto": "ese precio no es el precio.", "fondo": "acento"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "¿Ya tienes presupuestos?"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "**Mándanoslos.**"},
+    {"tipo": "pantalla", "segundos": 1.6, "texto": "Alex o Jaume te ayudan a **compararlos.**"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "Gratis.", "fondo": "acento"},
+    {"tipo": "pantalla", "segundos": 1.8, "texto": "Escríbenos. **Enlace en el perfil.**"}
   ]
 }

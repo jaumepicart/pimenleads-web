@@ -1,13 +1,26 @@
 {
-  "prueba": {"serie": "que-no-te-la-lien", "formato": "lista", "gancho": "aviso", "publico": "propietarios"},
-  "texto": "5 preguntas antes de firmar un presupuesto de reforma en Barcelona.\n\nGuárdalo para cuando te llegue el presupuesto, o mándaselo a quien esté reformando.\n\n¿Quieres reformar? Cuéntanos tu obra: primero hablas con nosotros, Alex y Jaume. Enlace en el perfil.\n\n#reformasbarcelona #reformas #barcelona",
+  "prueba": {"serie": "que-no-te-la-lien", "formato": "impacto", "gancho": "orden", "publico": "propietarios"},
+  "texto": "No firmes tu reforma en Barcelona sin hacer estas 4 preguntas.\n\nGuárdalo para cuando te llegue el presupuesto.\n\n¿Ya tienes un presupuesto? Escríbenos por WhatsApp y lo miramos contigo, gratis. Enlace en el perfil.\n\n#reformasbarcelona #presupuestoreforma #barcelona",
   "escenas": [
-    {"tipo": "gancho", "segundos": 3, "texto": "¿Vas a firmar un presupuesto de reforma en **Barcelona?**", "apoyo": "Antes, haz estas 5 preguntas."},
-    {"tipo": "paso", "segundos": 3.5, "n": 1, "total": 5, "titulo": "¿Está desglosado por partidas?", "detalle": "Materiales y mano de obra, por separado."},
-    {"tipo": "paso", "segundos": 3.5, "n": 2, "total": 5, "titulo": "¿Qué incluye y qué no?", "detalle": "Pregunta por escombros, tasas y permisos."},
-    {"tipo": "paso", "segundos": 3.5, "n": 3, "total": 5, "titulo": "¿Cuánto tarda?", "detalle": "Y qué pasa si se retrasa. Mejor por escrito."},
-    {"tipo": "paso", "segundos": 3.5, "n": 4, "total": 5, "titulo": "¿Cómo se paga?", "detalle": "Desconfía si te piden casi todo por adelantado."},
-    {"tipo": "paso", "segundos": 3.5, "n": 5, "total": 5, "titulo": "¿Tiene seguro?", "detalle": "Pregunta por el de responsabilidad civil."},
-    {"tipo": "cierre", "segundos": 4, "titular": "¿Quieres **reformar** en Barcelona?", "lineas": ["Primero hablas con Alex o Jaume.", "Gratis y sin compromiso."], "accion": "Enlace en el perfil"}
+    {"tipo": "pantalla", "segundos": 1.4, "texto": "No firmes tu **reforma** en Barcelona"},
+    {"tipo": "pantalla", "segundos": 1.2, "texto": "sin hacer estas **4 preguntas.**"},
+    {"tipo": "pantalla", "segundos": 1.6, "texto": "La última te puede ahorrar **un disgusto.**"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "¿Está **desglosado?**", "etiqueta": "1 de 4"},
+    {"tipo": "pantalla", "segundos": 1.2, "texto": "Si pone un solo precio,", "etiqueta": "1 de 4"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "no sabes **qué pagas.**", "etiqueta": "1 de 4"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "¿Qué **no** incluye?", "etiqueta": "2 de 4"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "Escombros. Tasas. Permisos.", "etiqueta": "2 de 4"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "**Pregúntalo antes.**", "etiqueta": "2 de 4"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "¿Cuánto **tarda?**", "etiqueta": "3 de 4"},
+    {"tipo": "pantalla", "segundos": 1.4, "texto": "¿Y qué pasa **si se retrasa?**", "etiqueta": "3 de 4"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "**Por escrito.**", "etiqueta": "3 de 4"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "¿Cómo **se paga?**", "etiqueta": "4 de 4"},
+    {"tipo": "pantalla", "segundos": 1.6, "texto": "Si te piden casi todo por adelantado,", "etiqueta": "4 de 4"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "desconfía.", "fondo": "acento"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "¿Ya tienes un presupuesto?"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "**Mándanoslo.**"},
+    {"tipo": "pantalla", "segundos": 1.4, "texto": "Alex o Jaume **lo miran contigo.**"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "Gratis.", "fondo": "acento"},
+    {"tipo": "pantalla", "segundos": 1.8, "texto": "Escríbenos. **Enlace en el perfil.**"}
   ]
 }

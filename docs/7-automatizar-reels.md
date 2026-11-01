@@ -38,16 +38,14 @@ npm run generar
 
 Deja en `salida/<vídeo>/` el `.mp4` (1080×1920), `portada.png` y `texto.txt`, y actualiza `salida/catalogo.csv` con lo que prueba cada vídeo.
 
-- **Formato lista:** vídeos 001, 003 y 005.
-- **Formato presupuesto:** vídeos 002, 004 y 006.
+- **Vídeos 001 a 006:** formato de impacto, al estilo de Alex Hormozi, cada uno con un gancho distinto. Alex descartó el primer estilo, de diapositivas.
 - **Coste:** Remotion es gratis, también para uso comercial, en empresas de hasta 3 empleados. Si pasáis de ahí, hace falta licencia.
 
 ## 4. Formatos
 
 | # | Formato | Qué hacéis vosotros | Estado | Hipótesis |
 |---|---|---|---|---|
-| F1 | Texto animado en lista | Nada | **Listo** | Fácil de guardar, poca confianza |
-| F2 | Presupuesto en pantalla | Nada | **Listo** | Más visual y más fácil de reenviar |
+| F1 | Impacto: letras grandes palabra a palabra | Nada | **Listo** | Retiene, pero da poca confianza sin una persona |
 | F3 | Precios con barras | Validar rangos | Por construir | El que más responde a lo que se busca |
 | F4 | Vuestra voz sobre animación | Grabar audio con el móvil, 10 min por lote | Por construir | Buen equilibrio entre coste y confianza |
 | F5 | Vosotros a cámara, con cortes y subtítulos automáticos | Grabar 15 min por lote | Por construir | **El que más confianza y leads dará** |
@@ -70,12 +68,12 @@ Con pocas visualizaciones, el azar pesa mucho: un vídeo puede multiplicar por d
 
 | Ronda | Qué se prueba | Opciones | Vídeos | Semanas |
 |---|---|---|---|---|
-| 1 | **Formato** | F1, F2, F4, F5 | 12 | 3 |
+| 1 | **Formato** | F1, F4, F5 | 9 | 3 |
 | 2 | **Gancho** | Pregunta de precio · Aviso («no firmes») · Curiosidad · Barrio concreto | 12 | 3 |
 | 3 | **Tema y público** | Precios · Evitar sustos · Comprar piso a reformar · Obras reales | 12 | 3 |
 | 4 | **Llamada a la acción** | Enlace · Palabra por mensaje · Revisar tu presupuesto por WhatsApp | 9 | 3 |
 
-**12 semanas y 45 vídeos** dan una fórmula con base real. F3 entra cuando los precios estén validados; F6, cuando haya fotos.
+**12 semanas y 42 vídeos** dan una fórmula con base real. F3 entra cuando los precios estén validados; F6, cuando haya fotos.
 
 ### Qué mirar y en qué orden
 

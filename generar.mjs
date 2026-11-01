@@ -58,8 +58,13 @@ for (const archivo of archivos) {
 	remotion('render', 'src/index.jsx', id, fotogramas, '--sequence', '--image-format=jpeg', '--jpeg-quality=95');
 	codificar(fotogramas, `${carpeta}/${id}.mp4`);
 	rmSync(fotogramas, {recursive: true});
-	remotion('still', 'src/index.jsx', id, `${carpeta}/portada.png`, '--frame=45');
+	// La portada es el final de la primera escena, con todas sus palabras ya en pantalla.
+	const portada = Math.round(datos.escenas[0].segundos * 30) - 1;
+	remotion('still', 'src/index.jsx', id, `${carpeta}/portada.png`, `--frame=${portada}`);
 	writeFileSync(`${carpeta}/texto.txt`, `${datos.texto}\n`);
+	// Lo que hay que leer si se graba con voz o a cámara.
+	const guion = datos.escenas.filter((e) => e.texto).map((e) => e.texto.replaceAll('**', ''));
+	writeFileSync(`${carpeta}/guion.txt`, `${guion.join('\n')}\n`);
 }
 
 writeFileSync('salida/catalogo.csv', `${filas.join('\n')}\n`);

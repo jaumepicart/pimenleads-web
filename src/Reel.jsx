@@ -2,11 +2,13 @@ import React from 'react';
 import {AbsoluteFill, Sequence, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {loadFont as cargarTitular} from '@remotion/google-fonts/BricolageGrotesque';
 import {loadFont as cargarTexto} from '@remotion/google-fonts/PublicSans';
+import {loadFont as cargarImpacto} from '@remotion/google-fonts/Montserrat';
 
 export const FPS = 30;
 
 const {fontFamily: TITULAR} = cargarTitular('normal', {weights: ['800'], subsets: ['latin', 'latin-ext']});
 const {fontFamily: TEXTO} = cargarTexto('normal', {weights: ['500', '700'], subsets: ['latin', 'latin-ext']});
+const {fontFamily: IMPACTO} = cargarImpacto('normal', {weights: ['900'], subsets: ['latin', 'latin-ext']});
 
 // Colores de la web (assets/styles.css).
 const C = {
@@ -225,7 +227,95 @@ const Cierre = ({titular, lineas, accion}) => (
 	</Lienzo>
 );
 
-const ESCENAS = {gancho: Gancho, paso: Paso, documento: Documento, cierre: Cierre};
+// Una pantalla de texto grande: las palabras entran una a una y **así** marca las clave.
+// Cada pantalla es un corte seco, sin transición, para mantener el ritmo.
+const ANCHO_TEXTO = 870;
+const PALETAS = {
+	oscuro: {fondo: '#0a1413', texto: C.blanco, clave: C.acento},
+	acento: {fondo: C.acento, texto: '#111111', clave: '#111111'},
+};
+
+const Pantalla = ({texto, fondo = 'oscuro', etiqueta, segundos}) => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const paleta = PALETAS[fondo];
+	const palabras = texto.split('**').flatMap((parte, i) =>
+		parte.trim().split(/\s+/).filter(Boolean).map((p) => ({texto: p, clave: i % 2 === 1}))
+	);
+	const larga = Math.max(...palabras.map((p) => p.texto.length));
+	const tamano = Math.min(148, ANCHO_TEXTO / (larga * 0.74));
+	const duracion = segundos * fps;
+	const zoom = interpolate(frame, [0, duracion], [1, 1.05]);
+
+	return (
+		<AbsoluteFill style={{background: paleta.fondo}}>
+			<div
+				style={{
+					position: 'absolute',
+					top: MARGEN.arriba,
+					bottom: MARGEN.abajo,
+					left: MARGEN.izquierda,
+					right: MARGEN.derecha,
+					display: 'flex',
+					flexDirection: 'column',
+					alignItems: 'center',
+					justifyContent: 'center',
+					transform: `scale(${zoom})`,
+				}}
+			>
+				{etiqueta ? (
+					<div
+						style={{
+							marginBottom: 48,
+							padding: '14px 32px',
+							borderRadius: 14,
+							background: C.acento,
+							color: '#111111',
+							fontFamily: IMPACTO,
+							fontWeight: 900,
+							fontSize: 44,
+							textTransform: 'uppercase',
+						}}
+					>
+						{etiqueta}
+					</div>
+				) : null}
+				<div
+					style={{
+						display: 'flex',
+						flexWrap: 'wrap',
+						justifyContent: 'center',
+						columnGap: tamano * 0.28,
+						fontFamily: IMPACTO,
+						fontWeight: 900,
+						fontSize: tamano,
+						lineHeight: 1.08,
+						letterSpacing: -2,
+						textTransform: 'uppercase',
+					}}
+				>
+					{palabras.map((p, i) => {
+						const inicio = (i / palabras.length) * duracion * 0.7;
+						return (
+							<span
+								key={i}
+								style={{
+									color: p.clave ? paleta.clave : paleta.texto,
+									opacity: frame >= inicio ? 1 : 0,
+									transform: `scale(${interpolate(frame - inicio, [0, 4], [1.2, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})})`,
+								}}
+							>
+								{p.texto}
+							</span>
+						);
+					})}
+				</div>
+			</div>
+		</AbsoluteFill>
+	);
+};
+
+const ESCENAS = {gancho: Gancho, paso: Paso, documento: Documento, cierre: Cierre, pantalla: Pantalla};
 
 export const Reel = ({datos}) => {
 	let inicio = 0;
@@ -238,7 +328,7 @@ export const Reel = ({datos}) => {
 				inicio += duracion;
 				return (
 					<Sequence key={i} from={desde} durationInFrames={duracion}>
-						<Escena {...props} />
+						<Escena {...props} segundos={segundos} />
 					</Sequence>
 				);
 			})}

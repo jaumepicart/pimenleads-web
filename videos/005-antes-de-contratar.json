@@ -1,12 +1,24 @@
 {
-  "prueba": {"serie": "que-no-te-la-lien", "formato": "lista", "gancho": "aviso", "publico": "propietarios"},
-  "texto": "4 cosas que comprobar antes de contratar una empresa de reformas en Barcelona.\n\nSon las mismas que pedimos nosotros a las empresas. Guárdalo para cuando te haga falta.\n\n¿Quieres reformar? Cuéntanos tu obra: primero hablas con nosotros, Alex y Jaume. Enlace en el perfil.\n\n#reformasbarcelona #empresareformas #barcelona",
+  "prueba": {"serie": "que-no-te-la-lien", "formato": "impacto", "gancho": "aviso", "publico": "propietarios"},
+  "texto": "Antes de contratar una empresa de reformas en Barcelona, mira estas 4 cosas. Si falla alguna, sigue buscando.\n\n¿Vas a reformar? Cuéntanos tu obra: primero hablas con nosotros, Alex y Jaume. Gratis y sin compromiso. Enlace en el perfil.\n\n#reformasbarcelona #empresareformas #barcelona",
   "escenas": [
-    {"tipo": "gancho", "segundos": 3, "texto": "No contrates una empresa de reformas en **Barcelona** sin mirar esto.", "apoyo": "4 cosas. Un minuto."},
-    {"tipo": "paso", "segundos": 3.5, "n": 1, "total": 4, "titulo": "Su NIF", "detalle": "Que aparezca en el presupuesto y esté activo."},
-    {"tipo": "paso", "segundos": 3.5, "n": 2, "total": 4, "titulo": "Su seguro", "detalle": "Pregunta por el de responsabilidad civil."},
-    {"tipo": "paso", "segundos": 3.5, "n": 3, "total": 4, "titulo": "Sus reseñas en Google", "detalle": "Mira la nota, cuántas hay y qué cuentan."},
-    {"tipo": "paso", "segundos": 3.5, "n": 4, "total": 4, "titulo": "Su presupuesto", "detalle": "Por escrito y desglosado."},
-    {"tipo": "cierre", "segundos": 4, "titular": "¿Quieres **reformar** en Barcelona?", "lineas": ["Primero hablas con Alex o Jaume.", "Gratis y sin compromiso."], "accion": "Enlace en el perfil"}
+    {"tipo": "pantalla", "segundos": 2.0, "texto": "Antes de contratar una empresa de reformas en Barcelona,"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "mira **estas 4 cosas.**"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "Tardas **un minuto.**"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "Su **NIF.**", "etiqueta": "1 de 4"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "¿Aparece en **el presupuesto?**", "etiqueta": "1 de 4"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "Su **seguro.**", "etiqueta": "2 de 4"},
+    {"tipo": "pantalla", "segundos": 1.4, "texto": "Pregunta por el de **responsabilidad civil.**", "etiqueta": "2 de 4"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "Sus **reseñas en Google.**", "etiqueta": "3 de 4"},
+    {"tipo": "pantalla", "segundos": 1.4, "texto": "La nota. Cuántas hay. **Qué cuentan.**", "etiqueta": "3 de 4"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "Su **presupuesto.**", "etiqueta": "4 de 4"},
+    {"tipo": "pantalla", "segundos": 1.0, "texto": "Por escrito y **desglosado.**", "etiqueta": "4 de 4"},
+    {"tipo": "pantalla", "segundos": 0.6, "texto": "¿Falla **alguna?**"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "Sigue buscando.", "fondo": "acento"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "¿Vas a **reformar?**"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "Cuéntanos tu obra."},
+    {"tipo": "pantalla", "segundos": 1.4, "texto": "Primero hablas con **Alex o Jaume.**"},
+    {"tipo": "pantalla", "segundos": 0.8, "texto": "Gratis.", "fondo": "acento"},
+    {"tipo": "pantalla", "segundos": 1.6, "texto": "**Enlace en el perfil.**"}
   ]
 }

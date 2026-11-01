@@ -5,15 +5,27 @@ Generador de vídeos verticales para captar particulares que quieren reformar en
 ## Cómo funciona
 
 - Cada `videos/NNN-nombre.json` es un vídeo. `npm run generar` crea en `salida/` el MP4, la portada y el texto.
-- `src/Reel.jsx` tiene los formatos de escena: `gancho`, `paso`, `documento` y `cierre`.
+- `src/Reel.jsx` tiene los formatos de escena. Se usa `pantalla`: letras grandes, palabra a palabra y con corte seco. Campos: `texto`, `segundos`, `fondo` (`acento` para las frases clave) y `etiqueta` (por ejemplo, «1 de 3»). Las demás escenas son del primer estilo, que se descartó.
 - `**texto**` resalta una parte de un titular. Campo `prueba`: qué compara el vídeo; actualiza `salida/catalogo.csv`.
 - Remotion solo saca fotogramas y los codifica `ffmpeg-static`, para que también funcione en macOS anterior al 15.
 - Comprueba cada vídeo nuevo mirando fotogramas de la mitad de cada escena, no del inicio.
 
+## Cómo escribir los guiones
+
+Alex quiere el método de Alex Hormozi:
+
+- **Gancho:** en la primera pantalla, dirigido a quien va a reformar en Barcelona. Debe prometer algo o avisar de algo concreto.
+- **Retención:** cuenta lo que queda («1 de 3») y que cada frase avance hacia lo prometido. Nada de relleno.
+- **Recompensa:** cumple lo prometido y remata con una frase clara, sobre fondo `acento`.
+- **Cierre:** una oferta concreta y de poco esfuerzo, como mandar el presupuesto para compararlo gratis.
+- **Pantallas de 1 a 6 palabras,** unos 0,2 segundos por palabra.
+
+Sin pruebas inventadas: todavía no hay obras cerradas. Cuando las haya, úsalas en los ganchos.
+
 ## Normas de cada vídeo
 
 - **Sin precios sin validar.** Solo importes de ejemplo, con la nota `EJEMPLO` visible.
-- **Solo promesas que ya hace la web:** «primero hablas con Alex o Jaume», «gratis», «sin compromiso», «hasta 3 presupuestos».
+- **Solo promesas que ya hace la web:** «primero hablas con Alex o Jaume», «gratis», «sin compromiso», «hasta 3 presupuestos», «te ayudamos a comparar los presupuestos».
 - **Sin «empresas revisadas»** hasta haberlo comprobado con cada empresa.
 - **Sin «te pagamos» ni la bonificación** sin sus condiciones al lado.
 - **Sin clientes, reseñas ni obras inventadas.** Sin avatares de IA, voces clonadas ni renders presentados como obras reales.

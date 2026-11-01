@@ -36,6 +36,7 @@ Cada vídeo queda en `salida/<nombre>/`:
 | `<nombre>.mp4` | El vídeo, 1080×1920 y sin sonido |
 | `portada.png` | La portada, si la plataforma la pide |
 | `texto.txt` | El texto para pegar al publicar |
+| `guion.txt` | Lo que hay que leer si se graba con voz o a cámara |
 
 `salida/catalogo.csv` indica qué prueba cada vídeo. Sirve para comparar resultados.
 
@@ -65,8 +66,7 @@ npm run editor
 
 | Formato | Estado |
 |---|---|
-| Texto en lista | Listo |
-| Presupuesto en pantalla | Listo |
+| Impacto: letras grandes palabra a palabra, con cortes secos | Listo |
 | Vuestra voz sobre animación | Por construir |
 | Vosotros a cámara, con cortes y subtítulos automáticos | Por construir |
 | Precios con barras | Por construir: faltan los precios validados |
