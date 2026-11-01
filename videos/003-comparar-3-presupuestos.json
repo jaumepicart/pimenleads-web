@@ -1,0 +1,12 @@
+{
+  "prueba": {"serie": "que-no-te-la-lien", "formato": "lista", "gancho": "pregunta", "publico": "propietarios"},
+  "texto": "Cómo comparar 3 presupuestos de reforma en Barcelona sin mirar solo el total.\n\nGuárdalo para cuando te lleguen, o mándaselo a quien esté reformando.\n\n¿Quieres reformar? Cuéntanos tu obra: primero hablas con nosotros, Alex y Jaume. Enlace en el perfil.\n\n#reformasbarcelona #presupuestoreforma #barcelona",
+  "escenas": [
+    {"tipo": "gancho", "segundos": 3, "texto": "¿Tienes 3 presupuestos de reforma en **Barcelona?**", "apoyo": "No mires solo el total."},
+    {"tipo": "paso", "segundos": 3.5, "n": 1, "total": 4, "titulo": "Ponlos partida por partida", "detalle": "Materiales con materiales, mano de obra con mano de obra."},
+    {"tipo": "paso", "segundos": 3.5, "n": 2, "total": 4, "titulo": "Busca lo que falta", "detalle": "Lo que uno incluye y otro no explica muchas diferencias."},
+    {"tipo": "paso", "segundos": 3.5, "n": 3, "total": 4, "titulo": "Compara las calidades", "detalle": "El mismo baño no cuesta igual con otros materiales."},
+    {"tipo": "paso", "segundos": 3.5, "n": 4, "total": 4, "titulo": "Compara plazos y pagos", "detalle": "Cuánto tarda cada uno y cuándo te pide el dinero."},
+    {"tipo": "cierre", "segundos": 4, "titular": "¿Quieres **reformar** en Barcelona?", "lineas": ["Primero hablas con Alex o Jaume.", "Gratis y sin compromiso."], "accion": "Enlace en el perfil"}
+  ]
+}

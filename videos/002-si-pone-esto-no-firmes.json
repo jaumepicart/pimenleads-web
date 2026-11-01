@@ -1,0 +1,11 @@
+{
+  "prueba": {"serie": "que-no-te-la-lien", "formato": "documento", "gancho": "no-hagas", "publico": "propietarios"},
+  "texto": "Un presupuesto de una sola línea no te dice qué estás pagando.\n\nAntes de firmar tu reforma en Barcelona, pide que te lo desglosen por escrito.\n\n¿Quieres reformar? Cuéntanos tu obra: primero hablas con nosotros, Alex y Jaume. Enlace en el perfil.\n\n#reformasbarcelona #reformabaño #barcelona",
+  "escenas": [
+    {"tipo": "gancho", "segundos": 2.5, "texto": "Si tu presupuesto de reforma pone esto, **no firmes todavía.**"},
+    {"tipo": "documento", "segundos": 4, "titular": "Una sola línea:", "nota": "EJEMPLO", "filas": [{"etiqueta": "Baño completo", "valor": "7.000 €"}], "aviso": "¿Y qué incluye?"},
+    {"tipo": "documento", "segundos": 6, "titular": "Pide que te lo **desglosen:**", "nota": "EJEMPLO", "marcar": true, "filas": [{"etiqueta": "Materiales"}, {"etiqueta": "Mano de obra"}, {"etiqueta": "Escombros y tasas"}, {"etiqueta": "Qué pasa si surge un imprevisto"}]},
+    {"tipo": "gancho", "segundos": 2.5, "texto": "Y siempre **por escrito.**"},
+    {"tipo": "cierre", "segundos": 4, "titular": "¿Quieres **reformar** en Barcelona?", "lineas": ["Primero hablas con Alex o Jaume.", "Gratis y sin compromiso."], "accion": "Enlace en el perfil"}
+  ]
+}

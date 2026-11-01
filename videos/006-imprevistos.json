@@ -1,0 +1,10 @@
+{
+  "prueba": {"serie": "que-no-te-la-lien", "formato": "documento", "gancho": "pregunta", "publico": "propietarios"},
+  "texto": "En una reforma pueden salir imprevistos. Lo importante es dejar claro antes qué pasa si salen.\n\nSi vas a reformar en Barcelona, déjalo por escrito antes de empezar.\n\n¿Quieres reformar? Cuéntanos tu obra: primero hablas con nosotros, Alex y Jaume. Enlace en el perfil.\n\n#reformasbarcelona #reformas #barcelona",
+  "escenas": [
+    {"tipo": "gancho", "segundos": 2.5, "texto": "¿Y si en tu reforma **aparece algo detrás de la pared?**"},
+    {"tipo": "documento", "segundos": 6, "titular": "Antes de firmar, **déjalo por escrito:**", "nota": "EJEMPLO", "marcar": true, "filas": [{"etiqueta": "Quién te avisa y cómo"}, {"etiqueta": "Cómo se calcula el coste"}, {"etiqueta": "Cuánto retrasa la obra"}, {"etiqueta": "Que nada siga sin tu OK"}]},
+    {"tipo": "gancho", "segundos": 2.5, "texto": "Y que nada se cobre **sin avisarte.**"},
+    {"tipo": "cierre", "segundos": 4, "titular": "¿Quieres **reformar** en Barcelona?", "lineas": ["Primero hablas con Alex o Jaume.", "Gratis y sin compromiso."], "accion": "Enlace en el perfil"}
+  ]
+}

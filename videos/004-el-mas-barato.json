@@ -1,0 +1,11 @@
+{
+  "prueba": {"serie": "que-no-te-la-lien", "formato": "documento", "gancho": "aviso", "publico": "propietarios"},
+  "texto": "Un presupuesto más barato puede ser solo un presupuesto que incluye menos.\n\nAntes de elegir tu reforma en Barcelona, mira qué entra en cada precio.\n\n¿Quieres reformar? Cuéntanos tu obra: primero hablas con nosotros, Alex y Jaume. Enlace en el perfil.\n\n#reformasbarcelona #presupuestoreforma #barcelona",
+  "escenas": [
+    {"tipo": "gancho", "segundos": 2.5, "texto": "El presupuesto más barato de tu reforma **puede no serlo.**"},
+    {"tipo": "documento", "segundos": 4, "titular": "A primera vista:", "nota": "EJEMPLO", "filas": [{"etiqueta": "Empresa A", "valor": "6.000 €"}, {"etiqueta": "Empresa B", "valor": "7.000 €"}], "aviso": "¿Eliges la A?"},
+    {"tipo": "documento", "segundos": 6, "titular": "Antes, mira si la A **incluye:**", "nota": "EJEMPLO", "marcar": true, "filas": [{"etiqueta": "Los mismos materiales"}, {"etiqueta": "Retirar escombros"}, {"etiqueta": "Tasas y permisos"}, {"etiqueta": "Remates finales"}]},
+    {"tipo": "gancho", "segundos": 2.5, "texto": "Compara lo mismo con **lo mismo.**"},
+    {"tipo": "cierre", "segundos": 4, "titular": "¿Quieres **reformar** en Barcelona?", "lineas": ["Primero hablas con Alex o Jaume.", "Gratis y sin compromiso."], "accion": "Enlace en el perfil"}
+  ]
+}
