@@ -58,9 +58,9 @@ const Resaltado = ({texto, color}) =>
 		)
 	);
 
-const Marca = ({oscuro}) => {
+const Marca = ({oscuro, sinAcento}) => {
 	const colores = oscuro
-		? [C.teal, C.acento, C.teal, C.teal]
+		? [C.teal, sinAcento ? C.teal : C.acento, C.teal, C.teal]
 		: [C.sobreTeal, C.acento, C.sobreTeal, C.sobreTeal];
 	return (
 		<div style={{display: 'flex', alignItems: 'center', gap: 20}}>
@@ -310,6 +310,81 @@ const Pantalla = ({texto, fondo = 'oscuro', etiqueta, segundos}) => {
 						);
 					})}
 				</div>
+			</div>
+		</AbsoluteFill>
+	);
+};
+
+// Carruseles e imágenes: cada fotograma de la composición es una lámina fija.
+// El margen lateral deja el texto a salvo del recorte de la cuadrícula del perfil.
+const MARGEN_LAMINA = 90;
+const ANCHO_LAMINA = 1080 - MARGEN_LAMINA * 2;
+
+export const Publicacion = ({datos}) => {
+	const frame = useCurrentFrame();
+	const {laminas} = datos;
+	const {titulo, detalle, fondo = 'oscuro', etiqueta, accion} = laminas[frame];
+	const paleta = PALETAS[fondo];
+	const esAcento = fondo === 'acento';
+	const palabras = titulo.split('**').flatMap((parte, i) =>
+		parte.trim().split(/\s+/).filter(Boolean).map((p) => ({texto: p, clave: i % 2 === 1}))
+	);
+	const larga = Math.max(...palabras.map((p) => p.texto.length));
+	const maximo = palabras.length > 8 ? 92 : 124;
+	const tamano = Math.min(maximo, ANCHO_LAMINA / (larga * 0.74));
+
+	return (
+		<AbsoluteFill
+			style={{
+				background: paleta.fondo,
+				padding: `${MARGEN_LAMINA}px ${MARGEN_LAMINA}px 76px`,
+				display: 'flex',
+				flexDirection: 'column',
+			}}
+		>
+			<div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+				{etiqueta ? (
+					<div style={{alignSelf: 'flex-start', marginBottom: 44, padding: '14px 32px', borderRadius: 14, background: C.acento, color: '#111111', fontFamily: IMPACTO, fontWeight: 900, fontSize: 44, textTransform: 'uppercase'}}>
+						{etiqueta}
+					</div>
+				) : null}
+				<div
+					style={{
+						display: 'flex',
+						flexWrap: 'wrap',
+						columnGap: tamano * 0.28,
+						fontFamily: IMPACTO,
+						fontWeight: 900,
+						fontSize: tamano,
+						lineHeight: 1.08,
+						letterSpacing: -2,
+						textTransform: 'uppercase',
+					}}
+				>
+					{palabras.map((p, i) => (
+						<span key={i} style={{color: p.clave ? paleta.clave : paleta.texto}}>
+							{p.texto}
+						</span>
+					))}
+				</div>
+				{detalle ? (
+					<div style={{marginTop: 44, fontFamily: TEXTO, fontWeight: 500, fontSize: 50, lineHeight: 1.3, color: esAcento ? '#111111' : C.sobreTeal}}>
+						{detalle}
+					</div>
+				) : null}
+				{accion ? (
+					<div style={{alignSelf: 'flex-start', marginTop: 52, padding: '28px 44px', borderRadius: 20, background: C.acento, color: '#1a1405', fontFamily: TEXTO, fontWeight: 700, fontSize: 50}}>
+						{accion}
+					</div>
+				) : null}
+			</div>
+			<div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+				<Marca oscuro={esAcento} sinAcento={esAcento} />
+				{laminas.length > 1 ? (
+					<div style={{fontFamily: TEXTO, fontWeight: 700, fontSize: 40, color: esAcento ? '#111111' : frame === 0 ? C.acento : C.sobreTeal}}>
+						{frame === 0 ? 'Desliza →' : `${frame + 1}/${laminas.length}`}
+					</div>
+				) : null}
 			</div>
 		</AbsoluteFill>
 	);

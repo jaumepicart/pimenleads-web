@@ -38,7 +38,9 @@ Cada vídeo queda en `salida/<nombre>/`:
 | `texto.txt` | El texto para pegar al publicar |
 | `guion.txt` | Lo que hay que leer si se graba con voz o a cámara |
 
-`salida/catalogo.csv` indica qué prueba cada vídeo. Sirve para comparar resultados.
+Los carruseles e imágenes salen de `publicaciones/` y quedan en `salida/c01-.../` o `salida/i01-.../`, con una imagen `lamina-1.png`, `lamina-2.png`... (1080×1350) y su `texto.txt`. Súbelas en orden de número.
+
+`salida/catalogo.csv` indica qué prueba cada pieza. Sirve para comparar resultados.
 
 Para rehacer un vídeo después de cambiarlo, indica su número:
 
@@ -54,7 +56,7 @@ npm run generar -- 003
 
 ## Vídeos nuevos
 
-Cada archivo de `videos/` es un vídeo. Para crear otro, copia uno, cámbiale el número y edita los textos. O abre esta carpeta con Claude Code y pídele el siguiente lote: las normas están en `CLAUDE.md`.
+Cada archivo de `videos/` es un vídeo, y cada uno de `publicaciones/`, un carrusel o una imagen. Para crear otro, copia uno, cámbiale el número y edita los textos. O abre esta carpeta con Claude Code y pídele el siguiente lote: las normas están en `CLAUDE.md`.
 
 Para ver los cambios al momento, sin generar el vídeo:
 
@@ -67,6 +69,7 @@ npm run editor
 | Formato | Estado |
 |---|---|
 | Impacto: letras grandes palabra a palabra, con cortes secos | Listo |
+| Carruseles e imágenes de texto | Listo |
 | Vuestra voz sobre animación | Por construir |
 | Vosotros a cámara, con cortes y subtítulos automáticos | Por construir |
 | Precios con barras | Por construir: faltan los precios validados |

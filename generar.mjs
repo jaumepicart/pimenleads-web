@@ -1,11 +1,12 @@
-// Genera lo que falte de cada archivo de videos/: vídeo, portada y texto para pegar al publicar.
+// Genera lo que falte de cada archivo de videos/ (vídeo, portada, texto y guion)
+// y de publicaciones/ (láminas y texto).
 // Uso: npm run generar            (todos los que falten)
 //      npm run generar -- 003     (solo los que empiecen por 003, aunque ya existan)
 //
 // El ffmpeg que trae Remotion exige macOS 15. Por eso Remotion solo saca los fotogramas
 // y el vídeo se codifica con ffmpeg-static, que funciona también en Macs más antiguos.
 import {execFileSync} from 'node:child_process';
-import {existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync} from 'node:fs';
 import ffmpeg from 'ffmpeg-static';
 
 const filtro = process.argv[2];
@@ -65,6 +66,28 @@ for (const archivo of archivos) {
 	// Lo que hay que leer si se graba con voz o a cámara.
 	const guion = datos.escenas.filter((e) => e.texto).map((e) => e.texto.replaceAll('**', ''));
 	writeFileSync(`${carpeta}/guion.txt`, `${guion.join('\n')}\n`);
+}
+
+// Carruseles e imágenes: una lámina PNG por cada entrada de "laminas".
+for (const archivo of readdirSync('publicaciones').filter((a) => a.endsWith('.json')).sort()) {
+	const id = archivo.replace('.json', '');
+	const datos = JSON.parse(readFileSync(`publicaciones/${archivo}`, 'utf8'));
+	const {serie, formato, gancho, publico} = datos.prueba;
+	filas.push([id, serie, formato, gancho, publico, ''].map(celda).join(','));
+
+	const carpeta = `salida/${id}`;
+	const elegido = filtro ? id.startsWith(filtro) : !existsSync(`${carpeta}/lamina-1.png`);
+	if (!elegido) continue;
+
+	const fotogramas = `${carpeta}/_fotogramas`;
+	rmSync(fotogramas, {recursive: true, force: true});
+	mkdirSync(carpeta, {recursive: true});
+	remotion('render', 'src/index.jsx', id, fotogramas, '--sequence', '--image-format=png');
+	readdirSync(fotogramas).filter((a) => a.endsWith('.png')).sort().forEach((a, i) => {
+		renameSync(`${fotogramas}/${a}`, `${carpeta}/lamina-${i + 1}.png`);
+	});
+	rmSync(fotogramas, {recursive: true});
+	writeFileSync(`${carpeta}/texto.txt`, `${datos.texto}\n`);
 }
 
 writeFileSync('salida/catalogo.csv', `${filas.join('\n')}\n`);

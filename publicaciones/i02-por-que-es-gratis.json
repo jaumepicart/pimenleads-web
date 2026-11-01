@@ -1,0 +1,7 @@
+{
+  "prueba": {"serie": "quienes-somos", "formato": "imagen", "gancho": "pregunta", "publico": "todos"},
+  "texto": "¿Por qué es gratis pedir presupuesto con nosotros? Porque nos pagan las empresas de reformas, no tú.\n\nSomos Alex y Jaume, de Barcelona. Primero hablas con nosotros, y ninguna empresa recibe tus datos antes.\n\nCuéntanos tu reforma. Enlace en el perfil.\n\n#reformasbarcelona #reformas #barcelona",
+  "laminas": [
+    {"titulo": "¿Gratis? **Sí.** Nos pagan las empresas.", "detalle": "Reformas en Barcelona. Primero hablas con Alex o Jaume, y ninguna empresa recibe tus datos antes."}
+  ]
+}

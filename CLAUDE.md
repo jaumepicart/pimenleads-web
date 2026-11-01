@@ -6,6 +6,7 @@ Generador de vídeos verticales para captar particulares que quieren reformar en
 
 - Cada `videos/NNN-nombre.json` es un vídeo. `npm run generar` crea en `salida/` el MP4, la portada y el texto.
 - `src/Reel.jsx` tiene los formatos de escena. Se usa `pantalla`: letras grandes, palabra a palabra y con corte seco. Campos: `texto`, `segundos`, `fondo` (`acento` para las frases clave) y `etiqueta` (por ejemplo, «1 de 3»). Las demás escenas son del primer estilo, que se descartó.
+- Cada `publicaciones/*.json` es un carrusel (`cNN`) o una imagen (`iNN`). Campo `laminas`, cada una con `titulo`, `detalle`, `fondo`, `etiqueta` y `accion`. Estructura de un carrusel: portada con gancho, una lámina por idea, una frase clave en `acento` y cierre con oferta.
 - `**texto**` resalta una parte de un titular. Campo `prueba`: qué compara el vídeo; actualiza `salida/catalogo.csv`.
 - Remotion solo saca fotogramas y los codifica `ffmpeg-static`, para que también funcione en macOS anterior al 15.
 - Comprueba cada vídeo nuevo mirando fotogramas de la mitad de cada escena, no del inicio.

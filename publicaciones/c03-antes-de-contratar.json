@@ -1,0 +1,13 @@
+{
+  "prueba": {"serie": "que-no-te-la-lien", "formato": "carrusel", "gancho": "aviso", "publico": "propietarios"},
+  "texto": "4 cosas que mirar antes de contratar una empresa de reformas en Barcelona. Si falla alguna, sigue buscando.\n\nGuárdalo para cuando te haga falta.\n\n¿Vas a reformar? Cuéntanos tu obra: primero hablas con nosotros, Alex y Jaume. Gratis y sin compromiso. Enlace en el perfil.\n\n#reformasbarcelona #empresareformas #barcelona",
+  "laminas": [
+    {"titulo": "**4 cosas** que mirar antes de contratar una empresa de reformas en Barcelona", "detalle": "Tardas un minuto."},
+    {"etiqueta": "1 de 4", "titulo": "Su **NIF**", "detalle": "Que aparezca en el presupuesto."},
+    {"etiqueta": "2 de 4", "titulo": "Su **seguro**", "detalle": "Pregunta por el de responsabilidad civil."},
+    {"etiqueta": "3 de 4", "titulo": "Sus **reseñas en Google**", "detalle": "Mira la nota, cuántas hay y qué cuentan."},
+    {"etiqueta": "4 de 4", "titulo": "Su **presupuesto**", "detalle": "Por escrito y desglosado."},
+    {"fondo": "acento", "titulo": "¿Falla alguna? Sigue buscando."},
+    {"titulo": "¿Vas a **reformar?**", "detalle": "Cuéntanos tu obra. Primero hablas con Alex o Jaume. Gratis y sin compromiso.", "accion": "Enlace en el perfil"}
+  ]
+}

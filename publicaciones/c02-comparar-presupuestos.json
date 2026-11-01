@@ -1,0 +1,13 @@
+{
+  "prueba": {"serie": "que-no-te-la-lien", "formato": "carrusel", "gancho": "pregunta", "publico": "propietarios"},
+  "texto": "Cómo comparar presupuestos de reforma en Barcelona sin mirar solo el total.\n\nGuárdalo para cuando te lleguen.\n\n¿Ya tienes presupuestos? Escríbenos por WhatsApp y te ayudamos a compararlos, gratis. Enlace en el perfil.\n\n#reformasbarcelona #presupuestoreforma #barcelona",
+  "laminas": [
+    {"titulo": "**3 presupuestos,** 3 precios. ¿Cuál eliges?", "detalle": "Cómo compararlos en Barcelona sin mirar solo el total."},
+    {"etiqueta": "1 de 4", "titulo": "Ponlos **partida por partida**", "detalle": "Materiales con materiales, mano de obra con mano de obra."},
+    {"etiqueta": "2 de 4", "titulo": "Busca **lo que falta**", "detalle": "Lo que uno incluye y otro no explica muchas diferencias."},
+    {"etiqueta": "3 de 4", "titulo": "Compara **las calidades**", "detalle": "El mismo baño no cuesta igual con otros materiales."},
+    {"etiqueta": "4 de 4", "titulo": "Compara **plazos y pagos**", "detalle": "Cuánto tarda cada uno y cuándo te pide el dinero."},
+    {"fondo": "acento", "titulo": "Ahora sí: mira el total."},
+    {"titulo": "¿Prefieres no hacerlo solo? **Mándanoslos.**", "detalle": "Alex o Jaume te ayudan a compararlos. Gratis.", "accion": "Enlace en el perfil"}
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "prueba": {"serie": "que-no-te-la-lien", "formato": "carrusel", "gancho": "aviso", "publico": "propietarios"},
+  "texto": "5 preguntas antes de firmar un presupuesto de reforma en Barcelona.\n\nGuárdalo para cuando te llegue el presupuesto, o mándaselo a quien esté reformando.\n\n¿Ya tienes un presupuesto? Escríbenos por WhatsApp y lo miramos contigo, gratis. Enlace en el perfil.\n\n#reformasbarcelona #presupuestoreforma #barcelona",
+  "laminas": [
+    {"titulo": "**5 preguntas** antes de firmar tu reforma en Barcelona", "detalle": "Guárdalo para cuando te llegue el presupuesto."},
+    {"etiqueta": "1 de 5", "titulo": "¿Está **desglosado?**", "detalle": "Materiales y mano de obra, por separado. Si pone un solo precio, no sabes qué pagas."},
+    {"etiqueta": "2 de 5", "titulo": "¿Qué **no** incluye?", "detalle": "Pregunta por escombros, tasas y permisos antes de firmar, no después."},
+    {"etiqueta": "3 de 5", "titulo": "¿Cuánto **tarda?**", "detalle": "Pide el plazo por escrito y pregunta qué pasa si se retrasa."},
+    {"etiqueta": "4 de 5", "titulo": "¿Cómo **se paga?**", "detalle": "Desconfía si te piden casi todo por adelantado."},
+    {"etiqueta": "5 de 5", "titulo": "¿Tiene **seguro?**", "detalle": "Pregunta por el de responsabilidad civil."},
+    {"fondo": "acento", "titulo": "Si no está por escrito, ese precio no es el precio."},
+    {"titulo": "¿Ya tienes un presupuesto? **Mándanoslo.**", "detalle": "Alex o Jaume lo miran contigo. Gratis.", "accion": "Enlace en el perfil"}
+  ]
+}
