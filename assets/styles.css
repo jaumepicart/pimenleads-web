@@ -330,3 +330,14 @@ html:has(.top-nav) { scroll-padding-top: 7rem; }
 .svc a.card h3 { font-size: 1.4rem; margin-bottom: .4rem; }
 .svc a.card p { color: var(--muted); }
 .svc a.card .go { display: inline-block; margin-top: .9rem; font-weight: 600; color: var(--ink); }
+
+.precios-grid { margin-top: 2rem; display: grid; gap: 1.25rem; }
+.precio { background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 1.5rem; }
+.precio h3 { font-size: 1.05rem; color: var(--muted); font-weight: 600; }
+.precio .cifra { margin-top: .35rem; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 1.75rem; line-height: 1.15; color: var(--teal); }
+.precio p:last-child { margin-top: .6rem; color: var(--muted); }
+.precios-nota { margin-top: 1.5rem; max-width: 62ch; color: var(--muted); font-size: .95rem; }
+.precios .btn { margin-top: 1.5rem; display: inline-block; }
+@media (min-width: 820px) {
+  .precios-grid { grid-template-columns: repeat(2, 1fr); max-width: 820px; }
+}
