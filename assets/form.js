@@ -10,6 +10,9 @@
   var ENDPOINT = "https://formspree.io/f/myekaoar";
   var UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "fbclid"];
   var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
+  // Eventos de medición (assets/medicion.js los manda a GA4 si aceptaron cookies y a la medición propia sin cookies);
+  // no hace nada si esos scripts no están cargados.
+  function medir(nombre, datos) { if (window.pimenEvento) { window.pimenEvento(nombre, datos); } else if (window.pimenVisitas) { window.pimenVisitas.evento(nombre, datos); } }
 
   // De dónde llega la visita (anuncio, Instagram…), para saber qué canal trae cada solicitud.
   // Se lee de la URL de la propia página; no se guarda nada en el navegador.
@@ -86,7 +89,12 @@
 
     function nextStep() {
       var bad = invalidFields(steps[current]);
-      if (bad.length) { showError(bad[0].getAttribute("data-error") || steps[current].dataset.error || form.dataset.error, bad[0]); return; }
+      if (bad.length) {
+        medir("form_error", { campo: bad[0].name || bad[0].id || "" });
+        showError(bad[0].getAttribute("data-error") || steps[current].dataset.error || form.dataset.error, bad[0]);
+        return;
+      }
+      medir("form_paso", { paso: current + 1 }); // pasos completados: 1 = pasó de la 1.ª a la 2.ª pantalla
       showStep(current + 1, true);
     }
 
@@ -143,12 +151,15 @@
 
       var bad = invalidFields(form);
       if (bad.length) {
+        var primero = bad[0].tagName === "FIELDSET" ? bad[0].querySelector("input") : bad[0];
+        medir("form_error", { campo: (primero && primero.name) || "" });
         var step = bad[0].closest(".step");
         if (step) { showStep(Array.prototype.indexOf.call(steps, step), false); invalidFields(step); }
         showError((step && step.dataset.error) || form.dataset.error, bad[0]);
         return;
       }
       if (!consent.checked) {
+        medir("form_error", { campo: "consent" });
         showError("No se ha enviado: marca la casilla de consentimiento para continuar.");
         consentLabel.classList.add("bad");
         consentLabel.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -214,6 +225,7 @@
       })).then(function (oks) {
         if (oks.indexOf(true) === -1) { throw new Error("fallo"); }
         form.reset();
+        medir("form_ok", { tipo: form.dataset.tipo || "" });
         location.href = form.dataset.next;
       }).catch(function () {
         showError("No se ha podido enviar. Inténtalo de nuevo o escríbenos a comercial@pimenleads.com.");

@@ -72,7 +72,10 @@
     filtroTipo: "",
     busqueda: "",
     filtroEmpresa: "",
-    periodo: "mes"
+    periodo: "mes",
+    web: null,         // filas de embudo_web() del periodo elegido (se pide al abrir el Resumen)
+    webOrigen: "todo", // todo | anuncio | resto
+    webDisp: ""        // "" | movil | tablet | escritorio
   };
   var sb;
 
@@ -195,6 +198,7 @@
       state.sinAsignacion = !state.contactos.length || !("responsable" in state.contactos[0]);
       // Igual con supabase/mejoras-crm.sql: sin la columna proxima_hora no se ofrece la hora.
       state.sinHora = !state.contactos.length || !("proxima_hora" in state.contactos[0]);
+      state.web = null;
       render();
     }).catch(function (err) {
       toast("Error al cargar datos: " + (err.message || err), true);
@@ -2056,6 +2060,79 @@
       tabla("Motivos de descarte", ["Motivo", "Leads"],
         Object.keys(motivos).map(function (k) { return [k, motivos[k].length]; }).sort(function (a, b) { return b[1] - a[1]; }))
     ));
+
+    main.appendChild(bloqueWeb(periodo.value, desde, hasta));
+  }
+
+  // Embudo de la web: visitas y qué hicieron (scroll, formulario, llamadas), medido sin cookies (supabase/visitas.sql).
+  var NOMBRE_PAGINA = function (p) { return p.replace(/^\//, "").replace(/\.html$/, "") || "inicio"; };
+  function bloqueWeb(periodo, desde, hasta) {
+    var card = h("div", { class: "card pn-web" });
+    var tit = h("div", { class: "pn-toolbar" }, h("h2", { text: "Embudo de la web" }));
+    function cuerpo() {
+      card.replaceChildren(tit);
+      var filas = state.web.filas.filter(function (f) {
+        return (state.webOrigen === "todo" || (state.webOrigen === "anuncio") === f.anuncio) && (!state.webDisp || f.dispositivo === state.webDisp);
+      });
+      // Visitas distintas por página que hicieron algo (evento y clave).
+      var pags = {};
+      filas.forEach(function (f) {
+        var p = pags[f.pagina] = pags[f.pagina] || {};
+        var k = f.evento + "|" + f.clave;
+        p[k] = (p[k] || 0) + f.visitas;
+        if (f.evento === "salida") { p.seg = p.seg || []; p.seg.push([f.mediana_seg, f.visitas]); }
+      });
+      function n(p, ev, clave) { return p[ev + "|" + (clave || "")] || 0; }
+      function suma(p, ev) { return Object.keys(p).filter(function (k) { return k.indexOf(ev + "|") === 0; }).reduce(function (s, k) { return s + p[k]; }, 0); }
+      function mediana(p) { // media ponderada de las medianas de cada grupo: aproximación suficiente para orientarse
+        var t = 0, w = 0;
+        (p.seg || []).forEach(function (s) { t += Number(s[0]) * s[1]; w += s[1]; });
+        return w ? Math.round(t / w) + " s" : "—";
+      }
+      function celda(a, v) { return v ? a + " (" + pct(a, v) + ")" : a; }
+      var nombres = Object.keys(pags).sort(function (a, b) { return n(pags[b], "vista") - n(pags[a], "vista"); });
+      var tot = {};
+      nombres.forEach(function (nom) { Object.keys(pags[nom]).forEach(function (k) { if (k !== "seg") { tot[k] = (tot[k] || 0) + pags[nom][k]; } }); });
+      tot.seg = [].concat.apply([], nombres.map(function (nom) { return pags[nom].seg || []; }));
+      function fila(nombre, p) {
+        var v = n(p, "vista");
+        return [nombre, v, celda(n(p, "scroll_profundidad", "50"), v), celda(n(p, "form_inicio"), v), celda(n(p, "form_paso", "1"), v), celda(n(p, "form_paso", "2"), v),
+          celda(n(p, "form_paso", "3"), v), celda(n(p, "form_enviar"), v), celda(n(p, "form_ok"), v), celda(suma(p, "clic_llamar") + suma(p, "clic_whatsapp"), v),
+          celda(n(p, "salida_rapida"), v), mediana(p)];
+      }
+      var cols = ["Página", "Visitas", "Scroll 50 %", "Form. iniciado", "Paso 1", "Paso 2", "Paso 3", "Pulsó enviar", "Enviado", "Llamar / WhatsApp", "Menos de 10 s", "Mediana"];
+      card.appendChild(h("div", { class: "pn-toolbar" },
+        ["todo|Todas las visitas", "anuncio|Con anuncio", "resto|Resto"].map(function (o) {
+          return h("button", { class: "chip", type: "button", "aria-pressed": String(state.webOrigen === o.split("|")[0]), text: o.split("|")[1], onclick: function () { state.webOrigen = o.split("|")[0]; cuerpo(); } });
+        }),
+        h("span", { class: "spacer" }),
+        ["|Todos los dispositivos", "movil|Móvil", "tablet|Tablet", "escritorio|Escritorio"].map(function (o) {
+          return h("button", { class: "chip", type: "button", "aria-pressed": String(state.webDisp === o.split("|")[0]), text: o.split("|")[1], onclick: function () { state.webDisp = o.split("|")[0]; cuerpo(); } });
+        })));
+      if (!nombres.length) { card.appendChild(h("p", { class: "meta", text: "Sin visitas registradas en este periodo con este filtro." })); }
+      else {
+        card.appendChild(h("div", { class: "tablewrap" }, h("table", {},
+          h("thead", {}, h("tr", {}, cols.map(function (c, i) { return h("th", { scope: "col", class: i ? "num" : null, text: c }); }))),
+          h("tbody", {}, nombres.map(function (nom) { return fila(NOMBRE_PAGINA(nom), pags[nom]); }).concat([fila("Total", tot)]).map(function (f, i, todas) {
+            return h("tr", { class: i === todas.length - 1 ? "total" : null }, f.map(function (v, j) { return h(j ? "td" : "th", { class: j ? "num" : null, scope: j ? null : "row", text: v }); }));
+          })))));
+        var av = n(tot, "cookies_aviso");
+        card.appendChild(h("p", { class: "meta", text: "Cuenta a todas las visitas, acepten o no las cookies de Google, sin identificar a nadie. Los pasos son los avances del formulario («Paso 1» = pasó de la 1.ª a la 2.ª pantalla); «Pulsó enviar» incluye los intentos con errores. Mediana: tiempo desde que se abrió la página. " +
+          (av ? "Aviso de cookies mostrado a " + av + " visitas nuevas: " + pct(n(tot, "cookies_si"), av) + " aceptan y " + pct(n(tot, "cookies_no"), av) + " rechazan." : "") }));
+      }
+    }
+    if (state.web && state.web.periodo === periodo) { cuerpo(); return card; }
+    card.appendChild(tit);
+    card.appendChild(h("p", { class: "meta", text: "Cargando…" }));
+    sb.rpc("embudo_web", { desde: desde.toISOString(), hasta: hasta.getTime() > 8e15 ? "infinity" : hasta.toISOString() }).then(function (r) {
+      if (r.error) {
+        card.replaceChildren(tit, h("p", { class: "meta", text: "Todavía no está activado: ejecuta supabase/visitas.sql en el SQL Editor de Supabase (" + (r.error.message || r.error) + ")." }));
+        return;
+      }
+      state.web = { periodo: periodo, filas: r.data || [] };
+      cuerpo();
+    });
+    return card;
   }
 
   // ── Arranque ──────────────────────────────────────────────────────────
