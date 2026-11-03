@@ -235,3 +235,8 @@ button.bar-row:hover { background: var(--tile-2); }
 .panel .pn-table .nw { white-space: nowrap; }
 details.card { gap: 0; }
 details.card[open] > summary { margin-bottom: .85rem; }
+
+/* Fila de totales de las tablas del Resumen */
+tr.total th, tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
+.pn-web td.num { white-space: nowrap; }
+.pn-web th.num { vertical-align: bottom; }

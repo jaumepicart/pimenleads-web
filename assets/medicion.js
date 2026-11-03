@@ -1,6 +1,8 @@
 // Medición de Google Ads y Google Analytics 4 con consentimiento previo.
 // La etiqueta de Google solo se carga si la persona acepta las cookies en el aviso.
 // Mientras googleAds.id y analytics.id estén vacíos en assets/config.js, no se carga nada ni se muestra el aviso.
+// Los eventos de abajo (clics, formulario, scroll, secciones) también van a la medición propia sin cookies de
+// assets/visitas.js, que cuenta a todas las visitas, acepten o no las cookies de Google.
 //
 // Además, si la visita llega desde un anuncio (gclid o utm_medium=cpc), se marca la página con
 // la clase "desde-anuncio" para ocultar los enlaces que sacan de la landing.
@@ -27,10 +29,13 @@
     if (cargada && ads.id && etiqueta) { gtag("event", "conversion", { send_to: ads.id + "/" + etiqueta }); }
   }
 
-  // Eventos propios de GA4 para saber dónde pulsan las personas. Solo se envían si aceptaron las cookies.
+  // Eventos para saber dónde pulsan las personas. A GA4 solo llegan si aceptaron las cookies; a la medición
+  // propia (assets/visitas.js, anónima y sin cookies) llegan siempre.
   function evento(nombre, datos) {
+    if (window.pimenVisitas) { window.pimenVisitas.evento(nombre, datos, /^(form_enviar|form_ok|clic_llamar|clic_whatsapp|cookies_)/.test(nombre)); }
     if (cargada && ga.id) { gtag("event", nombre, datos || {}); }
   }
+  window.pimenEvento = evento; // para form.js
 
   function zonaDe(el) {
     var z = el.closest("header, .sticky, footer, form, section, main");
@@ -45,9 +50,7 @@
     if (/^tel:/.test(href)) { evento("clic_llamar", datos); }
     else if (/wa\.me\//.test(href)) { evento("clic_whatsapp", datos); }
     else if (el.classList.contains("step-next")) {
-      var paso = el.closest("fieldset.step");
-      var form = el.closest("form");
-      if (paso && form) { evento("form_paso", { paso: Array.prototype.indexOf.call(form.querySelectorAll("fieldset.step"), paso) + 1 }); }
+      // El avance de paso lo registra form.js (también cuando avanza solo al tocar una opción).
     }
     else if (el.matches('button[type="submit"]')) { evento("form_enviar", datos); }
     else if (el.classList.contains("btn") || href.charAt(0) === "#") { datos.destino = href; evento("clic_boton", datos); }
@@ -138,6 +141,7 @@
       var b = e.target.closest("button[data-v]");
       if (!b) { return; }
       guardar(b.dataset.v);
+      evento("cookies_" + b.dataset.v);
       caja.remove();
       if (b.dataset.v === "si") { cargarGoogle(); }
       else { borrarCookiesGoogle(); if (cargada) { location.reload(); } } // por si las había aceptado antes
@@ -153,5 +157,5 @@
   var v = eleccion();
   if (v === "si") { cargarGoogle(); }
   else if (v === "no") { borrarCookiesGoogle(); }
-  else { aviso(); }
+  else { evento("cookies_aviso"); aviso(); }
 })();

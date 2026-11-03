@@ -157,3 +157,20 @@ del repositorio (lleva datos personales).
   Para dos personas basta; si se queda corto, configura vuestro correo en **Authentication → Emails → SMTP Settings**.
 - El plan gratuito de Supabase pausa el proyecto tras una semana sin actividad. Con leads entrando a diario no pasa,
   pero si se pausa hay que reactivarlo desde el panel de Supabase.
+
+## 9. Medición de la web sin cookies (embudo)
+
+Google Analytics solo cuenta a quien acepta las cookies. Para ver dónde se van las visitas aunque las rechacen,
+ejecuta [`visitas.sql`](visitas.sql) en el **SQL Editor** (después de `schema.sql`; se puede repetir). Crea la tabla
+`visitas` y dos funciones: `registrar_visita()` (la única que puede llamar la web pública) y `embudo_web()` (solo para
+los correos de `admins`).
+
+Cada página manda, desde [`assets/visitas.js`](../assets/visitas.js), un identificador que se crea al cargar y no se
+guarda, el tipo de dispositivo, la campaña (`utm_campaign`), si llegó con anuncio (sí/no, sin guardar el `gclid`) y los
+eventos: scroll, secciones, formulario (inicio, pasos, errores por campo, envío), llamar/WhatsApp, tiempo en la página
+y la respuesta al aviso de cookies. No se guarda IP, navegador ni nada escrito en el formulario. Las visitas de quien
+tiene abierta la sesión del panel no cuentan.
+
+El resultado está en **Resumen → Embudo de la web**, con filtros por origen (con anuncio / resto) y dispositivo.
+Hasta que no ejecutes el script, ese bloque avisa de que falta. Para que no crezca sin límite, de vez en cuando:
+`delete from public.visitas where created_at < now() - interval '13 months';`
