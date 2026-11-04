@@ -8,6 +8,7 @@
 // Si el formulario tiene bloques .step, se muestra por pasos (sin JS se ven todos).
 (function () {
   var ENDPOINT = "https://formspree.io/f/myekaoar";
+  var SIN_NOMBRE = "Sin nombre"; // el panel lo reconoce (panel.js) para no saludar «Hola Sin»
   var UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "fbclid"];
   var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
   // Eventos de medición (assets/medicion.js los manda a GA4 si aceptaron cookies y a la medición propia sin cookies);
@@ -182,9 +183,6 @@
           return;
         }
         var val = el.value.trim();
-        if (el.name === "mensaje" && detalleTa && detalleTa.value.trim() && !detalleBox.hidden) {
-          val = "Qué quiere hacer: " + detalleTa.value.trim() + (val ? " | " + val : "");
-        }
         datos[el.name] = val;
         data.append(el.name, val || (el.name === "_gotcha" ? "" : "—"));
       });
@@ -193,6 +191,16 @@
         datos[k] = form.querySelector('input[type=radio][name="' + k + '"]') ? (groups[k][0] || "") : groups[k];
         data.append(k, groups[k].join(", ") || "—");
       });
+      // "Todavía no lo sé": lo que cuenta la persona viaja como comentario, aunque el formulario no tenga campo de mensaje.
+      if (detalleTa && detalleTa.value.trim() && !detalleBox.hidden) {
+        datos.mensaje = "Qué quiere hacer: " + detalleTa.value.trim() + (datos.mensaje ? " | " + datos.mensaje : "");
+        data.set("mensaje", datos.mensaje);
+      }
+      // Las landings de particulares solo piden el teléfono; la base de datos exige un nombre, que se pregunta en la llamada.
+      if (datos.tipo_solicitud === "particular" && !datos.nombre) {
+        datos.nombre = SIN_NOMBRE;
+        data.append("nombre", SIN_NOMBRE);
+      }
       if (consent.value && consent.value !== "on") {
         data.append("consentimiento", consent.value);
         datos.consentimiento = consent.value;
