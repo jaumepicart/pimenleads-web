@@ -92,7 +92,7 @@ Pestaña **Clientes → + Nuevo cliente**. Datos: nombre y teléfono (obligatori
 
 Entra como «Nuevo». Después hay que llamarle para verificar que es real y quiere presupuesto; eso lo hace Alex o la persona desde la ficha del cliente.
 
-- **No envíes un cliente a empresas** sin confirmárselo a la persona: cada cliente va a **3 empresas como máximo**, solo de su tipo y zona. Ya no hay primer lead gratis: todos los leads se cobran.
+- **No envíes un cliente a empresas** sin confirmárselo a la persona: cada cliente va a **3 empresas como máximo por ronda** (si pide más presupuestos, otras 3 distintas, hasta 2 veces más), solo de su tipo y zona. Oferta «3 presupuestos en 7 días o 50 €»: la cuenta empieza en la llamada de verificación; anota la fecha para controlarla. Ya no hay primer lead gratis: todos los leads se cobran.
 - Si el teléfono no existe o no pidió presupuesto, se marca como inválido, no se cobra.
 
 ## Estados (para elegir el correcto)

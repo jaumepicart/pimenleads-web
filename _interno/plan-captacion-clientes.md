@@ -37,6 +37,8 @@ Guion de llamada (1 minuto): "Ayudamos a quien compra o tiene un piso a consegui
 
 ## La oferta para el cliente que contrata
 
+**Actualización 3 nov 2026:** la bonificación por tramos de abajo se sustituye en las landings por tres piezas: 3 presupuestos por escrito en 7 días o 50 €; si ninguno convence, otros 3 (hasta 2 veces más); y el Programa Fundadores (en las 10 primeras reformas se regala la comisión de Pimen, con tope de 2.000 €; después, la mitad). Lo que sigue queda como histórico.
+
 Idea de Alex: si el particular **contrata la obra** con una de las empresas que le pasamos, se le da un **descuento o una parte de la comisión** que se cobra a la reformista. No va dirigida a empresas ni a prescriptores.
 
 **Recomendación: descuento en la factura de la obra**, aplicado por la empresa y compensado por nosotros en la comisión.
