@@ -128,13 +128,14 @@
     <div class="wrap">
       <div class="intro">
         <h1>¿Cuánto cuesta reformar tu baño en Barcelona?</h1>
+        <p class="precio-hero"><span>Baño completo, calidad media, precio orientativo</span><strong>De 5.000 a 9.000 €</strong><em>Incluye sanitarios, alicatado, fontanería y cambio de bañera por ducha. <a href="#precios">Ver más precios</a></em></p>
         <p class="lead">Cuéntanos tu baño en 4 preguntas. Te llamamos para orientarte y te conseguimos 3 presupuestos, por escrito y en 7 días. Si no los tienes, te regalamos 50 €.</p>
         <p class="bonus-line"><a href="#quienes"><strong>Primero hablas con Alex o Jaume. Ninguna empresa recibe tus datos antes.</strong> <span>Quiénes somos</span></a></p>
       </div>
 
       <div class="formcard" id="presupuesto">
         <form id="form" novalidate data-lead-form data-tipo="bano"
-              data-subject="Presupuesto reforma de baño" data-subject-field="nombre"
+              data-subject="Presupuesto reforma de baño" data-subject-field="telefono"
               data-origen="Página de baños (particulares)" data-next="gracias.html"
               data-error="Rellena los campos marcados para poder enviarte los presupuestos.">
           <div class="stepper-ui" aria-hidden="true">
@@ -192,25 +193,11 @@
             </div>
           </fieldset>
 
-          <fieldset class="step" data-error="Rellena tu nombre, un teléfono y un correo válidos.">
-            <legend class="step-title" tabindex="-1">¿A quién enviamos los presupuestos?</legend>
+          <fieldset class="step" data-error="Escribe un teléfono válido, con 9 cifras, para poder llamarte.">
+            <legend class="step-title" tabindex="-1">¿A qué teléfono te llamamos?</legend>
             <div class="field">
-              <label for="nombre">Nombre</label>
-              <input type="text" id="nombre" name="nombre" autocomplete="name" required>
-            </div>
-            <div class="row">
-              <div class="field">
-                <label for="tel">Teléfono</label>
-                <input type="tel" id="tel" name="telefono" autocomplete="tel" inputmode="tel" required>
-              </div>
-              <div class="field">
-                <label for="email">Correo electrónico</label>
-                <input type="email" id="email" name="email" autocomplete="email" required>
-              </div>
-            </div>
-            <div class="field">
-              <label for="mensaje">Cuéntanos más (opcional)</label>
-              <textarea id="mensaje" name="mensaje" placeholder="Ej.: baño de 4 m², quiero mampara y mueble nuevo"></textarea>
+              <label for="tel">Teléfono</label>
+              <input type="tel" id="tel" name="telefono" autocomplete="tel" inputmode="tel" placeholder="Ej.: 612 345 678" required>
             </div>
             <div class="hp" aria-hidden="true">
               <label for="gotcha">No rellenes este campo</label>
