@@ -1589,7 +1589,7 @@
     var cols = h("div", { class: "pn-cols" }), izq = h("div", { class: "pn-col" }), der = h("div", { class: "pn-col" });
     cols.appendChild(izq); cols.appendChild(der);
     // Cabecera y contacto
-    var saludo = "Hola " + l.nombre.split(" ")[0] + ", te escribo de Pimen Reformas por tu solicitud de presupuesto. ¿Te va bien que te llame un momento?";
+    var saludo = (l.nombre === "Sin nombre" ? "Hola" : "Hola " + l.nombre.split(" ")[0]) + ", te escribo de Pimen Reformas por tu solicitud de presupuesto. ¿Te va bien que te llame un momento?";
     cont.appendChild(h("button", { class: "linkbtn pn-back", type: "button", text: "← Volver a clientes", onclick: function () { location.hash = "leads"; } }));
     izq.appendChild(h("div", { class: "card" },
       h("div", { class: "card-head" },
