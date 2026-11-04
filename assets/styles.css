@@ -346,3 +346,20 @@ html:has(.top-nav) { scroll-padding-top: 7rem; }
 @media (min-width: 820px) {
   .precios-grid { grid-template-columns: repeat(2, 1fr); max-width: 820px; }
 }
+.bonus .plazas { margin-top: 1rem; display: inline-block; padding: .45rem .85rem; background: var(--surface); border: 1.5px solid var(--accent); border-radius: 10px; font-size: .97rem; }
+.bonus .plazas strong { color: var(--teal); }
+.bonus .btn { margin-top: 1.5rem; display: inline-block; }
+.opiniones { margin-top: 2rem; display: grid; gap: 1rem; }
+.opinion { margin: 0; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 1.25rem; display: grid; gap: .75rem; align-content: start; }
+.opinion blockquote { margin: 0; }
+.opinion p { color: var(--ink); }
+.opinion figcaption { color: var(--muted); font-size: .95rem; }
+.opinion figcaption strong { color: var(--ink); }
+.av { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 50%; background: var(--teal); color: var(--on-teal); font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 1.1rem; }
+.cita { margin: 1.5rem 0 0; padding: 1rem 1.25rem; border-left: 4px solid var(--accent); background: var(--paper); border-radius: 0 12px 12px 0; max-width: 62ch; }
+.cita blockquote { margin: 0; }
+.cita p { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 700; font-size: 1.15rem; }
+.cita figcaption { margin-top: .4rem; color: var(--muted); font-size: .95rem; }
+@media (min-width: 820px) {
+  .opiniones { grid-template-columns: repeat(2, 1fr); }
+}
