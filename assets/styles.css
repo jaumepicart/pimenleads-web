@@ -220,8 +220,15 @@ td.us { color: var(--ink); font-weight: 600; }
 
 /* WhatsApp */
 .btn-wa { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--teal); }
-.btn-wa svg, .link-wa svg { width: 1.25rem; height: 1.25rem; flex: none; color: var(--teal); }
-.top a.link-wa { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+.btn-wa svg, .link-wa svg, .link-tel svg { width: 1.25rem; height: 1.25rem; flex: none; color: var(--teal); }
+.top-contact { display: flex; align-items: center; gap: 1.1rem; }
+.top a.link-wa, .top a.link-tel { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+/* En móvil no caben la marca y dos textos: botones redondos con icono (el texto queda para lectores de pantalla). */
+@media (max-width: 479px) {
+  .top-contact { gap: .5rem; }
+  .top a.link-wa, .top a.link-tel { width: 2.75rem; height: 2.75rem; justify-content: center; border: 1.5px solid var(--line); border-radius: 50%; background: var(--surface); }
+  .top a.link-wa span, .top a.link-tel span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
 
 /* Menú de secciones (web de empresas) */
 html:has(.top-nav) { scroll-padding-top: 7rem; }
