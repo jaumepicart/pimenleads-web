@@ -175,7 +175,7 @@
               <label class="tile"><input type="radio" name="plazo" value="Lo antes posible"><span>Lo antes posible</span></label>
               <label class="tile"><input type="radio" name="plazo" value="En 1 a 3 meses"><span>En 1 a 3 meses</span></label>
               <label class="tile"><input type="radio" name="plazo" value="En más de 3 meses"><span>En más de 3 meses</span></label>
-              <label class="tile"><input type="radio" name="plazo" value="Solo quiero saber el precio"><span>Solo quiero saber el precio</span></label>
+              <label class="tile"><input type="radio" name="plazo" value="Solo quiero saber el precio" data-precio><span>Solo quiero saber el precio</span></label>
             </div>
             <div class="step-nav">
               <button type="button" class="step-back">Atrás</button>
@@ -183,20 +183,20 @@
             </div>
           </fieldset>
 
-          <fieldset class="step" data-error="Escribe tu barrio o código postal para continuar.">
-            <legend class="step-title" tabindex="-1">¿Dónde está la vivienda?</legend>
-            <div class="field">
-              <label for="zona">Barrio o código postal</label>
-              <input type="text" id="zona" name="zona" autocomplete="postal-code" placeholder="Ej.: Poblenou o 08005" required>
-            </div>
-            <div class="field">
-              <label for="vivienda">La vivienda es… (opcional)</label>
-              <select id="vivienda" name="vivienda">
-                <option value="">Elige una opción</option>
-                <option>Mía (soy propietario)</option>
-                <option>De alquiler</option>
-                <option>Para un local o negocio</option>
-              </select>
+          <fieldset class="step" data-auto data-required data-error="Elige la zona para continuar.">
+            <legend class="step-title" tabindex="-1">¿En qué zona está la vivienda?</legend>
+            <div class="tiles compact">
+              <label class="tile"><input type="radio" name="zona" value="Ciutat Vella"><span>Ciutat Vella</span></label>
+              <label class="tile"><input type="radio" name="zona" value="Eixample"><span>Eixample</span></label>
+              <label class="tile"><input type="radio" name="zona" value="Sants-Montjuïc"><span>Sants-Montjuïc</span></label>
+              <label class="tile"><input type="radio" name="zona" value="Les Corts"><span>Les Corts</span></label>
+              <label class="tile"><input type="radio" name="zona" value="Sarrià-Sant Gervasi"><span>Sarrià-Sant Gervasi</span></label>
+              <label class="tile"><input type="radio" name="zona" value="Gràcia"><span>Gràcia</span></label>
+              <label class="tile"><input type="radio" name="zona" value="Horta-Guinardó"><span>Horta-Guinardó</span></label>
+              <label class="tile"><input type="radio" name="zona" value="Nou Barris"><span>Nou Barris</span></label>
+              <label class="tile"><input type="radio" name="zona" value="Sant Andreu"><span>Sant Andreu</span></label>
+              <label class="tile"><input type="radio" name="zona" value="Sant Martí" checked><span>Sant Martí</span></label>
+              <label class="tile"><input type="radio" name="zona" value="Fuera de Barcelona"><span>Fuera de Barcelona</span></label>
             </div>
             <div class="step-nav">
               <button type="button" class="step-back">Atrás</button>
@@ -204,8 +204,12 @@
             </div>
           </fieldset>
 
-          <fieldset class="step" data-error="Escribe un teléfono válido, con 9 cifras, para poder llamarte.">
-            <legend class="step-title" tabindex="-1">¿A qué teléfono te llamamos?</legend>
+          <fieldset class="step" data-error="Escribe un teléfono válido, con 9 cifras, para poder contactarte.">
+            <legend class="step-title" tabindex="-1" data-alt-precio="¿Dónde te mandamos la orientación de precio?">¿Cómo te contactamos?</legend>
+            <div class="tiles compact" role="radiogroup" aria-label="Cómo prefieres que te contactemos">
+              <label class="tile"><input type="radio" name="contacto" value="Llamada" checked><span>Llamada</span></label>
+              <label class="tile"><input type="radio" name="contacto" value="WhatsApp"><span>WhatsApp</span></label>
+            </div>
             <div class="field">
               <label for="tel">Teléfono</label>
               <input type="tel" id="tel" name="telefono" autocomplete="tel" inputmode="tel" placeholder="Ej.: 612 345 678" required>
@@ -216,9 +220,9 @@
             </div>
             <label class="consent">
               <input type="checkbox" id="consent" name="consent" value="Sí: compartir datos con un máximo de 3 empresas de reformas" required>
-              <span>Acepto que Pimen Reformas (Pimen Leads) comparta mis datos con un máximo de tres empresas de reformas para que me contacten y me preparen un presupuesto. He leído la <a href="legal.html#particulares">información sobre protección de datos</a>.</span>
+              <span>Acepto que, solo después de hablar conmigo, Pimen Reformas (Pimen Leads) pase mis datos a un máximo de tres empresas de reformas para que me preparen presupuesto. He leído la <a href="legal.html#particulares">información sobre protección de datos</a>.</span>
             </label>
-            <button class="btn" type="submit">Recibir mis presupuestos gratis</button>
+            <button class="btn" type="submit" data-alt-precio="Recibir orientación de precio">Recibir mis presupuestos gratis</button>
             <div class="step-nav"><button type="button" class="step-back">Atrás</button></div>
           </fieldset>
 
@@ -417,6 +421,6 @@
 <script src="assets/config.js?v=4" defer></script>
 <script src="assets/visitas.js?v=1" defer></script>
 <script src="assets/medicion.js?v=5" defer></script>
-<script src="assets/form.js?v=8" defer></script>
+<script src="assets/form.js?v=9" defer></script>
 </body>
 </html>

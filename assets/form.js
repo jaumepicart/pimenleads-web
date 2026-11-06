@@ -109,6 +109,20 @@
       detalleTa.required = on;
     }
 
+    // "Solo quiero saber el precio": el último paso ofrece una orientación de precio, por WhatsApp de entrada,
+    // en vez de los presupuestos. Los textos de ese caso van en data-alt-precio.
+    var contactoTocado = false;
+    function syncPrecio() {
+      var on = !!form.querySelector("input[data-precio]:checked");
+      each(form.querySelectorAll("[data-alt-precio]"), function (el) {
+        if (!el.hasAttribute("data-texto")) { el.setAttribute("data-texto", el.textContent); }
+        el.textContent = on ? el.getAttribute("data-alt-precio") : el.getAttribute("data-texto");
+      });
+      var wa = form.querySelector('input[name="contacto"][value="WhatsApp"]');
+      var llamada = form.querySelector('input[name="contacto"][value="Llamada"]');
+      if (wa && llamada && !contactoTocado) { (on ? wa : llamada).checked = true; }
+    }
+
     if (steps.length) {
       form.classList.add("js-steps");
       showStep(0, false);
@@ -130,7 +144,9 @@
       form.addEventListener("pointerdown", function () { lastPointer = Date.now(); });
       form.addEventListener("change", function (e) {
         var step = e.target.closest(".step");
+        if (e.target.name === "contacto") { contactoTocado = true; }
         syncDetalle();
+        syncPrecio();
         if (e.target.type === "radio" && step && step.hasAttribute("data-auto") && !e.target.hasAttribute("data-detalle") && Date.now() - lastPointer < 1500) {
           mark(e.target.closest("fieldset"), true);
           setTimeout(nextStep, 180);
@@ -194,6 +210,11 @@
       // "Todavía no lo sé": lo que cuenta la persona viaja como comentario, aunque el formulario no tenga campo de mensaje.
       if (detalleTa && detalleTa.value.trim() && !detalleBox.hidden) {
         datos.mensaje = "Qué quiere hacer: " + detalleTa.value.trim() + (datos.mensaje ? " | " + datos.mensaje : "");
+        data.set("mensaje", datos.mensaje);
+      }
+      // Llamada o WhatsApp: la base de datos no tiene columna para esto, así que va delante del comentario.
+      if (datos.contacto) {
+        datos.mensaje = "Prefiere " + (datos.contacto === "WhatsApp" ? "WhatsApp" : "llamada") + (datos.mensaje ? " | " + datos.mensaje : "");
         data.set("mensaje", datos.mensaje);
       }
       // Las landings de particulares solo piden el teléfono; la base de datos exige un nombre, que se pregunta en la llamada.
