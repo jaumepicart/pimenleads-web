@@ -31,6 +31,9 @@
   var nota = form.querySelector("[data-nota]");
   var bono = form.querySelector("[data-bono]");
   var resumen = form.querySelector("[data-resumen]");
+  // Botón de WhatsApp del paso del precio: abre el chat con el cálculo ya escrito, para quien no quiere dejar el teléfono.
+  var whatsapp = form.querySelector("[data-wa-precio]");
+  var zona = form.querySelector('input[type="hidden"][name="zona"]');
 
   function elegido(name) {
     var el = form.querySelector('input[name="' + name + '"]:checked');
@@ -62,6 +65,12 @@
     }
     resumen.value = "Calculadora: " + minusculas(reforma) + ", " + minusculas(tamano.dataset.texto) + ", " +
       minusculas(calidad.dataset.texto) + " → " + rango[0] + "-" + rango[1] + " €";
+    if (whatsapp) {
+      var texto = "Hola, he calculado el precio de mi baño en vuestra web: " + (noSabe ? "aún no sé qué reforma" : minusculas(reforma)) + ", " +
+        minusculas(tamano.dataset.texto) + ", " + minusculas(calidad.dataset.texto) + (zona ? ", en " + zona.value : "") +
+        ". Me sale entre " + miles(rango[0]) + " y " + miles(rango[1]) + " €. Quiero el precio cerrado.";
+      whatsapp.href = whatsapp.href.split("?")[0] + "?text=" + encodeURIComponent(texto);
+    }
   }
 
   form.addEventListener("change", calcular);
