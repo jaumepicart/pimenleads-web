@@ -382,3 +382,4 @@ html:has(.top-nav) { scroll-padding-top: 7rem; }
 .resultado-cta { font-size: .98rem; line-height: 1.45; }
 .mini-label { font-weight: 600; font-size: .95rem; margin-bottom: -.5rem; }
 .bonus-banner span { font-size: .95rem; }
+.resultado-wa { display: flex; width: 100%; text-align: center; }
