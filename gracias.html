@@ -29,6 +29,12 @@
   <section>
     <div class="wrap">
       <h1 id="titulo" style="font-size: clamp(2.1rem, 7vw, 3.6rem); max-width: 16ch;">Hemos recibido tu solicitud.</h1>
+      <div class="resultado gracias-precio" id="precio" hidden>
+        <p class="mini-label">Tu precio orientativo</p>
+        <p class="resultado-cifra" id="precio-cifra"></p>
+        <p class="resultado-nota" id="precio-nota"></p>
+        <p class="resultado-bono" id="precio-bono" hidden></p>
+      </div>
       <p class="sub" id="texto">En breve te llamaremos para confirmar los detalles de tu reforma. Después, hasta tres empresas de reformas se pondrán en contacto contigo para prepararte el presupuesto.</p>
       <p class="sub">Si tienes cualquier duda, escríbenos a <a href="mailto:comercial@pimenleads.com">comercial@pimenleads.com</a>.</p>
     </div>
@@ -37,9 +43,28 @@
 
 <script>
 // Las empresas llegan con ?de=empresa y ven su propio texto.
-if (new URLSearchParams(location.search).get("de") === "empresa") {
+var de = new URLSearchParams(location.search).get("de");
+if (de === "empresa") {
   document.getElementById("marca").textContent = "Pimen Leads";
   document.getElementById("texto").textContent = "Te escribimos por correo para explicarte las condiciones y cómo empezar a recibir leads.";
+}
+// Calculadora de baño (assets/calculadora.js): aquí se enseña el precio que se ha calculado antes de dejar el teléfono.
+if (de === "calculadora") {
+  var precio = null;
+  try { precio = JSON.parse(sessionStorage.getItem("pimen_precio") || "null"); } catch (e) { precio = null; }
+  if (precio && precio.cifra) {
+    document.getElementById("titulo").textContent = "Este es tu precio.";
+    document.getElementById("precio-cifra").textContent = precio.cifra;
+    document.getElementById("precio-nota").textContent = precio.nota || "";
+    if (precio.bono) {
+      document.getElementById("precio-bono").textContent = precio.bono;
+      document.getElementById("precio-bono").hidden = false;
+    }
+    document.getElementById("precio").hidden = false;
+    document.getElementById("texto").textContent = "En breve te escribimos o te llamamos para resolver tus dudas. Si quieres el precio cerrado, después hasta tres empresas de reformas te preparan un presupuesto sin compromiso.";
+  } else {
+    document.getElementById("texto").textContent = "En breve te mandamos el precio orientativo de tu baño y resolvemos tus dudas. Si quieres el precio cerrado, después hasta tres empresas de reformas te preparan un presupuesto sin compromiso.";
+  }
 }
 </script>
 <script src="assets/config.js?v=4" defer></script>

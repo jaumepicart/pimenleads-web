@@ -139,7 +139,7 @@
     <div class="wrap">
       <div class="intro">
         <h1>¿Cuánto cuesta reformar tu baño en Sant Andreu?</h1>
-        <p class="lead">Responde 3 preguntas y te decimos al momento cuánto costaría, sin dejar tus datos. Si quieres el precio cerrado, te conseguimos hasta 3 presupuestos de empresas que trabajan en Sant Andreu.</p>
+        <p class="lead">Responde 3 preguntas y te decimos al momento cuánto costaría tu baño. Si quieres el precio cerrado, te conseguimos hasta 3 presupuestos de empresas que trabajan en Sant Andreu.</p>
         <p class="bonus-banner"><strong>Te regalamos 50 € si contratas la obra con una de nuestras empresas.</strong> <span>En baños desde 5.000 €. <a href="#bonificacion">Condiciones</a></span></p>
         <p class="bonus-line"><a href="#quienes"><strong>Primero hablas con Alex o Jaume. Ninguna empresa recibe tus datos antes.</strong> <span>Quiénes somos</span></a></p>
       </div>
@@ -147,7 +147,7 @@
       <div class="formcard" id="presupuesto">
         <form id="form" novalidate data-lead-form data-tipo="bano" data-calculadora
               data-subject="Presupuesto reforma de baño" data-subject-field="telefono"
-              data-origen="Página de baños · Sant Andreu (particulares)" data-next="gracias.html"
+              data-origen="Página de baños · Sant Andreu (particulares)" data-next="gracias.html?de=calculadora"
               data-error="Rellena los campos marcados para poder enviarte los presupuestos.">
           <div class="stepper-ui" aria-hidden="true">
             <div class="progress"><span></span></div>
@@ -193,20 +193,19 @@
           </fieldset>
 
           <fieldset class="step" data-error="Escribe un teléfono válido, con 9 cifras, para poder contactarte.">
-            <legend class="step-title" tabindex="-1">Tu precio orientativo</legend>
-            <div class="resultado" aria-live="polite">
-              <p class="resultado-cifra" data-cifra>Responde las preguntas anteriores para ver el precio.</p>
+            <legend class="step-title" tabindex="-1">Tu precio está listo</legend>
+            <div class="resultado resultado-bloqueado">
+              <p class="resultado-cifra" aria-label="Precio oculto hasta que nos dejes tu teléfono">Entre ●.●●● y ●.●●● €</p>
               <p class="resultado-nota" data-nota></p>
               <p class="resultado-bono" data-bono hidden></p>
             </div>
-            <p class="resultado-cta"><strong>¿Quieres el precio cerrado?</strong> Te conseguimos hasta 3 presupuestos de empresas revisadas. Gratis y sin compromiso.</p>
-            <a class="btn btn-wa resultado-wa" data-wa-precio href="https://wa.me/34644489180?text=Hola%2C%20quiero%20el%20precio%20cerrado%20de%20la%20reforma%20de%20mi%20ba%C3%B1o" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5l1.3-3.9A8 8 0 1 1 8.4 18.7z"/></svg>Pídelo por WhatsApp</a>
+            <p class="resultado-cta"><strong>Déjanos tu teléfono y te enseñamos el precio al momento.</strong> Si después quieres el precio cerrado, te conseguimos hasta 3 presupuestos de empresas revisadas. Gratis y sin compromiso.</p>
             <input type="hidden" name="mensaje" data-resumen>
             <input type="hidden" name="zona" value="Sant Andreu">
-            <p class="mini-label">O déjanos tu teléfono y te contactamos nosotros:</p>
+            <p class="mini-label">¿Cómo prefieres que te contactemos?</p>
             <div class="tiles compact" role="radiogroup" aria-label="Cómo prefieres que te contactemos">
-              <label class="tile"><input type="radio" name="contacto" value="Llamada" checked><span>Llamada</span></label>
-              <label class="tile"><input type="radio" name="contacto" value="WhatsApp"><span>WhatsApp</span></label>
+              <label class="tile"><input type="radio" name="contacto" value="WhatsApp" checked><span>WhatsApp</span></label>
+              <label class="tile"><input type="radio" name="contacto" value="Llamada"><span>Llamada</span></label>
             </div>
             <div class="field">
               <label for="tel">Teléfono</label>
@@ -220,7 +219,7 @@
               <input type="checkbox" id="consent" name="consent" value="Sí: compartir datos con un máximo de 3 empresas de reformas" required>
               <span>Acepto que, solo después de hablar conmigo, Pimen Reformas (Pimen Leads) pase mis datos a un máximo de tres empresas de reformas para que me preparen presupuesto. He leído la <a href="legal.html#particulares">información sobre protección de datos</a>.</span>
             </label>
-            <button class="btn" type="submit">Quiero mis 3 presupuestos gratis</button>
+            <button class="btn" type="submit">Ver mi precio</button>
             <div class="step-nav"><button type="button" class="step-back">Atrás</button></div>
           </fieldset>
 
@@ -269,11 +268,11 @@
       <ol class="steps">
         <li>
           <h3>Calcula el precio</h3>
-          <p>Respondes tres preguntas sobre tu baño y ves al momento cuánto costaría.</p>
+          <p>Respondes tres preguntas sobre tu baño, nos dejas tu teléfono y ves al momento cuánto costaría.</p>
         </li>
         <li>
           <h3>Hablas con nosotros</h3>
-          <p>Si quieres el precio cerrado, nos dejas tu teléfono: te llamamos o te escribimos por WhatsApp y resolvemos tus dudas. Ninguna empresa recibe tus datos antes de hablar contigo.</p>
+          <p>Te escribimos por WhatsApp o te llamamos para resolver tus dudas y, si quieres, pedir el precio cerrado. Ninguna empresa recibe tus datos antes de hablar contigo.</p>
         </li>
         <li>
           <h3>Comparas y decides</h3>
@@ -430,7 +429,7 @@
 <script src="assets/config.js?v=4" defer></script>
 <script src="assets/visitas.js?v=1" defer></script>
 <script src="assets/medicion.js?v=5" defer></script>
-<script src="assets/calculadora.js?v=2" defer></script>
-<script src="assets/form.js?v=9" defer></script>
+<script src="assets/calculadora.js?v=3" defer></script>
+<script src="assets/form.js?v=10" defer></script>
 </body>
 </html>

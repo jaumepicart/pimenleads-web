@@ -382,4 +382,6 @@ html:has(.top-nav) { scroll-padding-top: 7rem; }
 .resultado-cta { font-size: .98rem; line-height: 1.45; }
 .mini-label { font-weight: 600; font-size: .95rem; margin-bottom: -.5rem; }
 .bonus-banner span { font-size: .95rem; }
-.resultado-wa { display: flex; width: 100%; text-align: center; }
+.resultado-bloqueado .resultado-cifra { filter: blur(5px); user-select: none; }
+.gracias-precio { max-width: 34rem; margin: 1.5rem 0; display: grid; gap: .5rem; }
+.gracias-precio .mini-label { margin: 0; }

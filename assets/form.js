@@ -120,7 +120,8 @@
       });
       var wa = form.querySelector('input[name="contacto"][value="WhatsApp"]');
       var llamada = form.querySelector('input[name="contacto"][value="Llamada"]');
-      if (wa && llamada && !contactoTocado) { (on ? wa : llamada).checked = true; }
+      // Solo en los formularios con la opción de precio: los demás dejan marcado lo que traiga el HTML.
+      if (wa && llamada && !contactoTocado && form.querySelector("input[data-precio]")) { (on ? wa : llamada).checked = true; }
     }
 
     if (steps.length) {
