@@ -1,6 +1,7 @@
 // Calculadora de precio de las landings de baño: con las respuestas de los primeros pasos del formulario
-// enseña un rango orientativo en el último paso, junto al teléfono. No guarda nada ni manda nada por su cuenta:
-// el resumen viaja con la solicitud como comentario (campo oculto "mensaje"), para tenerlo en la llamada.
+// prepara un rango orientativo. El último paso lo enseña tapado y pide el teléfono; al enviar, la página de
+// gracias (gracias.html?de=calculadora) enseña la cifra, que se guarda en sessionStorage solo para eso.
+// El resumen viaja con la solicitud como comentario (campo oculto "mensaje"), para tenerlo en la llamada.
 //
 // PRECIOS SIN VALIDAR: son rangos de mercado (Barcelona, materiales y mano de obra), no tarifas de nuestras
 // empresas. Hay que contrastarlos con 2-3 reformistas y cambiarlos aquí.
@@ -24,16 +25,13 @@
   // La bonificación por contratar (sección #bonificacion): 50 € en obras de 5.000 a 9.999 €, 100 € desde 10.000 €.
   var BONO_DESDE = 5000;
   var BONO_ALTO_DESDE = 10000;
+  var CLAVE = "pimen_precio"; // la lee gracias.html
 
   var form = document.querySelector("form[data-calculadora]");
   if (!form) { return; }
-  var cifra = form.querySelector("[data-cifra]");
   var nota = form.querySelector("[data-nota]");
   var bono = form.querySelector("[data-bono]");
   var resumen = form.querySelector("[data-resumen]");
-  // Botón de WhatsApp del paso del precio: abre el chat con el cálculo ya escrito, para quien no quiere dejar el teléfono.
-  var whatsapp = form.querySelector("[data-wa-precio]");
-  var zona = form.querySelector('input[type="hidden"][name="zona"]');
 
   function elegido(name) {
     var el = form.querySelector('input[name="' + name + '"]:checked');
@@ -52,25 +50,25 @@
     var tabla = PRECIOS[tipo];
     var rango = (tipo === "completa" ? tabla[tamano.dataset.clave] : tabla)[calidad.dataset.clave];
 
-    cifra.textContent = "Entre " + miles(rango[0]) + " y " + miles(rango[1]) + " €";
     var noSabe = reforma === "Todavía no lo sé";
-    nota.textContent = (noSabe ? "Reforma completa del baño" : reforma) + " · " + minusculas(tamano.dataset.texto) + " · " + minusculas(calidad.dataset.texto) + ". " +
+    var textoNota = (noSabe ? "Reforma completa del baño" : reforma) + " · " + minusculas(tamano.dataset.texto) + " · " + minusculas(calidad.dataset.texto) + ". " +
       (noSabe ? "Es lo que cuesta una reforma completa; si al final es solo una parte, costará menos. " : "") +
       "Precio orientativo en Barcelona, con materiales y mano de obra.";
-    if (rango[1] >= BONO_DESDE) {
-      bono.textContent = "Y si contratas con una de nuestras empresas, te regalamos " + (rango[0] >= BONO_ALTO_DESDE ? "100 €" : "50 €") + ".";
-      bono.hidden = false;
-    } else {
-      bono.hidden = true;
-    }
+    var textoBono = rango[1] >= BONO_DESDE ?
+      "Y si contratas con una de nuestras empresas, te regalamos " + (rango[0] >= BONO_ALTO_DESDE ? "100 €" : "50 €") + "." : "";
+
+    nota.textContent = textoNota;
+    bono.textContent = textoBono;
+    bono.hidden = !textoBono;
     resumen.value = "Calculadora: " + minusculas(reforma) + ", " + minusculas(tamano.dataset.texto) + ", " +
       minusculas(calidad.dataset.texto) + " → " + rango[0] + "-" + rango[1] + " €";
-    if (whatsapp) {
-      var texto = "Hola, he calculado el precio de mi baño en vuestra web: " + (noSabe ? "aún no sé qué reforma" : minusculas(reforma)) + ", " +
-        minusculas(tamano.dataset.texto) + ", " + minusculas(calidad.dataset.texto) + (zona ? ", en " + zona.value : "") +
-        ". Me sale entre " + miles(rango[0]) + " y " + miles(rango[1]) + " €. Quiero el precio cerrado.";
-      whatsapp.href = whatsapp.href.split("?")[0] + "?text=" + encodeURIComponent(texto);
-    }
+    try {
+      sessionStorage.setItem(CLAVE, JSON.stringify({
+        cifra: "Entre " + miles(rango[0]) + " y " + miles(rango[1]) + " €",
+        nota: textoNota,
+        bono: textoBono
+      }));
+    } catch (e) { /* sin sessionStorage, la página de gracias dice que le mandamos el precio */ }
   }
 
   form.addEventListener("change", calcular);
