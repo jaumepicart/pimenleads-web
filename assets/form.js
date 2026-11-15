@@ -62,8 +62,10 @@
   each(document.querySelectorAll("form[data-lead-form]"), function (form) {
     var msg = form.querySelector(".msg");
     var btn = form.querySelector('button[type="submit"]');
+    // La casilla de consentimiento es opcional: las landings de baño llevan en su lugar un campo oculto
+    // con una nota para el equipo (el permiso para pasar los datos a empresas se pide en la llamada).
     var consent = form.querySelector('input[name="consent"]');
-    var consentLabel = consent.closest("label");
+    var consentLabel = consent && consent.type === "checkbox" ? consent.closest("label") : null;
     var steps = form.querySelectorAll(".step");
     var current = 0;
     var lastPointer = 0;
@@ -176,7 +178,7 @@
         showError((step && step.dataset.error) || form.dataset.error, bad[0]);
         return;
       }
-      if (!consent.checked) {
+      if (consentLabel && !consent.checked) {
         medir("form_error", { campo: "consent" });
         showError("No se ha enviado: marca la casilla de consentimiento para continuar.");
         consentLabel.classList.add("bad");
@@ -184,7 +186,7 @@
         consent.focus();
         return;
       }
-      consentLabel.classList.remove("bad");
+      if (consentLabel) { consentLabel.classList.remove("bad"); }
 
       var data = new FormData();
       var datos = { tipo_solicitud: form.dataset.tipo === "empresa" ? "empresa" : "particular", tipo: form.dataset.tipo, origen: {} };
@@ -223,7 +225,7 @@
         datos.nombre = SIN_NOMBRE;
         data.append("nombre", SIN_NOMBRE);
       }
-      if (consent.value && consent.value !== "on") {
+      if (consent && consent.value && consent.value !== "on") {
         data.append("consentimiento", consent.value);
         datos.consentimiento = consent.value;
       }
