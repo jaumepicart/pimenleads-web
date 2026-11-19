@@ -25,6 +25,10 @@
   // La bonificación por contratar (sección #bonificacion): 50 € en obras de 5.000 a 9.999 €, 100 € desde 10.000 €.
   var BONO_DESDE = 5000;
   var BONO_ALTO_DESDE = 10000;
+  // El regalo es para solicitudes enviadas hasta el 31 de diciembre de 2026 (hora de Barcelona). Pasada la fecha,
+  // la calculadora deja de ofrecerlo. OJO: los textos de las landings (banner, #bonificacion, preguntas) hay que
+  // cambiarlos a mano.
+  var BONO_HASTA = new Date("2027-01-01T00:00:00+01:00");
   var CLAVE = "pimen_precio"; // la lee gracias.html
 
   var form = document.querySelector("form[data-calculadora]");
@@ -54,8 +58,9 @@
     var textoNota = (noSabe ? "Reforma completa del baño" : reforma) + " · " + minusculas(tamano.dataset.texto) + " · " + minusculas(calidad.dataset.texto) + ". " +
       (noSabe ? "Es lo que cuesta una reforma completa; si al final es solo una parte, costará menos. " : "") +
       "Precio orientativo en Barcelona, con materiales y mano de obra.";
-    var textoBono = rango[1] >= BONO_DESDE ?
-      "Y si contratas con una de nuestras empresas, te regalamos " + (rango[0] >= BONO_ALTO_DESDE ? "100 €" : "50 €") + "." : "";
+    var textoBono = rango[1] >= BONO_DESDE && new Date() < BONO_HASTA ?
+      "Y si contratas con una de nuestras empresas, te regalamos " + (rango[0] >= BONO_ALTO_DESDE ? "100 €" : "50 €") +
+      ". Solo para solicitudes hasta el 31 de diciembre." : "";
 
     nota.textContent = textoNota;
     bono.textContent = textoBono;
